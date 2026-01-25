@@ -107,14 +107,16 @@ export function GradingDashboard() {
                   {quiz.needsGradingCount > 0 && (
                       <Badge variant="destructive">{quiz.needsGradingCount} Needs Grading</Badge>
                   )}
-                   <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); exportToCsv(quiz.name, quiz.submissions, quiz.id); }}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Export to Excel
-                  </Button>
                 </div>
             </div>
           </AccordionTrigger>
           <AccordionContent className="bg-card p-0 rounded-b-lg border border-t-0">
+            <div className="p-4 flex justify-end border-b">
+                <Button variant="outline" size="sm" onClick={() => exportToCsv(quiz.name, quiz.submissions, quiz.id)}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export to Excel
+                </Button>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
