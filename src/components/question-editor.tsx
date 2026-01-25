@@ -15,13 +15,15 @@ import EssayEditor from "./quiz/question-types/essay-editor";
 import MatchingEditor from "./quiz/question-types/matching-editor";
 import DropdownEditor from "./quiz/question-types/dropdown-editor";
 import PassageEditor from "./quiz/question-types/passage-editor";
+import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropdowns-editor";
 
 interface QuestionEditorProps {
   question: Question;
   onUpdate: (question: Question) => void;
+  passageQuestions: Pick<Question, 'id' | 'text'>[];
 }
 
-export default function QuestionEditor({ question, onUpdate }: QuestionEditorProps) {
+export default function QuestionEditor({ question, onUpdate, passageQuestions }: QuestionEditorProps) {
   const { toast } = useToast();
 
   const handleFieldChange = (field: keyof Question, value: any) => {
@@ -30,7 +32,7 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
   
   const handleTypeChange = (type: QuestionType) => {
     let newOptions = question.options;
-    if ((type === 'multiple-choice' || type === 'dropdown') && question.options.length === 0) {
+    if ((type === 'multiple-choice' || type === 'dropdown') && (!question.options || question.options.length === 0)) {
       newOptions = [
         { id: crypto.randomUUID(), text: "", isCorrect: false },
         { id: crypto.randomUUID(), text: "", isCorrect: false },
@@ -38,10 +40,23 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
     }
 
     let newMatchingPairs = question.matchingPairs;
-    if (type === 'matching' && question.matchingPairs.length === 0) {
+    if (type === 'matching' && (!question.matchingPairs || question.matchingPairs.length === 0)) {
         newMatchingPairs = [
             { id: crypto.randomUUID(), left: "", right: "" },
             { id: crypto.randomUUID(), left: "", right: "" },
+        ]
+    }
+    
+    let newDropdowns = question.dropdowns;
+    if (type === 'passage-with-dropdowns' && (!question.dropdowns || question.dropdowns.length === 0)) {
+        newDropdowns = [
+            {
+                id: crypto.randomUUID(),
+                options: [
+                    { id: crypto.randomUUID(), text: "", isCorrect: false },
+                    { id: crypto.randomUUID(), text: "", isCorrect: false },
+                ]
+            }
         ]
     }
 
@@ -50,7 +65,7 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
         newPoints = 0;
     }
 
-    onUpdate({ ...question, type, options: newOptions, matchingPairs: newMatchingPairs, points: newPoints });
+    onUpdate({ ...question, type, options: newOptions, matchingPairs: newMatchingPairs, dropdowns: newDropdowns, points: newPoints });
   }
   
   const handleAiPoints = () => {
@@ -61,15 +76,23 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
     });
   }
 
+  const showLinkToPassage = passageQuestions.length > 0 && question.type !== 'passage' && question.type !== 'passage-with-dropdowns';
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>{question.type === 'passage' ? 'Passage Text' : 'Question'}</Label>
+        <Label>{question.type === 'passage' ? 'Passage Text' : (question.type === 'passage-with-dropdowns' ? 'Passage with Dropdowns' : 'Question')}</Label>
         <Textarea
-          placeholder={question.type === 'passage' ? "Enter the passage text" : "Enter the question text"}
+          placeholder={
+            question.type === 'passage' 
+            ? "Enter the passage text. You can then link other questions to this passage." 
+            : question.type === 'passage-with-dropdowns'
+            ? "Enter the passage text. Use [[1]], [[2]], etc. to mark where dropdowns should appear."
+            : "Enter the question text"
+          }
           value={question.text}
           onChange={(e) => handleFieldChange("text", e.target.value)}
-          rows={question.type === 'passage' ? 6 : undefined}
+          rows={question.type === 'passage' || question.type === 'passage-with-dropdowns' ? 6 : 3}
         />
       </div>
 
@@ -86,7 +109,8 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
               <SelectItem value="essay">Essay</SelectItem>
               <SelectItem value="matching">Matching</SelectItem>
               <SelectItem value="dropdown">Dropdown</SelectItem>
-              <SelectItem value="passage">Passage</SelectItem>
+              <SelectItem value="passage">Passage (for linked questions)</SelectItem>
+              <SelectItem value="passage-with-dropdowns">Passage with Inline Dropdowns</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -109,6 +133,28 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
           </div>
         )}
       </div>
+
+      {showLinkToPassage && (
+        <div className="space-y-2">
+            <Label>Link to Passage</Label>
+            <Select
+                value={question.passageId || ''}
+                onValueChange={(passageId) => handleFieldChange('passageId', passageId || undefined)}
+            >
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a passage to link this question to" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {passageQuestions.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                            <p className="truncate">{p.text || `Passage (ID: ...${p.id.slice(-4)})`}</p>
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+      )}
       
       <div>
         {question.type === 'multiple-choice' && (
@@ -132,6 +178,12 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
             />
         )}
         {question.type === 'passage' && <PassageEditor />}
+        {question.type === 'passage-with-dropdowns' && (
+            <PassageWithDropdownsEditor 
+                dropdowns={question.dropdowns || []}
+                onDropdownsChange={(dropdowns) => handleFieldChange('dropdowns', dropdowns)}
+            />
+        )}
       </div>
     </div>
   );

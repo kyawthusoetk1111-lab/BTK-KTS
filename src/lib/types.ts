@@ -4,7 +4,8 @@ export type QuestionType =
   | 'essay'
   | 'matching'
   | 'dropdown'
-  | 'passage';
+  | 'passage'
+  | 'passage-with-dropdowns';
 
 export interface Option {
   id: string;
@@ -18,6 +19,11 @@ export interface MatchingPair {
   right: string;
 }
 
+export interface InlineDropdown {
+  id: string;
+  options: Option[];
+}
+
 export interface Question {
   id: string;
   type: QuestionType;
@@ -25,6 +31,8 @@ export interface Question {
   points: number;
   options: Option[];
   matchingPairs: MatchingPair[];
+  dropdowns?: InlineDropdown[];
+  passageId?: string;
 }
 
 export interface Section {

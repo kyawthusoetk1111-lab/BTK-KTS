@@ -1,6 +1,6 @@
 "use client";
 
-import type { Section, Question, QuestionType } from "@/lib/types";
+import type { Section, Question } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -32,6 +32,7 @@ export default function SectionEditor({ section, sectionNumber, onUpdate, onDele
         { id: crypto.randomUUID(), text: "", isCorrect: false },
       ],
       matchingPairs: [],
+      dropdowns: [],
     };
     onUpdate({ ...section, questions: [...section.questions, newQuestion] });
   };
@@ -53,6 +54,8 @@ export default function SectionEditor({ section, sectionNumber, onUpdate, onDele
   const calculateSectionPoints = () => {
     return section.questions.reduce((total, q) => total + (Number(q.points) || 0), 0);
   }
+
+  const passageQuestions = section.questions.filter(q => q.type === 'passage');
 
   return (
     <Card className="overflow-hidden">
@@ -92,7 +95,7 @@ export default function SectionEditor({ section, sectionNumber, onUpdate, onDele
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-4 pt-0">
-                        <QuestionEditor question={question} onUpdate={updateQuestion} />
+                        <QuestionEditor question={question} onUpdate={updateQuestion} passageQuestions={passageQuestions} />
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
