@@ -1,12 +1,13 @@
 "use client";
 
 import type { Section, Question } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Trash2, PlusCircle, GripVertical } from "lucide-react";
 import QuestionEditor from "./question-editor";
+import { cn } from "@/lib/utils";
 
 interface SectionEditorProps {
   section: Section;
@@ -88,9 +89,17 @@ export default function SectionEditor({ section, sectionNumber, onUpdate, onDele
                             </div>
                             <div className="flex items-center gap-2 pr-2">
                                 <span className="text-sm font-medium text-muted-foreground">{question.points || 0} pts</span>
-                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive rounded-full h-8 w-8" onClick={(e) => {e.stopPropagation(); deleteQuestion(question.id)}}>
+                                <div
+                                    role="button"
+                                    aria-label="Delete question"
+                                    className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "text-muted-foreground hover:text-destructive rounded-full h-8 w-8")}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteQuestion(question.id);
+                                    }}
+                                >
                                     <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </div>
                             </div>
                         </div>
                     </AccordionTrigger>
