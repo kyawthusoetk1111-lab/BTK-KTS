@@ -23,6 +23,7 @@ import {
 import { mockQuizzes, mockLeaderboard } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import type { Quiz, LeaderboardEntry } from '@/lib/types';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 
 function countQuestions(quiz: Quiz) {
@@ -49,6 +50,13 @@ export function LandingPage() {
     // We'll use the Math leaderboard as a sample for the landing page
     const leaderboardEntries = mockLeaderboard['Mathematics'] || [];
     
+    const heroImage = PlaceHolderImages.find(img => img.id === 'hero-landing');
+
+    const getQuizImage = (quizId: string) => {
+        const image = PlaceHolderImages.find(img => img.id === quizId);
+        return image || { imageUrl: `https://picsum.photos/seed/${quizId}/400/200`, imageHint: 'quiz' };
+    }
+
     return (
         <div className="flex flex-col min-h-screen bg-white text-slate-800">
             {/* Navbar */}
@@ -101,11 +109,11 @@ export function LandingPage() {
                             </div>
                             <div className="relative animate-in fade-in slide-in-from-right-12 duration-1000">
                                 <Image 
-                                    src="https://picsum.photos/seed/edutech/600/400"
-                                    alt="3D educational illustration"
+                                    src={heroImage?.imageUrl || "https://picsum.photos/seed/edutech/600/400"}
+                                    alt={heroImage?.description || "3D educational illustration"}
                                     width={600}
                                     height={400}
-                                    data-ai-hint="3d educational illustration student laptop"
+                                    data-ai-hint={heroImage?.imageHint || "education study"}
                                     className="rounded-xl shadow-2xl"
                                 />
                             </div>
@@ -156,11 +164,12 @@ export function LandingPage() {
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {mockQuizzes.slice(0,3).map((quiz, index) => {
                                 const status = getQuizStatus(quiz);
+                                const quizImage = getQuizImage(quiz.id);
                                 return (
                                 <Card key={quiz.id} className="group overflow-hidden transition-all hover:shadow-2xl animate-in fade-in zoom-in-95 duration-1000" style={{animationDelay: `${200 * index}ms`}}>
                                     <CardContent className="p-0">
                                         <div className="relative h-48 w-full">
-                                            <Image src={`https://picsum.photos/seed/${quiz.id}/400/200`} alt={quiz.name} fill style={{objectFit: 'cover'}} className="transition-transform group-hover:scale-105" />
+                                            <Image src={quizImage.imageUrl} alt={quiz.name} fill style={{objectFit: 'cover'}} data-ai-hint={quizImage.imageHint} className="transition-transform group-hover:scale-105" />
                                             <div className="absolute top-3 right-3">
                                                  <Badge variant={status.variant} className={cn(status.variant === 'live' && "shadow-lg shadow-green-500/40")}>{status.text}</Badge>
                                             </div>

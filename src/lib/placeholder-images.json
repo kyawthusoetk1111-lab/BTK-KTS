@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-landing",
+      "description": "A student studying with a laptop and books.",
+      "imageUrl": "https://images.unsplash.com/photo-1524995767963-4024765d754f?q=80&w=600&h=400&auto=format&fit=crop&crop=entropy",
+      "imageHint": "education study"
+    },
+    {
+      "id": "quiz-1",
+      "description": "Image for general knowledge quiz, showing a globe and historical items.",
+      "imageUrl": "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?q=80&w=400&h=200&auto=format&fit=crop&crop=entropy",
+      "imageHint": "knowledge history"
+    },
+    {
+      "id": "quiz-2",
+      "description": "Image for a mathematics quiz, showing formulas on a blackboard.",
+      "imageUrl": "https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?q=80&w=400&h=200&auto=format&fit=crop&crop=entropy",
+      "imageHint": "mathematics formula"
+    }
+  ]
 }
