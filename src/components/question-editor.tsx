@@ -14,7 +14,6 @@ import ShortAnswerEditor from "./quiz/question-types/short-answer-editor";
 import EssayEditor from "./quiz/question-types/essay-editor";
 import MatchingEditor from "./quiz/question-types/matching-editor";
 import DropdownEditor from "./quiz/question-types/dropdown-editor";
-import PassageEditor from "./quiz/question-types/passage-editor";
 import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropdowns-editor";
 
 interface QuestionEditorProps {
@@ -48,24 +47,11 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
     }
     
     let newDropdowns = question.dropdowns;
-    if (type === 'passage-with-dropdowns' && (!question.dropdowns || question.dropdowns.length === 0)) {
-        newDropdowns = [
-            {
-                id: crypto.randomUUID(),
-                options: [
-                    { id: crypto.randomUUID(), text: "", isCorrect: false },
-                    { id: crypto.randomUUID(), text: "", isCorrect: false },
-                ]
-            }
-        ]
+    if (type === 'passage' && !newDropdowns) {
+        newDropdowns = [];
     }
 
-    let newPoints = question.points;
-    if (type === 'passage') {
-        newPoints = 0;
-    }
-
-    onUpdate({ ...question, type, options: newOptions, matchingPairs: newMatchingPairs, dropdowns: newDropdowns, points: newPoints });
+    onUpdate({ ...question, type, options: newOptions, matchingPairs: newMatchingPairs, dropdowns: newDropdowns });
   }
   
   const handleAiPoints = () => {
@@ -76,23 +62,21 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
     });
   }
 
-  const showLinkToPassage = passageQuestions.length > 0 && question.type !== 'passage' && question.type !== 'passage-with-dropdowns';
+  const showLinkToPassage = passageQuestions.length > 0 && question.type !== 'passage';
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>{question.type === 'passage' ? 'Passage Text' : (question.type === 'passage-with-dropdowns' ? 'Passage with Dropdowns' : 'Question')}</Label>
+        <Label>{question.type === 'passage' ? 'Passage Text' : 'Question'}</Label>
         <Textarea
           placeholder={
             question.type === 'passage' 
-            ? "Enter the passage text. You can then link other questions to this passage." 
-            : question.type === 'passage-with-dropdowns'
-            ? "Enter the passage text. Use [[1]], [[2]], etc. to mark where dropdowns should appear."
+            ? "Enter the passage text. Use [[1]], [[2]], etc. to mark where dropdowns should appear. You can also leave it as plain text to be referenced by other questions."
             : "Enter the question text"
           }
           value={question.text}
           onChange={(e) => handleFieldChange("text", e.target.value)}
-          rows={question.type === 'passage' || question.type === 'passage-with-dropdowns' ? 6 : 3}
+          rows={question.type === 'passage' ? 6 : 3}
         />
       </div>
 
@@ -109,13 +93,11 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
               <SelectItem value="essay">Essay</SelectItem>
               <SelectItem value="matching">Matching</SelectItem>
               <SelectItem value="dropdown">Dropdown</SelectItem>
-              <SelectItem value="passage">Passage (for linked questions)</SelectItem>
-              <SelectItem value="passage-with-dropdowns">Passage with Inline Dropdowns</SelectItem>
+              <SelectItem value="passage">Passage</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        {question.type !== 'passage' && (
-          <div className="space-y-2 md:col-span-2">
+        <div className="space-y-2 md:col-span-2">
             <Label>Points</Label>
             <div className="flex items-center gap-2">
               <Input
@@ -130,8 +112,7 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
                   AI Suggest
               </Button>
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {showLinkToPassage && (
@@ -177,8 +158,7 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
                 onPairsChange={(pairs) => handleFieldChange('matchingPairs', pairs)}
             />
         )}
-        {question.type === 'passage' && <PassageEditor />}
-        {question.type === 'passage-with-dropdowns' && (
+        {question.type === 'passage' && (
             <PassageWithDropdownsEditor 
                 dropdowns={question.dropdowns || []}
                 onDropdownsChange={(dropdowns) => handleFieldChange('dropdowns', dropdowns)}

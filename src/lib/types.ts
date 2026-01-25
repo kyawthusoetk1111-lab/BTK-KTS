@@ -4,8 +4,7 @@ export type QuestionType =
   | 'essay'
   | 'matching'
   | 'dropdown'
-  | 'passage'
-  | 'passage-with-dropdowns';
+  | 'passage';
 
 export interface Option {
   id: string;
