@@ -1,7 +1,7 @@
 'use client';
 
-import type { Quiz } from '@/lib/types';
-import { useState } from 'react';
+import type { Quiz, Section } from '@/lib/types';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
@@ -22,31 +22,61 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const router = useRouter();
     const firestore = useFirestore();
     const { user } = useUser();
-
-    const allQuestions = quiz.sections.flatMap(s => 
-        s.questions.map(q => ({...q, sectionName: s.name}))
-    );
     
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, any>>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [score, setScore] = useState(0);
     const [totalPossibleScore, setTotalPossibleScore] = useState(0);
+    const [scrollToQuestionId, setScrollToQuestionId] = useState<string | null>(null);
 
-    const handleNext = () => {
-        if (currentQuestionIndex < allQuestions.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
+    const allQuestions = useMemo(() => quiz.sections.flatMap(s => s.questions), [quiz.sections]);
+
+    const questionMap = useMemo(() => {
+        const map: { sectionIndex: number, questionId: string }[] = [];
+        let flatIndex = 0;
+        quiz.sections.forEach((section, sIndex) => {
+            section.questions.forEach(question => {
+                map[flatIndex] = { sectionIndex: sIndex, questionId: question.id };
+                flatIndex++;
+            });
+        });
+        return map;
+    }, [quiz.sections]);
+
+    useEffect(() => {
+        if (scrollToQuestionId) {
+            const element = document.getElementById(`question-cont-${scrollToQuestionId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            setScrollToQuestionId(null);
+        }
+    }, [scrollToQuestionId, currentSectionIndex]);
+
+    const handleNextSection = () => {
+        if (currentSectionIndex < quiz.sections.length - 1) {
+            setCurrentSectionIndex(currentSectionIndex + 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
-    const handlePrev = () => {
-        if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(currentQuestionIndex - 1);
+    const handlePrevSection = () => {
+        if (currentSectionIndex > 0) {
+            setCurrentSectionIndex(currentSectionIndex - 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
-    const handleQuestionSelect = (index: number) => {
-        setCurrentQuestionIndex(index);
+    const handleQuestionSelect = (flatIndex: number) => {
+        const mapping = questionMap[flatIndex];
+        if (mapping) {
+            const { sectionIndex, questionId } = mapping;
+            if (sectionIndex !== currentSectionIndex) {
+                setCurrentSectionIndex(sectionIndex);
+            }
+            setScrollToQuestionId(questionId);
+        }
     }
     
     const handleAnswerChange = (questionId: string, answer: any) => {
@@ -177,7 +207,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         );
     }
 
-    const currentQuestion = allQuestions[currentQuestionIndex];
+    const currentSection = quiz.sections[currentSectionIndex];
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -186,7 +216,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                     <div className="flex items-center justify-between h-16">
                         <div className="flex flex-col">
                             <h1 className="text-xl font-bold font-headline text-primary">{quiz.name}</h1>
-                            <p className="text-sm text-muted-foreground">{quiz.subject}</p>
+                            <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
                         </div>
                         <div className="flex items-center gap-4">
                             {quiz.timerInMinutes && quiz.timerInMinutes > 0 && (
@@ -206,23 +236,28 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                     <div className="md:col-span-2 lg:col-span-3">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Question {currentQuestionIndex + 1}</CardTitle>
-                                <CardDescription>{currentQuestion.sectionName} - {currentQuestion.points} points</CardDescription>
+                                <CardTitle>{currentSection.name}</CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <QuestionRenderer 
-                                    question={currentQuestion}
-                                    answer={answers[currentQuestion.id]}
-                                    onAnswerChange={(answer) => handleAnswerChange(currentQuestion.id, answer)}
-                                />
+                            <CardContent className="space-y-8">
+                                {currentSection.questions.map((question, index) => (
+                                    <div key={question.id} id={`question-cont-${question.id}`} className="p-6 border rounded-lg">
+                                        <CardTitle className="mb-4">Question {index + 1}</CardTitle>
+                                        <CardDescription className="mb-4">{question.points} points</CardDescription>
+                                        <QuestionRenderer 
+                                            question={question}
+                                            answer={answers[question.id]}
+                                            onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
+                                        />
+                                    </div>
+                                ))}
                             </CardContent>
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
+                             <CardFooter className="flex justify-between">
+                                <Button variant="outline" onClick={handlePrevSection} disabled={currentSectionIndex === 0}>
                                     <ChevronLeft className="mr-2 h-4 w-4" />
-                                    Previous
+                                    Previous Section
                                 </Button>
-                                <Button onClick={handleNext} disabled={currentQuestionIndex === allQuestions.length - 1}>
-                                    Next
+                                <Button onClick={handleNextSection} disabled={currentSectionIndex === quiz.sections.length - 1}>
+                                    Next Section
                                     <ChevronRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </CardFooter>
@@ -236,8 +271,8 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                             </CardHeader>
                             <CardContent>
                                 <QuestionNavigation
-                                    questions={allQuestions}
-                                    currentQuestionIndex={currentQuestionIndex}
+                                    sections={quiz.sections}
+                                    currentSectionIndex={currentSectionIndex}
                                     answers={answers}
                                     onQuestionSelect={handleQuestionSelect}
                                 />
