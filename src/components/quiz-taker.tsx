@@ -22,6 +22,14 @@ interface QuizTakerProps {
     quiz: Quiz;
 }
 
+function calculateTotalQuizPoints(quiz: Quiz): number {
+    return quiz.sections.reduce((total, section) => {
+        return total + section.questions.reduce((sectionTotal, question) => {
+            return sectionTotal + (question.points || 0);
+        }, 0);
+    }, 0);
+}
+
 export function QuizTaker({ quiz }: QuizTakerProps) {
     const { toast } = useToast();
     const router = useRouter();
@@ -205,28 +213,27 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
             setShowSubmissionModal(false);
         }
 
-        let calculatedScore = 0;
-        let possibleScore = 0;
+        let autoGradedScore = 0;
 
         allQuestions.forEach(question => {
             if (question.type === 'multiple-choice' || question.type === 'true-false') {
-                possibleScore += question.points;
                 const correctAnswer = question.options.find(opt => opt.isCorrect);
                 const userAnswer = answers[question.id];
 
                 if (question.type === 'true-false') {
                     if (correctAnswer && userAnswer === correctAnswer.text) {
-                        calculatedScore += question.points;
+                        autoGradedScore += question.points;
                     }
                 } else {
                     if (correctAnswer && userAnswer === correctAnswer.id) {
-                        calculatedScore += question.points;
+                        autoGradedScore += question.points;
                     }
                 }
             }
         });
 
-        const { grade } = getGradeDetails(calculatedScore, possibleScore);
+        const totalQuizPoints = calculateTotalQuizPoints(quiz);
+        const { grade } = getGradeDetails(autoGradedScore, totalQuizPoints);
         
         if (user && firestore && examResultId) {
             const examResultData = {
@@ -234,8 +241,8 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                 quizId: quiz.id,
                 quizName: quiz.name,
                 answers: answers,
-                score: calculatedScore,
-                totalPossibleScore: possibleScore,
+                score: autoGradedScore,
+                totalPossibleScore: totalQuizPoints,
                 grade: grade,
                 submissionTime: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -251,8 +258,8 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
             localStorage.removeItem(`quiz-answers-${examResultId}`);
         }
 
-        setScore(calculatedScore);
-        setTotalPossibleScore(possibleScore);
+        setScore(autoGradedScore);
+        setTotalPossibleScore(totalQuizPoints);
         setIsSubmitted(true);
 
         if (!isTimeUp) {
