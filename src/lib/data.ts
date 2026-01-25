@@ -1,4 +1,4 @@
-import type { Quiz, LeaderboardEntry, Badge } from './types';
+import type { Quiz, LeaderboardEntry, Badge, StudentSubmission } from './types';
 import { Award, Rocket, BrainCircuit } from 'lucide-react';
 
 export const mockQuizzes: Quiz[] = [
@@ -67,7 +67,7 @@ export const mockQuizzes: Quiz[] = [
     subject: 'Mathematics',
     examCode: 'MATH-202',
     timerInMinutes: 60,
-    showInstantFeedback: false,
+    showInstantFeedback: true,
     sections: [
       {
         id: 'sec-2-1',
@@ -82,11 +82,77 @@ export const mockQuizzes: Quiz[] = [
             matchingPairs: [],
             dropdowns: [],
           },
+          {
+            id: 'q-2-1-2',
+            type: 'multiple-choice',
+            text: 'What is the derivative of $x^2$?',
+            points: 10,
+            options: [
+              { id: 'opt-m-1', text: '$2x$', isCorrect: true },
+              { id: 'opt-m-2', text: '$x$', isCorrect: false },
+              { id: 'opt-m-3', text: '$x^2/2$', isCorrect: false },
+            ],
+            matchingPairs: [],
+            dropdowns: [],
+          },
         ],
       },
     ],
   },
 ];
+
+export const mockSubmissions: StudentSubmission[] = [
+    {
+      id: 'sub-1',
+      studentId: 'student-1',
+      studentName: 'Alice Johnson',
+      quizId: 'quiz-1',
+      answers: {
+        'q-1-1-1': 'opt-2', // Correct
+        'q-1-1-2': 'False', // Correct
+        'q-1-2-1': 'H2O',
+      },
+      autoScore: 15,
+      manualScore: 0,
+      totalScore: 15,
+      totalPossibleScore: 20,
+      status: 'Needs Grading',
+      submissionTime: '2024-05-20T10:30:00Z',
+    },
+    {
+      id: 'sub-2',
+      studentId: 'student-2',
+      studentName: 'Bob Williams',
+      quizId: 'quiz-1',
+      answers: {
+        'q-1-1-1': 'opt-3', // Incorrect
+        'q-1-1-2': 'True', // Incorrect
+        'q-1-2-1': 'Water',
+      },
+      autoScore: 0,
+      manualScore: 4,
+      totalScore: 4,
+      totalPossibleScore: 20,
+      status: 'Graded',
+      submissionTime: '2024-05-20T11:00:00Z',
+    },
+    {
+        id: 'sub-3',
+        studentId: 'student-3',
+        studentName: 'Charlie Brown',
+        quizId: 'quiz-2',
+        answers: {
+            'q-2-1-1': 'The fundamental theorem of calculus is a theorem that links the concept of differentiating a function with the concept of integrating a function.',
+            'q-2-1-2': 'opt-m-1', // Correct
+        },
+        autoScore: 10,
+        manualScore: 0,
+        totalScore: 10,
+        totalPossibleScore: 35,
+        status: 'Needs Grading',
+        submissionTime: '2024-05-21T14:00:00Z',
+    }
+  ];
 
 export const mockLeaderboard: Record<string, LeaderboardEntry[]> = {
   'Mathematics': [

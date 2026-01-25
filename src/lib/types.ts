@@ -66,6 +66,20 @@ export interface UserProfile {
   badges?: Badge[];
 }
 
+export interface StudentSubmission {
+  id: string;
+  studentId: string;
+  studentName: string;
+  quizId: string;
+  answers: Record<string, any>;
+  autoScore: number;
+  manualScore: number;
+  totalScore: number;
+  totalPossibleScore: number;
+  status: 'Graded' | 'Needs Grading';
+  submissionTime: string;
+}
+
 export interface ExamResult {
   id: string;
   quizId: string;
