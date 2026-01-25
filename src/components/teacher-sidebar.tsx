@@ -42,8 +42,12 @@ export function TeacherSidebar() {
   const { state } = useSidebar();
 
   const getHref = (item: typeof menuItems[0]) => {
-      // Use placeholder for pages that don't exist yet
-      if (['/quizzes', '/students', '/results', '/billing', '/settings'].includes(item.href)) {
+      // The dashboard at '/' is where quizzes are managed.
+      if (item.href === '/quizzes') {
+          return '/';
+      }
+      // Use placeholder for pages that don't exist yet to avoid 404 errors.
+      if (['/students', '/billing', '/settings'].includes(item.href)) {
           return '#';
       }
       return item.href;
@@ -65,25 +69,30 @@ export function TeacherSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  tooltip={{children: item.label, className: "bg-slate-800 text-white border-slate-700"}}
-                  className={cn(
-                    'text-gray-300 hover:bg-white/10 hover:text-white justify-start',
-                    pathname === item.href &&
-                      'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.6)]'
-                  )}
-                >
-                  <Link href={getHref(item)}>
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {menuItems.map((item) => {
+            const href = getHref(item);
+            const isActive = href !== '#' && (pathname === href || (href === '/' && item.href === '/quizzes'));
+            
+            return (
+              <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive}
+                    tooltip={{children: item.label, className: "bg-slate-800 text-white border-slate-700"}}
+                    className={cn(
+                      'text-gray-300 hover:bg-white/10 hover:text-white justify-start',
+                      isActive &&
+                        'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.6)]'
+                    )}
+                  >
+                    <Link href={href}>
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-2">
