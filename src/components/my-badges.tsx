@@ -13,10 +13,10 @@ export function MyBadges() {
     }
 
     return (
-        <Card>
+        <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
             <CardHeader>
-                <CardTitle>My Badges</CardTitle>
-                <CardDescription>Your achievements and accolades.</CardDescription>
+                <CardTitle>ရရှိထားသော ဆုတံဆိပ်များ</CardTitle>
+                <CardDescription className="text-gray-300">Your achievements and accolades.</CardDescription>
             </CardHeader>
             <CardContent>
                 <TooltipProvider>
@@ -25,13 +25,13 @@ export function MyBadges() {
                              <Tooltip key={badge.id}>
                                 <TooltipTrigger asChild>
                                     <div className="flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-110">
-                                        <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center border-2 border-primary/10 shadow-inner">
-                                            <badge.icon className="h-10 w-10 text-primary/80" />
+                                        <div className="h-20 w-20 rounded-full bg-white/10 flex items-center justify-center border-2 border-primary/10 shadow-inner">
+                                            <badge.icon className="h-10 w-10 text-white/80" />
                                         </div>
                                         <span className="text-xs font-medium text-center">{badge.name}</span>
                                     </div>
                                 </TooltipTrigger>
-                                <TooltipContent>
+                                <TooltipContent className="bg-slate-800 text-white border-slate-700">
                                     <p className="font-semibold">{badge.name}</p>
                                     <p className="text-sm text-muted-foreground">{badge.description}</p>
                                 </TooltipContent>

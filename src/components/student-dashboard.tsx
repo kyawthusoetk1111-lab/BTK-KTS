@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockLeaderboard } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Clock, CheckCircle, Search, Activity, FilePlus2, ShoppingCart } from 'lucide-react';
+import { BookCopy, Star, Play, Eye, Clock, Search, Activity, ShoppingCart } from 'lucide-react';
 import type { Quiz, Purchase } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
@@ -50,7 +50,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
 
     if (purchases.length === 0) {
         return (
-            <div className="text-center text-muted-foreground py-16">
+            <div className="text-center text-gray-300 py-16">
                 <h3 className="text-lg font-semibold">No Purchases Yet</h3>
                 <p className="text-sm">Your purchased quizzes and subscriptions will appear here.</p>
             </div>
@@ -66,7 +66,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
             <CardContent>
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-white/20">
+                        <TableRow className="border-white/20 hover:bg-white/10">
                             <TableHead className="text-gray-200">Item</TableHead>
                             <TableHead className="text-gray-200">Type</TableHead>
                             <TableHead className="text-gray-200">Amount</TableHead>
@@ -75,7 +75,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
                     </TableHeader>
                     <TableBody>
                         {purchases.map(p => (
-                            <TableRow key={p.id} className="border-white/20">
+                            <TableRow key={p.id} className="border-white/20 hover:bg-white/10">
                                 <TableCell className="font-medium">{p.itemDescription}</TableCell>
                                 <TableCell className="capitalize">{p.itemType}</TableCell>
                                 <TableCell>{p.amountPaid.toLocaleString()} MMK</TableCell>
@@ -124,7 +124,7 @@ export function StudentDashboard() {
   return (
     <>
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-950 text-white">
-      <header className="sticky top-0 z-10 bg-transparent border-b border-white/20 backdrop-blur-md">
+      <header className="sticky top-0 z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-white">
@@ -139,7 +139,7 @@ export function StudentDashboard() {
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-bold font-headline tracking-tight">Welcome back, {profile?.name?.split(' ')[0] || 'Student'}!</h2>
+            <h2 className="text-3xl font-bold font-headline tracking-tight">မင်္ဂလာပါ {profile?.name?.split(' ')[0] || 'Student'}!</h2>
             <p className="text-gray-300">
               Ready for a new challenge? Select a quiz to start.
             </p>
@@ -148,8 +148,8 @@ export function StudentDashboard() {
         
         <Tabs defaultValue="quizzes">
             <TabsList className="grid w-full grid-cols-4 md:w-[800px] mb-6 bg-white/10 text-gray-300">
-                <TabsTrigger value="quizzes" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">Available Quizzes</TabsTrigger>
-                <TabsTrigger value="grades" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">My Grades & Badges</TabsTrigger>
+                <TabsTrigger value="quizzes" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">သင်ခန်းစာများ</TabsTrigger>
+                <TabsTrigger value="grades" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
                 <TabsTrigger value="purchases" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">My Purchases</TabsTrigger>
                 <TabsTrigger value="leaderboards" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">Leaderboards</TabsTrigger>
             </TabsList>
@@ -220,7 +220,7 @@ export function StudentDashboard() {
                                  <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
                                     <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white">
                                         <Play className="mr-2 h-4 w-4" />
-                                        Start Attempt
+                                        စာမေးပွဲစတင်မည်
                                     </Button>
                                 </Link>
                             ) : (
