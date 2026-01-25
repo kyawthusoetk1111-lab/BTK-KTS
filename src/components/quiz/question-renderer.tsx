@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { LatexRenderer } from '../latex-renderer';
 
 interface QuestionRendererProps {
     question: Question;
@@ -20,17 +21,19 @@ export function QuestionRenderer({ question, answer, onAnswerChange, passageText
              {passageText && (
                 <div className="p-4 bg-muted/50 rounded-lg border">
                     <h4 className="font-semibold mb-2 text-muted-foreground">Linked Passage</h4>
-                    <p className="whitespace-pre-wrap">{passageText}</p>
+                    <LatexRenderer text={passageText} className="whitespace-pre-wrap" />
                 </div>
             )}
-            <p className="text-lg font-semibold">{question.text}</p>
+            <LatexRenderer text={question.text} className="text-lg font-semibold" />
             
             {question.type === 'multiple-choice' && (
                  <RadioGroup onValueChange={onAnswerChange} value={answer} className="space-y-2">
                     {question.options.map(opt => (
                         <div key={opt.id} className="flex items-center space-x-3 p-3 border rounded-md has-[:checked]:bg-secondary">
                             <RadioGroupItem value={opt.id} id={opt.id} />
-                            <Label htmlFor={opt.id} className="flex-1 cursor-pointer">{opt.text}</Label>
+                            <Label htmlFor={opt.id} className="flex-1 cursor-pointer">
+                                <LatexRenderer text={opt.text} />
+                            </Label>
                         </div>
                     ))}
                 </RadioGroup>
@@ -41,7 +44,9 @@ export function QuestionRenderer({ question, answer, onAnswerChange, passageText
                    {question.options.map(opt => (
                        <div key={opt.id} className="flex items-center space-x-3 p-3 border rounded-md has-[:checked]:bg-secondary">
                            <RadioGroupItem value={opt.text} id={opt.id} />
-                           <Label htmlFor={opt.id} className="flex-1 cursor-pointer">{opt.text}</Label>
+                           <Label htmlFor={opt.id} className="flex-1 cursor-pointer">
+                               <LatexRenderer text={opt.text} />
+                           </Label>
                        </div>
                    ))}
                </RadioGroup>

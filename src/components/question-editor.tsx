@@ -18,6 +18,7 @@ import DropdownEditor from "./quiz/question-types/dropdown-editor";
 import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropdowns-editor";
 import TrueFalseEditor from "./quiz/question-types/true-false-editor";
 import { MathEquationHelper } from "./math-type-helper";
+import { LatexRenderer } from "./latex-renderer";
 
 interface QuestionEditorProps {
   question: Question;
@@ -107,12 +108,20 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
           placeholder={
             question.type === 'passage' 
             ? "Enter the passage text. Use [[1]], [[2]], etc. to mark where dropdowns should appear. You can also leave it as plain text to be referenced by other questions."
-            : "Enter the question text"
+            : "Enter question text, using $...$ for inline math and $$...$$ for block math. E.g., What is $x$ if $x^2 = 4$?"
           }
           value={question.text}
           onChange={(e) => handleFieldChange("text", e.target.value)}
           rows={question.type === 'passage' ? 6 : 3}
         />
+        {question.text && (
+            <div className="pt-2">
+                <Label className="text-xs text-muted-foreground">Live Preview</Label>
+                <div className="p-4 border rounded-md mt-1 min-h-[40px] bg-muted/30">
+                    <LatexRenderer text={question.text} />
+                </div>
+            </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

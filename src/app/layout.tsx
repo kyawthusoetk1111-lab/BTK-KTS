@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
+import 'katex/dist/katex.min.css';
 
 export const metadata: Metadata = {
   title: 'QuizCraft Pro',
