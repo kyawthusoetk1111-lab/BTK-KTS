@@ -18,6 +18,7 @@ import { Calendar } from "./ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subjects } from "@/lib/subjects";
 import { Switch } from "./ui/switch";
+import { useParams } from "next/navigation";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -26,6 +27,7 @@ interface QuizEditorProps {
 export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const [quiz, setQuiz] = useState<Quiz>(initialQuiz);
   const { toast } = useToast();
+  const params = useParams();
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
@@ -72,6 +74,13 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
       }, 0);
     }, 0);
   };
+
+  const handlePreview = () => {
+    // If it's a new, unsaved quiz, store it in localStorage for the preview page to pick up.
+    if (params.id === 'new') {
+      localStorage.setItem('quiz-preview', JSON.stringify(quiz));
+    }
+  };
   
   const handleSave = () => {
     // In a real app, you would send this to your backend API
@@ -94,7 +103,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
               <span className="text-sm font-medium text-muted-foreground">
                 Total Points: {calculateTotalPoints()}
               </span>
-              <Link href={`/quizzes/${quiz.id}/preview`} target="_blank">
+              <Link href={`/quizzes/${quiz.id}/preview`} target="_blank" onClick={handlePreview}>
                 <Button variant="outline">
                     <Eye className="mr-2 h-4 w-4" />
                     Preview
