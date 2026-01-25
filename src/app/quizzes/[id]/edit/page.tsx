@@ -3,14 +3,16 @@
 import { QuizEditor } from '@/components/quiz-editor';
 import { mockQuizzes } from '@/lib/data';
 import type { Quiz } from '@/lib/types';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { useEffect } from 'react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
-export default function EditQuizPage({ params }: { params: { id: string } }) {
+export default function EditQuizPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -28,7 +30,7 @@ export default function EditQuizPage({ params }: { params: { id: string } }) {
 
   let quiz: Quiz | undefined | null;
 
-  if (params.id === 'new') {
+  if (id === 'new') {
     quiz = {
       id: crypto.randomUUID(),
       name: 'Untitled Quiz',
@@ -42,7 +44,7 @@ export default function EditQuizPage({ params }: { params: { id: string } }) {
       ],
     };
   } else {
-    quiz = mockQuizzes.find((q) => q.id === params.id);
+    quiz = mockQuizzes.find((q) => q.id === id);
   }
 
   if (!quiz) {
