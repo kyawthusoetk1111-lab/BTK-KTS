@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Wand2, Image as ImageIcon, Music } from "lucide-react";
+import { Wand2, Image as ImageIcon, Music, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import MultipleChoiceEditor from "./quiz/question-types/multiple-choice-editor";
@@ -29,9 +29,26 @@ interface QuestionEditorProps {
 export default function QuestionEditor({ question, onUpdate, passageQuestions }: QuestionEditorProps) {
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
 
   const handleFieldChange = (field: keyof Question, value: any) => {
     onUpdate({ ...question, [field]: value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'audio') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (fileType === 'image') {
+          handleFieldChange('imageUrl', reader.result as string);
+        } else {
+          handleFieldChange('audioUrl', reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleInsertSymbol = (symbol: string) => {
@@ -125,28 +142,50 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`question-image-url-${question.id}`}>Image URL (Online only)</Label>
+        <Label htmlFor={`question-image-url-${question.id}`}>Image</Label>
         <div className="flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-muted-foreground" />
             <Input
                 id={`question-image-url-${question.id}`}
-                placeholder="https://example.com/image.png"
+                placeholder="Paste image URL or upload a file"
                 value={question.imageUrl || ''}
                 onChange={(e) => handleFieldChange("imageUrl", e.target.value)}
+            />
+            <Button variant="outline" onClick={() => imageInputRef.current?.click()}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload
+            </Button>
+            <input 
+              type="file"
+              ref={imageInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => handleFileChange(e, 'image')}
             />
         </div>
          {question.imageUrl && <img src={question.imageUrl} alt="Question preview" className="mt-2 rounded-md border max-h-48 object-contain" />}
       </div>
 
        <div className="space-y-2">
-        <Label htmlFor={`question-audio-url-${question.id}`}>Audio URL (Online only)</Label>
+        <Label htmlFor={`question-audio-url-${question.id}`}>Audio</Label>
         <div className="flex items-center gap-2">
             <Music className="h-4 w-4 text-muted-foreground" />
             <Input
                 id={`question-audio-url-${question.id}`}
-                placeholder="https://example.com/audio.mp3"
+                placeholder="Paste audio URL or upload a file"
                 value={question.audioUrl || ''}
                 onChange={(e) => handleFieldChange("audioUrl", e.target.value)}
+            />
+            <Button variant="outline" onClick={() => audioInputRef.current?.click()}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload
+            </Button>
+             <input 
+              type="file"
+              ref={audioInputRef}
+              className="hidden"
+              accept="audio/*"
+              onChange={(e) => handleFileChange(e, 'audio')}
             />
         </div>
         {question.audioUrl && <audio controls src={question.audioUrl} className="mt-2 w-full" />}
