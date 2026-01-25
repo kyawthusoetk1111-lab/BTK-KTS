@@ -70,6 +70,19 @@ service cloud.firestore {
     function isImmutable(field) {
         return request.resource.data[field] == resource.data[field];
     }
+    
+    // -------------------------------------------------------------------------
+    // Public Read Rules (Collection Groups)
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Allow any signed-in user to read quizzes from any teacher.
+     * This is necessary for students to be able to list and take quizzes.
+     * Write access is still controlled by the more specific rule under /users/{userId}.
+     */
+    match /{path=**}/quizzes/{quizId} {
+      allow get, list: if isSignedIn();
+    }
 
     // -------------------------------------------------------------------------
     // User Data Rules
@@ -202,5 +215,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
