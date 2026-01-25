@@ -1,6 +1,6 @@
 'use client';
 
-import type { Quiz, Question } from '@/lib/types';
+import type { Quiz } from '@/lib/types';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
@@ -15,6 +15,7 @@ import { doc } from 'firebase/firestore';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
+import { LoadingSpinner } from './loading-spinner';
 
 interface QuizTakerProps {
     quiz: Quiz;
@@ -34,6 +35,9 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const [scrollToQuestionId, setScrollToQuestionId] = useState<string | null>(null);
 
     const [examResultId, setExamResultId] = useState<string | null>(null);
+    const [deadline, setDeadline] = useState<number | null>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+
     const [isSaving, setIsSaving] = useState(false);
     const [showSubmissionModal, setShowSubmissionModal] = useState(false);
     const [unansweredQuestions, setUnansweredQuestions] = useState(0);
@@ -42,9 +46,63 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const allQuestions = useMemo(() => quiz.sections.flatMap(s => s.questions), [quiz.sections]);
 
     useEffect(() => {
-        // Generate a unique ID for this exam attempt when the component mounts.
-        setExamResultId(crypto.randomUUID());
-    }, []);
+        if (!user) return;
+
+        const sessionKey = `quiz-session-${quiz.id}-${user.uid}`;
+        const storedSession = localStorage.getItem(sessionKey);
+        
+        if (storedSession) {
+            // Session exists, restore it
+            const { examResultId: storedExamResultId, deadline: storedDeadline } = JSON.parse(storedSession);
+            setExamResultId(storedExamResultId);
+            setDeadline(storedDeadline);
+
+            if (storedDeadline && Date.now() > storedDeadline) {
+                handleSubmit(true);
+                return;
+            }
+            
+            // Restore answers from localStorage
+            const storedAnswers = localStorage.getItem(`quiz-answers-${storedExamResultId}`);
+            if (storedAnswers) {
+                setAnswers(JSON.parse(storedAnswers));
+            }
+        } else {
+            // No session, start a new one
+            const newExamResultId = crypto.randomUUID();
+            const newDeadline = quiz.timerInMinutes ? Date.now() + quiz.timerInMinutes * 60 * 1000 : null;
+
+            setExamResultId(newExamResultId);
+            setDeadline(newDeadline);
+            
+            localStorage.setItem(sessionKey, JSON.stringify({ examResultId: newExamResultId, deadline: newDeadline }));
+            localStorage.setItem(`quiz-answers-${newExamResultId}`, JSON.stringify({})); // init empty answers
+            
+            // Create an initial document in Firestore to mark the start of the attempt
+            if (firestore) {
+                const resultDocRef = doc(firestore, 'users', user.uid, 'examResults', newExamResultId);
+                const initialData = {
+                    id: newExamResultId,
+                    quizId: quiz.id,
+                    quizName: quiz.name,
+                    answers: {},
+                    score: 0,
+                    totalPossibleScore: 0,
+                    grade: 'In Progress',
+                    submissionTime: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+                setDocumentNonBlocking(resultDocRef, initialData, { merge: false });
+            }
+        }
+
+        setIsLoaded(true);
+
+    // Using JSON.stringify on quiz.id and user.uid for stable dependency check
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, firestore, quiz.id]);
+
 
     const questionMap = useMemo(() => {
         const map: { sectionIndex: number, questionId: string }[] = [];
@@ -76,17 +134,12 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
 
         const resultDocRef = doc(firestore, 'users', user.uid, 'examResults', examResultId);
         const progressData = {
-            id: examResultId,
-            quizId: quiz.id,
-            quizName: quiz.name,
             answers: answers,
             updatedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
         };
 
         setDocumentNonBlocking(resultDocRef, progressData, { merge: true });
-
-        // Simulate save time and show confirmation
+        
         setTimeout(() => {
             setIsSaving(false);
             toast({ title: 'Progress saved!', duration: 2000 });
@@ -130,7 +183,11 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     }
     
     const handleAnswerChange = (questionId: string, answer: any) => {
-        setAnswers(prev => ({...prev, [questionId]: answer}));
+        const newAnswers = {...answers, [questionId]: answer};
+        setAnswers(newAnswers);
+        if (examResultId) {
+            localStorage.setItem(`quiz-answers-${examResultId}`, JSON.stringify(newAnswers));
+        }
     }
 
     const handleOpenSubmitModal = () => {
@@ -139,8 +196,11 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         setShowSubmissionModal(true);
     }
 
-    const handleSubmit = () => {
-        setShowSubmissionModal(false);
+    const handleSubmit = (isTimeUp: boolean = false) => {
+        if (!isLoaded || !user) return;
+        if (!isTimeUp) {
+            setShowSubmissionModal(false);
+        }
 
         let calculatedScore = 0;
         let possibleScore = 0;
@@ -175,21 +235,29 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                 totalPossibleScore: possibleScore,
                 grade: grade,
                 submissionTime: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
             const resultDoc = doc(firestore, 'users', user.uid, 'examResults', examResultId);
-            setDocumentNonBlocking(resultDoc, examResultData, { merge: false });
+            setDocumentNonBlocking(resultDoc, examResultData, { merge: true }); // Merge to not overwrite createdAt
+        }
+
+        // Clear session from localStorage
+        const sessionKey = `quiz-session-${quiz.id}-${user.uid}`;
+        localStorage.removeItem(sessionKey);
+        if (examResultId) {
+            localStorage.removeItem(`quiz-answers-${examResultId}`);
         }
 
         setScore(calculatedScore);
         setTotalPossibleScore(possibleScore);
         setIsSubmitted(true);
 
-        toast({
-            title: "Quiz Submitted!",
-            description: "Your results are ready.",
-        });
+        if (!isTimeUp) {
+            toast({
+                title: "Quiz Submitted!",
+                description: "Your results are ready.",
+            });
+        }
     }
 
     const getGradeDetails = (currentScore: number, totalScore: number) => {
@@ -233,6 +301,15 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const getPassageText = (passageId?: string): string | undefined => {
         if (!passageId) return undefined;
         return allQuestions.find(q => q.id === passageId && q.type === 'passage')?.text;
+    }
+
+    if (!isLoaded) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <LoadingSpinner />
+                <p className="ml-4">Loading your session...</p>
+            </div>
+        );
     }
 
     if (isSubmitted) {
@@ -286,8 +363,8 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                             <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
                         </div>
                         <div className="flex items-center gap-4">
-                            {quiz.timerInMinutes && quiz.timerInMinutes > 0 && (
-                                <Timer durationInMinutes={quiz.timerInMinutes} onTimeUp={handleSubmit} />
+                            {deadline && (
+                                <Timer deadline={deadline} onTimeUp={() => handleSubmit(true)} />
                             )}
                             <Button onClick={handleOpenSubmitModal}>
                                 <CheckCircle className="mr-2 h-4 w-4" />
@@ -378,7 +455,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSubmit}>
+                        <AlertDialogAction onClick={() => handleSubmit(false)}>
                             Submit
                         </AlertDialogAction>
                     </AlertDialogFooter>

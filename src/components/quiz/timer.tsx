@@ -5,36 +5,38 @@ import { Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TimerProps {
-    durationInMinutes: number;
+    deadline: number; // Deadline as a timestamp (Date.now())
     onTimeUp: () => void;
 }
 
-export function Timer({ durationInMinutes, onTimeUp }: TimerProps) {
+export function Timer({ deadline, onTimeUp }: TimerProps) {
     const { toast } = useToast();
-    const [timeLeft, setTimeLeft] = useState(durationInMinutes * 60);
+    const [timeLeft, setTimeLeft] = useState(Math.max(0, deadline - Date.now()));
 
     useEffect(() => {
-        if (timeLeft <= 0) {
-            toast({
-                title: "Time's up!",
-                description: "Your quiz has been automatically submitted.",
-                variant: "destructive"
-            })
-            onTimeUp();
-            return;
-        }
-
         const intervalId = setInterval(() => {
-            setTimeLeft(timeLeft - 1);
+            const remaining = Math.max(0, deadline - Date.now());
+            setTimeLeft(remaining);
+
+            if (remaining === 0) {
+                toast({
+                    title: "Time's up!",
+                    description: "Your quiz has been automatically submitted.",
+                    variant: "destructive"
+                });
+                onTimeUp();
+                clearInterval(intervalId);
+            }
         }, 1000);
 
         return () => clearInterval(intervalId);
-    }, [timeLeft, onTimeUp, toast]);
+    }, [deadline, onTimeUp, toast]);
 
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
+    const totalSeconds = Math.floor(timeLeft / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
 
-    const isLowTime = timeLeft < 5 * 60; // 5 minutes
+    const isLowTime = totalSeconds < 5 * 60; // 5 minutes
 
     return (
         <div className={`flex items-center gap-2 font-medium p-2 rounded-md ${isLowTime ? 'text-destructive' : ''}`}>
@@ -43,5 +45,3 @@ export function Timer({ durationInMinutes, onTimeUp }: TimerProps) {
         </div>
     )
 }
-
-    
