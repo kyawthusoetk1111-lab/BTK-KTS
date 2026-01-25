@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import MultipleChoiceEditor from "./quiz/question-types/multiple-choice-editor";
 import ShortAnswerEditor from "./quiz/question-types/short-answer-editor";
 import EssayEditor from "./quiz/question-types/essay-editor";
+import MatchingEditor from "./quiz/question-types/matching-editor";
+import DropdownEditor from "./quiz/question-types/dropdown-editor";
+import PassageEditor from "./quiz/question-types/passage-editor";
 
 interface QuestionEditorProps {
   question: Question;
@@ -27,13 +30,27 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
   
   const handleTypeChange = (type: QuestionType) => {
     let newOptions = question.options;
-    if (type === 'multiple-choice' && question.options.length === 0) {
+    if ((type === 'multiple-choice' || type === 'dropdown') && question.options.length === 0) {
       newOptions = [
         { id: crypto.randomUUID(), text: "", isCorrect: false },
         { id: crypto.randomUUID(), text: "", isCorrect: false },
       ]
     }
-    onUpdate({ ...question, type, options: newOptions });
+
+    let newMatchingPairs = question.matchingPairs;
+    if (type === 'matching' && question.matchingPairs.length === 0) {
+        newMatchingPairs = [
+            { id: crypto.randomUUID(), left: "", right: "" },
+            { id: crypto.randomUUID(), left: "", right: "" },
+        ]
+    }
+
+    let newPoints = question.points;
+    if (type === 'passage') {
+        newPoints = 0;
+    }
+
+    onUpdate({ ...question, type, options: newOptions, matchingPairs: newMatchingPairs, points: newPoints });
   }
   
   const handleAiPoints = () => {
@@ -47,11 +64,12 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Question</Label>
+        <Label>{question.type === 'passage' ? 'Passage Text' : 'Question'}</Label>
         <Textarea
-          placeholder="Enter the question text"
+          placeholder={question.type === 'passage' ? "Enter the passage text" : "Enter the question text"}
           value={question.text}
           onChange={(e) => handleFieldChange("text", e.target.value)}
+          rows={question.type === 'passage' ? 6 : undefined}
         />
       </div>
 
@@ -66,28 +84,30 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
               <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
               <SelectItem value="short-answer">Short Answer</SelectItem>
               <SelectItem value="essay">Essay</SelectItem>
-              <SelectItem value="matching" disabled>Matching (coming soon)</SelectItem>
-              <SelectItem value="dropdown" disabled>Dropdown (coming soon)</SelectItem>
-              <SelectItem value="passage" disabled>Passage (coming soon)</SelectItem>
+              <SelectItem value="matching">Matching</SelectItem>
+              <SelectItem value="dropdown">Dropdown</SelectItem>
+              <SelectItem value="passage">Passage</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Points</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min="0"
-              placeholder="Points"
-              value={question.points}
-              onChange={(e) => handleFieldChange("points", parseInt(e.target.value) || 0)}
-            />
-            <Button variant="ghost" size="sm" onClick={handleAiPoints}>
-                <Wand2 className="h-4 w-4 mr-2" />
-                AI Suggest
-            </Button>
+        {question.type !== 'passage' && (
+          <div className="space-y-2 md:col-span-2">
+            <Label>Points</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="0"
+                placeholder="Points"
+                value={question.points}
+                onChange={(e) => handleFieldChange("points", parseInt(e.target.value) || 0)}
+              />
+              <Button variant="ghost" size="sm" onClick={handleAiPoints}>
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  AI Suggest
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       
       <div>
@@ -97,8 +117,21 @@ export default function QuestionEditor({ question, onUpdate }: QuestionEditorPro
             onOptionsChange={(opts) => handleFieldChange('options', opts)}
           />
         )}
+        {question.type === 'dropdown' && (
+          <DropdownEditor
+            options={question.options}
+            onOptionsChange={(opts) => handleFieldChange('options', opts)}
+          />
+        )}
         {question.type === 'short-answer' && <ShortAnswerEditor />}
         {question.type === 'essay' && <EssayEditor />}
+        {question.type === 'matching' && (
+            <MatchingEditor 
+                pairs={question.matchingPairs}
+                onPairsChange={(pairs) => handleFieldChange('matchingPairs', pairs)}
+            />
+        )}
+        {question.type === 'passage' && <PassageEditor />}
       </div>
     </div>
   );
