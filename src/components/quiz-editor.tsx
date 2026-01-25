@@ -17,7 +17,6 @@ import { format } from "date-fns";
 import { Calendar } from "./ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subjects } from "@/lib/subjects";
-import { Badge } from "./ui/badge";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -29,7 +28,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
-    value: string | number
+    value: string | number | undefined
   ) => {
     setQuiz((prev) => ({ ...prev, [field]: value }));
   };
@@ -112,115 +111,127 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <Card>
-            <CardContent className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                  <h2 className="text-2xl font-bold font-headline tracking-tight">Quiz Details</h2>
-                  {quiz.examCode && (
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">Exam Code:</span>
-                        <Badge variant="outline" className="font-mono text-base px-3 py-1">{quiz.examCode}</Badge>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                            if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                                navigator.clipboard.writeText(quiz.examCode || '');
-                                toast({ title: 'Copied!', description: 'Exam code copied to clipboard.' });
-                            }
-                        }}>
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                    </div>
-                  )}
-              </div>
-              <div>
-                <Input
-                  placeholder="Quiz Name"
-                  value={quiz.name}
-                  onChange={(e) => handleQuizDetailsChange("name", e.target.value)}
-                  className="text-2xl font-bold h-12 font-headline"
-                />
-              </div>
-              <div>
-                <Textarea
-                  placeholder="Quiz Description"
-                  value={quiz.description}
-                  onChange={(e) =>
-                    handleQuizDetailsChange("description", e.target.value)
-                  }
-                />
-              </div>
-               <div>
-                <Label htmlFor="quiz-subject">Subject</Label>
-                <Select
-                    value={quiz.subject || ''}
-                    onValueChange={(value) => handleQuizDetailsChange('subject', value)}
-                >
-                    <SelectTrigger id="quiz-subject">
-                        <SelectValue placeholder="Select a subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {subjects.map((subject) => (
-                            <SelectItem key={subject} value={subject}>
-                                {subject}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="p-6 space-y-6">
+                <h2 className="text-2xl font-bold font-headline tracking-tight">Quiz Details</h2>
+
                 <div className="space-y-2">
-                    <Label htmlFor="start-date">Start Date</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn("w-full justify-start text-left font-normal", !quiz.startDate && "text-muted-foreground")}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {quiz.startDate ? format(new Date(quiz.startDate), "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={quiz.startDate ? new Date(quiz.startDate) : undefined}
-                                onSelect={(date) => handleDateChange('startDate', date)}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="end-date">End Date</Label>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn("w-full justify-start text-left font-normal", !quiz.endDate && "text-muted-foreground")}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {quiz.endDate ? format(new Date(quiz.endDate), "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={quiz.endDate ? new Date(quiz.endDate) : undefined}
-                                onSelect={(date) => handleDateChange('endDate', date)}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="timer">Timer (minutes)</Label>
+                    <Label htmlFor="quiz-name">Quiz Name</Label>
                     <Input
-                        id="timer"
-                        type="number"
-                        placeholder="e.g. 60"
-                        value={quiz.timerInMinutes || ''}
-                        onChange={(e) => handleQuizDetailsChange("timerInMinutes", parseInt(e.target.value) || 0)}
+                        id="quiz-name"
+                        placeholder="Quiz Name"
+                        value={quiz.name}
+                        onChange={(e) => handleQuizDetailsChange("name", e.target.value)}
+                        className="text-xl font-bold h-11"
                     />
                 </div>
-            </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="quiz-description">Quiz Description</Label>
+                    <Textarea
+                        id="quiz-description"
+                        placeholder="A brief summary of what this quiz is about."
+                        value={quiz.description}
+                        onChange={(e) => handleQuizDetailsChange("description", e.target.value)}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="quiz-subject">Subject</Label>
+                        <Select
+                            value={quiz.subject || ''}
+                            onValueChange={(value) => handleQuizDetailsChange('subject', value)}
+                        >
+                            <SelectTrigger id="quiz-subject">
+                                <SelectValue placeholder="Select a subject" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {subjects.map((subject) => (
+                                    <SelectItem key={subject} value={subject}>
+                                        {subject}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="exam-code">Exam Code</Label>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                id="exam-code"
+                                placeholder="e.g. EXAM-101"
+                                value={quiz.examCode || ''}
+                                onChange={(e) => handleQuizDetailsChange("examCode", e.target.value)}
+                                className="font-mono"
+                            />
+                            <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => {
+                                if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                    navigator.clipboard.writeText(quiz.examCode || '');
+                                    toast({ title: 'Copied!', description: 'Exam code copied to clipboard.' });
+                                }
+                            }}>
+                                <Copy className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="start-date">Start Date</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn("w-full justify-start text-left font-normal", !quiz.startDate && "text-muted-foreground")}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {quiz.startDate ? format(new Date(quiz.startDate), "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={quiz.startDate ? new Date(quiz.startDate) : undefined}
+                                    onSelect={(date) => handleDateChange('startDate', date)}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="end-date">End Date</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn("w-full justify-start text-left font-normal", !quiz.endDate && "text-muted-foreground")}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {quiz.endDate ? format(new Date(quiz.endDate), "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={quiz.endDate ? new Date(quiz.endDate) : undefined}
+                                    onSelect={(date) => handleDateChange('endDate', date)}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="timer">Timer (minutes)</Label>
+                        <Input
+                            id="timer"
+                            type="number"
+                            placeholder="e.g. 60"
+                            value={quiz.timerInMinutes || ''}
+                            onChange={(e) => handleQuizDetailsChange("timerInMinutes", e.target.value ? parseInt(e.target.value) : undefined)}
+                        />
+                    </div>
+                </div>
             </CardContent>
           </Card>
 

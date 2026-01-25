@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import type { Question, QuestionType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import MatchingEditor from "./quiz/question-types/matching-editor";
 import DropdownEditor from "./quiz/question-types/dropdown-editor";
 import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropdowns-editor";
 import TrueFalseEditor from "./quiz/question-types/true-false-editor";
+import { MathTypeHelper } from "./math-type-helper";
 
 interface QuestionEditorProps {
   question: Question;
@@ -25,9 +27,30 @@ interface QuestionEditorProps {
 
 export default function QuestionEditor({ question, onUpdate, passageQuestions }: QuestionEditorProps) {
   const { toast } = useToast();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFieldChange = (field: keyof Question, value: any) => {
     onUpdate({ ...question, [field]: value });
+  };
+
+  const handleInsertSymbol = (symbol: string) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + symbol + text.substring(end);
+      
+      handleFieldChange('text', newText);
+
+      // Focus and set cursor position after re-render
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + symbol.length;
+        }
+      }, 0);
+    }
   };
   
   const handleTypeChange = (type: QuestionType) => {
@@ -74,8 +97,13 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>{question.type === 'passage' ? 'Passage Text' : 'Question'}</Label>
+        <div className="flex justify-between items-center mb-1">
+          <Label htmlFor={`question-text-${question.id}`}>{question.type === 'passage' ? 'Passage Text' : 'Question'}</Label>
+          <MathTypeHelper onInsert={handleInsertSymbol} />
+        </div>
         <Textarea
+          id={`question-text-${question.id}`}
+          ref={textareaRef}
           placeholder={
             question.type === 'passage' 
             ? "Enter the passage text. Use [[1]], [[2]], etc. to mark where dropdowns should appear. You can also leave it as plain text to be referenced by other questions."
