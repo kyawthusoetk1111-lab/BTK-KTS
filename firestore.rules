@@ -1,36 +1,37 @@
 /**
  * Core Philosophy: This ruleset enforces a strict, multi-tiered security model.
- * A core principle is path-based ownership, where a user's private data, such as quizzes and questions,
- * is stored in a hierarchical structure under their unique user ID. This provides strong, inherited
- * security guarantees. For globally accessible data like exam results, security is managed via a
- * denormalized `userId` field within the document itself, ensuring users can only access their own records.
+ * A core principle is path-based ownership, where a user's private data is stored in a hierarchical
+ * structure under their unique user ID. For globally accessible data like quizzes, security is managed
+ * via a denormalized `ownerId` field within the document itself, ensuring users can only write to their
+ * own records while allowing broad read access for students.
  *
  * Data Structure:
- * - /users/{userId}/... : All user-specific data, including their profile, quizzes, sections, and questions,
- *   is nested under this path. This creates a secure data silo for each user.
- * - /passages/{passageId}/... : A top-level collection for public, read-only content that can be shared across quizzes.
+ * - /users/{userId}/... : Private user data and exam results are nested here.
+ * - /quizzes/{quizId}/... : Quizzes are in a top-level collection to allow for easy listing by all users.
+ * - /passages/{passageId}/... : A top-level collection for public, read-only content.
  *
  * Key Security Decisions:
  * - Default Deny: All paths are closed by default. Access must be explicitly granted.
- * - Strict Ownership: All data under `/users/{userId}` is strictly accessible only to the authenticated
- *   user whose UID matches `{userId}`.
+ * - Ownership via `ownerId`: Write access to quizzes and their sub-collections is controlled by an `ownerId`
+ *   field in the document data, which must match the authenticated user's UID.
+ * - Public Quiz Listing: The top-level `/quizzes` collection is readable by any authenticated user,
+ *   enabling students to browse and take any available quiz.
  * - No User Listing: The rules do not allow for querying the top-level `/users` collection, preventing
  *   the exposure of the user base.
  * - Secure Result Handling: Exam results are stored in a subcollection under the user, e.g.,
  *   `/users/{userId}/examResults/{examResultId}`. This path-based ownership guarantees that
  *   users can only read, write, and query their own results.
- * - Public Read-Only Content: The `/passages` collection is publicly readable by any user, but all write
- *   operations are disabled to protect shared content integrity.
  *
  * Denormalization for Authorization:
- * To ensure high-performance and secure authorization, this ruleset relies on denormalization.
- * - Path-based Ownership: Instead of using `get()` calls to check ownership, the user's ID is part of the
- *   document path (e.g., `/users/{userId}/...`), making ownership checks instantaneous.
+ * To ensure high-performance and secure authorization without using expensive `get()` calls in rules,
+ * this ruleset relies on denormalization.
+ * - `ownerId` Field: Instead of checking a parent document, rules check an `ownerId` field directly
+ *   on the document being written to.
  *
  * Structural Segregation:
- * The data model separates private user data (`/users/{userId}/quizzes`) from public shared data (`/passages`).
- * This segregation simplifies rules, improves query performance, and enhances security by preventing accidental
- * cross-collection data exposure.
+ * The data model separates private user data (`/users/{userId}`) from shared quiz data (`/quizzes`) and
+ * public content (`/passages`). This segregation simplifies rules, improves query performance, and enhances
+ * security by preventing accidental cross-collection data exposure.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -49,18 +50,10 @@ service cloud.firestore {
 
     /**
      * Checks if the currently authenticated user's UID matches the given userId.
-     * This is the core of our path-based ownership model.
+     * This is the core of our ownership model.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * Checks for ownership on an existing document. Used for update and delete.
-     * Ensures the operation targets a document that actually exists.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
     }
 
     /**
@@ -72,115 +65,77 @@ service cloud.firestore {
     }
     
     // -------------------------------------------------------------------------
-    // Public Read Rules (Collection Groups)
-    // -------------------------------------------------------------------------
-
-    /**
-     * @description Allow any signed-in user to read quizzes from any teacher.
-     * This is necessary for students to be able to list and take quizzes.
-     * Write access is still controlled by the more specific rule under /users/{userId}.
-     */
-    match /{path=**}/quizzes/{quizId} {
-      allow get, list: if isSignedIn();
-    }
-
-    // -------------------------------------------------------------------------
     // User Data Rules
     // -------------------------------------------------------------------------
 
     /**
      * @description Users can create their own profile and can only read or write their own data.
      * @path /users/{userId}
-     * @allow (create) a new user creating their own user document: auth.uid === userId.
-     * @deny (get) an authenticated user trying to read another user's profile.
-     * @principle Restricts access to a user's own data tree and allows self-creation of a user profile.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false; // Disallow listing all users for security.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId);
+
+       /**
+       * @description Exam results are private to the user. Path-based ownership.
+       * @path /users/{userId}/examResults/{examResultId}
+       */
+      match /examResults/{examResultId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // -------------------------------------------------------------------------
+    // Quiz Rules (Top-level collection)
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Quizzes are public to read for any signed-in user, but writable only by the owner.
+     * @path /quizzes/{quizId}
+     */
+    match /quizzes/{quizId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwner(request.resource.data.ownerId);
+      allow update, delete: if isOwner(resource.data.ownerId);
 
       /**
-       * @description Quizzes are owned by the user. Only the owner can manage them.
-       * @path /users/{userId}/quizzes/{quizId}
-       * @allow (create, get, list, update, delete) an authenticated user operating on their own quizzes.
-       * @deny (any) a user attempting to access another user's quizzes.
-       * @principle Enforces strict path-based ownership inherited from the parent user document.
+       * @description Sections are public to read, but writable only by the quiz owner.
+       * Ownership is determined by checking the ownerId of the quiz document being written to.
+       * A `get()` call is used here as it's a necessary check for writes to a subcollection
+       * when ownership is based on the parent document.
        */
-      match /quizzes/{quizId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isExistingOwner(userId);
+      match /sections/{sectionId} {
+        allow get, list: if isSignedIn();
+        allow write: if get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId == request.auth.uid;
 
         /**
-         * @description Sections are owned by the user who owns the quiz.
-         * @path /users/{userId}/quizzes/{quizId}/sections/{sectionId}
-         * @allow (any) an authenticated user operating on their own sections within their own quiz.
-         * @deny (any) a user attempting to access sections in another user's quiz.
-         * @principle Enforces strict path-based ownership inherited from the parent user document.
+         * @description Questions follow the same pattern as sections.
          */
-        match /sections/{sectionId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId);
-          allow update, delete: if isExistingOwner(userId);
+        match /questions/{questionId} {
+          allow get, list: if isSignedIn();
+          allow write: if get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId == request.auth.uid;
 
           /**
-           * @description Questions are owned by the user who owns the quiz.
-           * @path /users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}
-           * @allow (any) an authenticated user operating on their own questions.
-           * @deny (any) a user attempting to access another user's questions.
-           * @principle Enforces strict path-based ownership inherited from the parent user document.
+           * @description Answer options follow the same pattern.
            */
-          match /questions/{questionId} {
-            allow get, list: if isOwner(userId);
-            allow create: if isOwner(userId);
-            allow update, delete: if isExistingOwner(userId);
+          match /answerOptions/{answerOptionId} {
+            allow get, list: if isSignedIn();
+            allow write: if get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId == request.auth.uid;
+          }
 
-            /**
-             * @description Answer options are owned by the user who owns the question.
-             * @path /users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/answerOptions/{answerOptionId}
-             * @allow (any) an authenticated user operating on their own answer options.
-             * @deny (any) a user attempting to access another user's answer options.
-             * @principle Enforces strict path-based ownership inherited from the parent user document.
-             */
-            match /answerOptions/{answerOptionId} {
-              allow get, list: if isOwner(userId);
-              allow create: if isOwner(userId);
-              allow update, delete: if isExistingOwner(userId);
-            }
-
-            /**
-             * @description Matching pairs are owned by the user who owns the question.
-             * @path /users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/matching/{matchingId}
-             * @allow (any) an authenticated user operating on their own matching pairs.
-             * @deny (any) a user attempting to access another user's matching pairs.
-             * @principle Enforces strict path-based ownership inherited from the parent user document.
-             */
-            match /matching/{matchingId} {
-              allow get, list: if isOwner(userId);
-              allow create: if isOwner(userId);
-              allow update, delete: if isExistingOwner(userId);
-            }
+          /**
+           * @description Matching pairs follow the same pattern.
+           */
+          match /matching/{matchingId} {
+            allow get, list: if isSignedIn();
+            allow write: if get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId == request.auth.uid;
           }
         }
       }
-
-       /**
-       * @description Exam results are private to the user.
-       * @path /users/{userId}/examResults/{examResultId}
-       * @allow (any) an authenticated user operating on their own results.
-       * @deny (any) a user attempting to access another user's results.
-       * @principle Enforces strict path-based ownership.
-       */
-      match /examResults/{examResultId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if isExistingOwner(userId);
-      }
     }
-
 
     // -------------------------------------------------------------------------
     // Public Content Rules
@@ -189,28 +144,18 @@ service cloud.firestore {
     /**
      * @description Passages are public, read-only content. Anyone can view them.
      * @path /passages/{passageId}
-     * @allow (get, list) any user, signed in or not, to read passages.
-     * @deny (create, update, delete) all write operations to protect shared content.
-     * @principle Provides public read access while preventing modification by clients.
      */
     match /passages/{passageId} {
       allow get, list: if true;
-      allow create: if false; // TODO: Implement admin or teacher role for creating passages.
-      allow update: if false; // TODO: Implement admin or teacher role for updating passages.
-      allow delete: if false; // TODO: Implement admin or teacher role for deleting passages.
+      allow write: if false; // TODO: Implement admin or teacher role for writes.
 
       /**
-       * @description Passage questions are public and read-only, inheriting from the parent passage.
+       * @description Passage questions are public and read-only.
        * @path /passages/{passageId}/passageQuestions/{passageQuestionId}
-       * @allow (get, list) any user, signed in or not, to read passage questions.
-       * @deny (create, update, delete) all write operations.
-       * @principle Inherits public read-only access from the parent passage.
        */
       match /passageQuestions/{passageQuestionId} {
         allow get, list: if true;
-        allow create: if false; // TODO: Implement admin or teacher role for writes.
-        allow update: if false; // TODO: Implement admin or teacher role for writes.
-        allow delete: if false; // TODO: Implement admin or teacher role for writes.
+        allow write: if false; // TODO: Implement admin or teacher role for writes.
       }
     }
   }

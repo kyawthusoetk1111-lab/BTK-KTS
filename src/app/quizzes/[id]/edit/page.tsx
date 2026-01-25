@@ -3,9 +3,9 @@
 import { QuizEditor } from '@/components/quiz-editor';
 import type { Quiz } from '@/lib/types';
 import { notFound, useRouter, useParams } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { collectionGroup, query, where, limit } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 
 export default function EditQuizPage() {
   const params = useParams();
@@ -17,13 +17,12 @@ export default function EditQuizPage() {
   const firestore = useFirestore();
 
   // Data fetching for existing quiz
-  const quizQuery = useMemoFirebase(() => {
-    if (isNewQuiz || !firestore || !id || !user) return null;
-    // We use a collectionGroup query to find the quiz first.
-    return query(collectionGroup(firestore, 'quizzes'), where('id', '==', id), limit(1));
-  }, [isNewQuiz, firestore, id, user]);
+  const quizDocRef = useMemoFirebase(() => {
+    if (isNewQuiz || !firestore || !id) return null;
+    return doc(firestore, 'quizzes', id);
+  }, [isNewQuiz, firestore, id]);
 
-  const { data: quizzes, isLoading: isQuizLoading } = useCollection<Quiz>(quizQuery);
+  const { data: quiz, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
 
   // Loading state
   if (isAuthLoading || (!isNewQuiz && isQuizLoading)) {
@@ -45,6 +44,7 @@ export default function EditQuizPage() {
     const newQuizData: Quiz = {
       id: crypto.randomUUID(),
       name: 'Untitled Quiz',
+      ownerId: user.uid,
       description: 'Enter a description for your new quiz.',
       examCode: crypto.randomUUID().slice(0, 6).toUpperCase(),
       showInstantFeedback: false,
@@ -62,8 +62,6 @@ export default function EditQuizPage() {
   }
 
   // Handle existing quiz
-  const quiz = quizzes?.[0];
-
   if (!quiz) {
     // This will be hit if the query completes but finds no quiz
     notFound();

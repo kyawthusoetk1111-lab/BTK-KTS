@@ -17,8 +17,8 @@ import { Input } from './ui/input';
 import { MyGrades } from './my-grades';
 import { MyBadges } from './my-badges';
 import { Leaderboard } from './leaderboard';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collectionGroup, query, orderBy } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 
 
@@ -46,14 +46,14 @@ const hasAttempted = (quizId: string) => {
 export function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [searchCode, setSearchCode] = useState<string>('');
-  const { profile, isLoading: isProfileLoading, user } = useUserWithProfile();
+  const { profile, isLoading: isProfileLoading } = useUserWithProfile();
   const [selectedLeaderboardSubject, setSelectedLeaderboardSubject] = useState<string>(subjects[0]);
   const firestore = useFirestore();
 
   const quizzesQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collectionGroup(firestore, 'quizzes'), orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
+    if (!firestore) return null;
+    return query(collection(firestore, 'quizzes'));
+  }, [firestore]);
 
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
 

@@ -10,6 +10,10 @@
           "type": "string",
           "description": "Unique identifier for the quiz."
         },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns this quiz."
+        },
         "quizName": {
           "type": "string",
           "description": "The name of the quiz."
@@ -57,6 +61,7 @@
       },
       "required": [
         "id",
+        "ownerId",
         "quizName",
         "quizDescription",
         "totalPoints",
@@ -77,6 +82,10 @@
         "quizId": {
           "type": "string",
           "description": "Reference to Quiz. (Relationship: Quiz 1:N Section)"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns this quiz."
         },
         "sectionName": {
           "type": "string",
@@ -100,6 +109,7 @@
       "required": [
         "id",
         "quizId",
+        "ownerId",
         "sectionName",
         "sectionPoints",
         "createdAt",
@@ -119,6 +129,10 @@
         "sectionId": {
           "type": "string",
           "description": "Reference to Section. (Relationship: Section 1:N Question)"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns this quiz."
         },
         "questionType": {
           "type": "string",
@@ -146,6 +160,7 @@
       "required": [
         "id",
         "sectionId",
+        "ownerId",
         "questionType",
         "questionText",
         "points",
@@ -166,6 +181,10 @@
         "questionId": {
           "type": "string",
           "description": "Reference to Question. (Relationship: Question 1:N AnswerOption)"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns this quiz."
         },
         "optionText": {
           "type": "string",
@@ -189,6 +208,7 @@
       "required": [
         "id",
         "questionId",
+        "ownerId",
         "optionText",
         "isCorrect",
         "createdAt",
@@ -208,6 +228,10 @@
         "questionId": {
           "type": "string",
           "description": "Reference to Question. (Relationship: Question 1:N Matching)"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "The UID of the user who owns this quiz."
         },
         "leftColumnText": {
           "type": "string",
@@ -231,6 +255,7 @@
       "required": [
         "id",
         "questionId",
+        "ownerId",
         "leftColumnText",
         "rightColumnText",
         "createdAt",
@@ -443,18 +468,14 @@
         }
       },
       {
-        "path": "/users/{userId}/quizzes/{quizId}",
+        "path": "/quizzes/{quizId}",
         "definition": {
           "entityName": "Quiz",
           "schema": {
             "$ref": "#/backend/entities/Quiz"
           },
-          "description": "Stores quizzes created by the user. Path-based ownership, so only the user can access their quizzes.",
+          "description": "Stores quizzes created by teachers. Quizzes are public to read but owned by a user for writes.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (owner)."
-            },
             {
               "name": "quizId",
               "description": "The unique identifier of the quiz."
@@ -463,7 +484,7 @@
         }
       },
       {
-        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}",
+        "path": "/quizzes/{quizId}/sections/{sectionId}",
         "definition": {
           "entityName": "Section",
           "schema": {
@@ -471,10 +492,6 @@
           },
           "description": "Stores sections within a quiz. Inherits ownership from the quiz.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (owner)."
-            },
             {
               "name": "quizId",
               "description": "The unique identifier of the quiz."
@@ -487,7 +504,7 @@
         }
       },
       {
-        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}",
+        "path": "/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}",
         "definition": {
           "entityName": "Question",
           "schema": {
@@ -495,10 +512,6 @@
           },
           "description": "Stores questions within a section. Inherits ownership from the quiz and section.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (owner)."
-            },
             {
               "name": "quizId",
               "description": "The unique identifier of the quiz."
@@ -515,7 +528,7 @@
         }
       },
       {
-        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/answerOptions/{answerOptionId}",
+        "path": "/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/answerOptions/{answerOptionId}",
         "definition": {
           "entityName": "AnswerOption",
           "schema": {
@@ -523,10 +536,6 @@
           },
           "description": "Stores answer options for a question. Inherits ownership from the question.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (owner)."
-            },
             {
               "name": "quizId",
               "description": "The unique identifier of the quiz."
@@ -547,7 +556,7 @@
         }
       },
       {
-        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/matching/{matchingId}",
+        "path": "/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/matching/{matchingId}",
         "definition": {
           "entityName": "Matching",
           "schema": {
@@ -555,10 +564,6 @@
           },
           "description": "Stores matching pairs for a matching question. Inherits ownership from the question.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (owner)."
-            },
             {
               "name": "quizId",
               "description": "The unique identifier of the quiz."
@@ -638,5 +643,3 @@
     "reasoning": "The Firestore structure is designed to support a flexible exam platform with various question types and section management. The design prioritizes Authorization Independence by avoiding `get()` calls in security rules, using hierarchical paths for user-owned data and denormalizing data where necessary. Segregation is achieved by storing different data types (users, quizzes, questions, results) in separate collections.\n\nAuthorization Independence is achieved by using the following strategy:\n\n*   Path-based ownership for User-owned quizzes: `/users/{userId}/quizzes/{quizId}`. This ensures that only the owner can manage their quizzes. Section and questions are nested under quizzes.\n\n*   Path-based ownership for User-owned exam results: `/users/{userId}/examResults/{examResultId}`. This ensures that only the student can access their results.\n\nThe design supports QAPs through:\n\n*   Structural Segregation: separating user data, quiz data, and results into different collections allowing efficient and secure `list` operations without filtering based on data content.\n*   Path Based Ownership: for entities that represent a `User 1:N Entity` relationship (e.g., a `User` has many `Quizzes`), path-based ownership like `/users/{userId}/quizzes/{quizId}` is used. This structure is highly secure and makes ownership-based security rules simple and efficient."
   }
 }
-
-    

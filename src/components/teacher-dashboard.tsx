@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { StudentAnalytics } from './student-analytics';
 import { GradingDashboard } from './grading-dashboard';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 
 function calculateTotalPoints(quiz: Quiz) {
@@ -40,7 +40,7 @@ export function TeacherDashboard() {
 
   const quizzesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return query(collection(firestore, 'users', user.uid, 'quizzes'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'quizzes'), where('ownerId', '==', user.uid));
   }, [user, firestore]);
 
   const { data: quizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);

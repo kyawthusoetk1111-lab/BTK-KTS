@@ -103,11 +103,12 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
     const quizToSave: Quiz = {
         ...quiz,
+        ownerId: user.uid,
         updatedAt: new Date().toISOString(),
         createdAt: quiz.createdAt || new Date().toISOString()
     }
 
-    const quizDocRef = doc(firestore, 'users', user.uid, 'quizzes', quiz.id);
+    const quizDocRef = doc(firestore, 'quizzes', quiz.id);
 
     try {
         await setDoc(quizDocRef, quizToSave, { merge: true });

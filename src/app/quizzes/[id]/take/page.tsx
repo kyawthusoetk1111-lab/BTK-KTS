@@ -2,10 +2,10 @@
 
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { QuizTaker } from '@/components/quiz-taker';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useEffect } from 'react';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { collectionGroup, query, where, limit } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import type { Quiz } from '@/lib/types';
 
 export default function TakeQuizPage() {
@@ -21,12 +21,12 @@ export default function TakeQuizPage() {
         }
       }, [user, isUserLoading, router]);
 
-    const quizQuery = useMemoFirebase(() => {
-        if (!firestore || !id || !user) return null;
-        return query(collectionGroup(firestore, 'quizzes'), where('id', '==', id), limit(1));
-    }, [firestore, id, user]);
+    const quizDocRef = useMemoFirebase(() => {
+        if (!firestore || !id) return null;
+        return doc(firestore, 'quizzes', id);
+    }, [firestore, id]);
 
-    const { data: quizzes, isLoading: isQuizLoading } = useCollection<Quiz>(quizQuery);
+    const { data: quiz, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
     
     if (isUserLoading || isQuizLoading) {
         return (
@@ -36,8 +36,6 @@ export default function TakeQuizPage() {
         );
     }
       
-    const quiz = quizzes?.[0];
-
     if (!quiz) {
         notFound();
     }

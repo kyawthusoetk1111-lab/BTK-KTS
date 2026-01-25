@@ -13,17 +13,20 @@ export interface Option {
   id: string;
   text: string;
   isCorrect: boolean;
+  ownerId?: string;
 }
 
 export interface MatchingPair {
   id: string;
   left: string;
   right: string;
+  ownerId?: string;
 }
 
 export interface InlineDropdown {
   id: string;
   options: Option[];
+  ownerId?: string;
 }
 
 export interface Question {
@@ -35,18 +38,21 @@ export interface Question {
   matchingPairs: MatchingPair[];
   dropdowns?: InlineDropdown[];
   passageId?: string;
+  ownerId?: string;
 }
 
 export interface Section {
   id: string;
   name: string;
   questions: Question[];
+  ownerId?: string;
 }
 
 export interface Quiz {
   id: string;
   name: string;
   description: string;
+  ownerId?: string;
   examCode?: string;
   sections: Section[];
   subject?: string;

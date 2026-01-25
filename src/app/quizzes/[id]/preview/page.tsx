@@ -2,10 +2,10 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { QuizPreview } from '@/components/quiz-preview';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import type { Quiz } from '@/lib/types';
-import { collectionGroup, query, where, limit } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 
 export default function PreviewQuizPage() {
@@ -16,16 +16,16 @@ export default function PreviewQuizPage() {
     const [localQuiz, setLocalQuiz] = useState<Quiz | null>(null);
     const [isLocalLoading, setIsLocalLoading] = useState(true);
 
-    const { user, isUserLoading: isAuthLoading } = useUser();
+    const { isUserLoading: isAuthLoading } = useUser();
     const firestore = useFirestore();
 
     // Data fetching for existing quiz
-    const quizQuery = useMemoFirebase(() => {
-        if (isNewQuiz || !firestore || !id || !user) return null;
-        return query(collectionGroup(firestore, 'quizzes'), where('id', '==', id), limit(1));
-    }, [isNewQuiz, firestore, id, user]);
+    const quizDocRef = useMemoFirebase(() => {
+        if (isNewQuiz || !firestore || !id) return null;
+        return doc(firestore, 'quizzes', id);
+    }, [isNewQuiz, firestore, id]);
 
-    const { data: quizzes, isLoading: isDbLoading } = useCollection<Quiz>(quizQuery);
+    const { data: quizFromDb, isLoading: isDbLoading } = useDoc<Quiz>(quizDocRef);
 
     // Effect for loading new quiz draft from localStorage
     useEffect(() => {
@@ -65,11 +65,9 @@ export default function PreviewQuizPage() {
         return <QuizPreview quiz={localQuiz!} />;
     }
 
-    const quiz = quizzes?.[0];
-
-    if (!quiz) {
+    if (!quizFromDb) {
         notFound();
     }
 
-    return <QuizPreview quiz={quiz} />;
+    return <QuizPreview quiz={quizFromDb} />;
 }
