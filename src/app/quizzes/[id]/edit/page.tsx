@@ -16,16 +16,14 @@ export default function EditQuizPage() {
   const { user, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
 
-  // Data fetching for existing quiz
   const quizDocRef = useMemoFirebase(() => {
-    if (isNewQuiz || !firestore || !id) return null;
+    if (isNewQuiz || !firestore || !id || !user) return null;
     return doc(firestore, 'quizzes', id);
-  }, [isNewQuiz, firestore, id]);
+  }, [isNewQuiz, firestore, id, user]);
 
   const { data: quiz, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
 
-  // Loading state
-  if (isAuthLoading || (!isNewQuiz && isQuizLoading)) {
+  if (isAuthLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner />
@@ -33,13 +31,11 @@ export default function EditQuizPage() {
     );
   }
 
-  // Auth check
   if (!user) {
     router.push('/login');
     return null;
   }
   
-  // Handle new quiz creation
   if (isNewQuiz) {
     const newQuizData: Quiz = {
       id: crypto.randomUUID(),
@@ -60,11 +56,23 @@ export default function EditQuizPage() {
     };
     return <QuizEditor initialQuiz={newQuizData} />;
   }
-
-  // Handle existing quiz
+  
+  if (isQuizLoading) {
+     return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+  
   if (!quiz) {
-    // This will be hit if the query completes but finds no quiz
     notFound();
+    return null;
+  }
+  
+  if (quiz.ownerId !== user.uid) {
+    notFound();
+    return null;
   }
   
   return <QuizEditor initialQuiz={quiz} />;

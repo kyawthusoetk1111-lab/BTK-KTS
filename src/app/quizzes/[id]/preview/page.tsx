@@ -16,27 +16,22 @@ export default function PreviewQuizPage() {
     const [localQuiz, setLocalQuiz] = useState<Quiz | null>(null);
     const [isLocalLoading, setIsLocalLoading] = useState(true);
 
-    const { isUserLoading: isAuthLoading } = useUser();
+    const { user, isUserLoading: isAuthLoading } = useUser();
     const firestore = useFirestore();
 
-    // Data fetching for existing quiz
     const quizDocRef = useMemoFirebase(() => {
-        if (isNewQuiz || !firestore || !id) return null;
+        if (isNewQuiz || !firestore || !id || !user) return null;
         return doc(firestore, 'quizzes', id);
-    }, [isNewQuiz, firestore, id]);
+    }, [isNewQuiz, firestore, id, user]);
 
     const { data: quizFromDb, isLoading: isDbLoading } = useDoc<Quiz>(quizDocRef);
 
-    // Effect for loading new quiz draft from localStorage
     useEffect(() => {
         if (isNewQuiz) {
             try {
                 const storedQuizPreview = localStorage.getItem('quiz-preview');
                 if (storedQuizPreview) {
-                    const parsedQuiz = JSON.parse(storedQuizPreview);
-                    if (parsedQuiz && parsedQuiz.id && parsedQuiz.name) {
-                         setLocalQuiz(parsedQuiz);
-                    }
+                    setLocalQuiz(JSON.parse(storedQuizPreview));
                 }
             } catch (error) {
                 console.error("Failed to parse quiz preview from localStorage", error);
@@ -49,24 +44,30 @@ export default function PreviewQuizPage() {
         }
     }, [isNewQuiz]);
 
-    if (isAuthLoading || isDbLoading || isLocalLoading) {
+    if (isAuthLoading || (!isNewQuiz && isDbLoading) || (isNewQuiz && isLocalLoading)) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
                 <LoadingSpinner />
             </div>
         );
     }
+
+    if (!user) {
+        notFound();
+        return null;
+    }
     
     if (isNewQuiz) {
         if (!localQuiz) {
-            // If someone navigates to /new/preview directly without having a draft.
             notFound();
+            return null;
         }
-        return <QuizPreview quiz={localQuiz!} />;
+        return <QuizPreview quiz={localQuiz} />;
     }
 
     if (!quizFromDb) {
         notFound();
+        return null;
     }
 
     return <QuizPreview quiz={quizFromDb} />;
