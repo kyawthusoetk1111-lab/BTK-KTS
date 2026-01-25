@@ -46,10 +46,6 @@ export function TeacherSidebar() {
       if (item.href === '/quizzes') {
           return '/';
       }
-      // Use placeholder for pages that don't exist yet to avoid 404 errors.
-      if (['/students', '/billing', '/settings'].includes(item.href)) {
-          return '#';
-      }
       return item.href;
   }
 
