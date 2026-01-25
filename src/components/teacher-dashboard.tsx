@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockQuizzes } from '@/lib/data';
+import { mockQuizzes, mockLeaderboard } from '@/lib/data';
 import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, BarChart2, Code } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { StudentAnalytics } from './student-analytics';
+import { Leaderboard } from './leaderboard';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -32,6 +33,7 @@ function countQuestions(quiz: Quiz) {
 export function TeacherDashboard() {
   const { profile } = useUserWithProfile();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [selectedLeaderboardSubject, setSelectedLeaderboardSubject] = useState<string>(subjects[0]);
 
   const filteredQuizzes = selectedSubject === 'all'
     ? mockQuizzes
@@ -76,9 +78,10 @@ export function TeacherDashboard() {
         </div>
 
         <Tabs defaultValue="quizzes">
-            <TabsList className="grid w-full grid-cols-2 md:w-[400px] mb-6">
+            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6">
                 <TabsTrigger value="quizzes">My Quizzes</TabsTrigger>
                 <TabsTrigger value="results">Student Results</TabsTrigger>
+                <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
                  <div className="flex justify-end mb-4">
@@ -139,6 +142,29 @@ export function TeacherDashboard() {
             </TabsContent>
             <TabsContent value="results">
                 <StudentAnalytics />
+            </TabsContent>
+            <TabsContent value="leaderboards">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Leaderboards</CardTitle>
+                      <CardDescription>Top student performers by subject.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      <div className="w-full md:w-64">
+                          <Select value={selectedLeaderboardSubject} onValueChange={setSelectedLeaderboardSubject}>
+                              <SelectTrigger>
+                                  <SelectValue placeholder="Select a subject..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {subjects.map(subject => (
+                                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                      <Leaderboard entries={mockLeaderboard[selectedLeaderboardSubject] || []} />
+                  </CardContent>
+              </Card>
             </TabsContent>
         </Tabs>
       </main>

@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react";
+
 export type QuestionType =
   | 'multiple-choice'
   | 'true-false'
@@ -61,6 +63,7 @@ export interface UserProfile {
   email: string;
   createdAt: string;
   updatedAt: string;
+  badges?: Badge[];
 }
 
 export interface ExamResult {
@@ -74,4 +77,18 @@ export interface ExamResult {
   createdAt: string;
   updatedAt: string;
   answers: Record<string, any>;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  studentName: string;
+  score: number;
+  time: string; // e.g., "5m 32s"
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: LucideIcon;
 }

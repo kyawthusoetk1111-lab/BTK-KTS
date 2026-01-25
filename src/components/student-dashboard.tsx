@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockQuizzes } from '@/lib/data';
+import { mockQuizzes, mockLeaderboard } from '@/lib/data';
 import { BookCopy, Star, Play, Eye, Clock, CheckCircle, Search, Activity } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
@@ -15,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { Input } from './ui/input';
 import { MyGrades } from './my-grades';
+import { MyBadges } from './my-badges';
+import { Leaderboard } from './leaderboard';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -41,6 +43,7 @@ export function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [searchCode, setSearchCode] = useState<string>('');
   const { profile } = useUserWithProfile();
+  const [selectedLeaderboardSubject, setSelectedLeaderboardSubject] = useState<string>(subjects[0]);
 
   const filteredQuizzes = mockQuizzes.filter(quiz => {
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
@@ -73,9 +76,10 @@ export function StudentDashboard() {
         </div>
         
         <Tabs defaultValue="quizzes">
-            <TabsList className="grid w-full grid-cols-2 md:w-[400px] mb-6">
+            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6">
                 <TabsTrigger value="quizzes">Available Quizzes</TabsTrigger>
-                <TabsTrigger value="grades">My Grades</TabsTrigger>
+                <TabsTrigger value="grades">My Grades & Badges</TabsTrigger>
+                <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
                 <div className="flex flex-col md:flex-row gap-4 justify-end mb-4">
@@ -158,12 +162,36 @@ export function StudentDashboard() {
                 </div>
             </TabsContent>
             <TabsContent value="grades">
-                <MyGrades />
+                <div className="space-y-6">
+                    <MyGrades />
+                    <MyBadges />
+                </div>
+            </TabsContent>
+            <TabsContent value="leaderboards">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Leaderboards</CardTitle>
+                        <CardDescription>See how you stack up against your peers.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="w-full md:w-64">
+                            <Select value={selectedLeaderboardSubject} onValueChange={setSelectedLeaderboardSubject}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a subject..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {subjects.map(subject => (
+                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Leaderboard entries={mockLeaderboard[selectedLeaderboardSubject] || []} />
+                    </CardContent>
+                </Card>
             </TabsContent>
         </Tabs>
       </main>
     </div>
   );
 }
-
-    
