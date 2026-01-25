@@ -1,0 +1,105 @@
+"use client";
+
+import type { Question, QuestionType } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Wand2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+import MultipleChoiceEditor from "./quiz/question-types/multiple-choice-editor";
+import ShortAnswerEditor from "./quiz/question-types/short-answer-editor";
+import EssayEditor from "./quiz/question-types/essay-editor";
+
+interface QuestionEditorProps {
+  question: Question;
+  onUpdate: (question: Question) => void;
+}
+
+export default function QuestionEditor({ question, onUpdate }: QuestionEditorProps) {
+  const { toast } = useToast();
+
+  const handleFieldChange = (field: keyof Question, value: any) => {
+    onUpdate({ ...question, [field]: value });
+  };
+  
+  const handleTypeChange = (type: QuestionType) => {
+    let newOptions = question.options;
+    if (type === 'multiple-choice' && question.options.length === 0) {
+      newOptions = [
+        { id: crypto.randomUUID(), text: "", isCorrect: false },
+        { id: crypto.randomUUID(), text: "", isCorrect: false },
+      ]
+    }
+    onUpdate({ ...question, type, options: newOptions });
+  }
+  
+  const handleAiPoints = () => {
+    // Placeholder for AI suggestion call
+    toast({
+        title: "AI Suggestion",
+        description: "This feature is coming soon!"
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Question</Label>
+        <Textarea
+          placeholder="Enter the question text"
+          value={question.text}
+          onChange={(e) => handleFieldChange("text", e.target.value)}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Question Type</Label>
+          <Select value={question.type} onValueChange={handleTypeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a question type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+              <SelectItem value="short-answer">Short Answer</SelectItem>
+              <SelectItem value="essay">Essay</SelectItem>
+              <SelectItem value="matching" disabled>Matching (coming soon)</SelectItem>
+              <SelectItem value="dropdown" disabled>Dropdown (coming soon)</SelectItem>
+              <SelectItem value="passage" disabled>Passage (coming soon)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label>Points</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min="0"
+              placeholder="Points"
+              value={question.points}
+              onChange={(e) => handleFieldChange("points", parseInt(e.target.value) || 0)}
+            />
+            <Button variant="ghost" size="sm" onClick={handleAiPoints}>
+                <Wand2 className="h-4 w-4 mr-2" />
+                AI Suggest
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        {question.type === 'multiple-choice' && (
+          <MultipleChoiceEditor
+            options={question.options}
+            onOptionsChange={(opts) => handleFieldChange('options', opts)}
+          />
+        )}
+        {question.type === 'short-answer' && <ShortAnswerEditor />}
+        {question.type === 'essay' && <EssayEditor />}
+      </div>
+    </div>
+  );
+}
