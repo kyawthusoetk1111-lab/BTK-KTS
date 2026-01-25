@@ -1,0 +1,599 @@
+{
+  "entities": {
+    "Quiz": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Quiz",
+      "type": "object",
+      "description": "Represents a quiz or exam.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the quiz."
+        },
+        "quizName": {
+          "type": "string",
+          "description": "The name of the quiz."
+        },
+        "quizDescription": {
+          "type": "string",
+          "description": "A description of the quiz."
+        },
+        "totalPoints": {
+          "type": "number",
+          "description": "The total points possible for the quiz."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the quiz was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the quiz was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "quizName",
+        "quizDescription",
+        "totalPoints",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Section": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Section",
+      "type": "object",
+      "description": "Represents a section within a quiz.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the section."
+        },
+        "quizId": {
+          "type": "string",
+          "description": "Reference to Quiz. (Relationship: Quiz 1:N Section)"
+        },
+        "sectionName": {
+          "type": "string",
+          "description": "The name of the section."
+        },
+        "sectionPoints": {
+          "type": "number",
+          "description": "The total points possible for this section."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the section was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the section was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "quizId",
+        "sectionName",
+        "sectionPoints",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Question": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Question",
+      "type": "object",
+      "description": "Represents a question within a section.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the question."
+        },
+        "sectionId": {
+          "type": "string",
+          "description": "Reference to Section. (Relationship: Section 1:N Question)"
+        },
+        "questionType": {
+          "type": "string",
+          "description": "The type of question (e.g., multiple-choice, short-answer, essay, matching, dropdown, passage)."
+        },
+        "questionText": {
+          "type": "string",
+          "description": "The text of the question."
+        },
+        "points": {
+          "type": "number",
+          "description": "The points assigned to this question."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the question was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the question was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sectionId",
+        "questionType",
+        "questionText",
+        "points",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AnswerOption": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AnswerOption",
+      "type": "object",
+      "description": "Represents an answer option for multiple-choice or dropdown questions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the answer option."
+        },
+        "questionId": {
+          "type": "string",
+          "description": "Reference to Question. (Relationship: Question 1:N AnswerOption)"
+        },
+        "optionText": {
+          "type": "string",
+          "description": "The text of the answer option."
+        },
+        "isCorrect": {
+          "type": "boolean",
+          "description": "Indicates whether this option is the correct answer."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the option was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the option was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "questionId",
+        "optionText",
+        "isCorrect",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Matching": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Matching",
+      "type": "object",
+      "description": "Represents a pair of items for matching questions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the matching pair."
+        },
+        "questionId": {
+          "type": "string",
+          "description": "Reference to Question. (Relationship: Question 1:N Matching)"
+        },
+        "leftColumnText": {
+          "type": "string",
+          "description": "The text for the left column item."
+        },
+        "rightColumnText": {
+          "type": "string",
+          "description": "The text for the right column item."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the matching pair was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the matching pair was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "questionId",
+        "leftColumnText",
+        "rightColumnText",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Passage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Passage",
+      "type": "object",
+      "description": "Represents a passage of text for passage-based questions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the passage."
+        },
+        "passageText": {
+          "type": "string",
+          "description": "The text of the passage."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the passage was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the passage was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "passageText",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PassageQuestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PassageQuestion",
+      "type": "object",
+      "description": "Represents a question tied to a passage.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the passage question."
+        },
+        "passageId": {
+          "type": "string",
+          "description": "Reference to Passage. (Relationship: Passage 1:N PassageQuestion)"
+        },
+        "questionText": {
+          "type": "string",
+          "description": "The text of the question related to the passage."
+        },
+        "points": {
+          "type": "number",
+          "description": "The points assigned to this question."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the passage question was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the passage question was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "passageId",
+        "questionText",
+        "points",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user (teacher, student, or admin).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "userType": {
+          "type": "string",
+          "description": "The type of user (e.g., teacher, student, admin)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the user was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the user was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userType",
+        "name",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ExamResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ExamResult",
+      "type": "object",
+      "description": "Represents the result of a student taking an exam.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the exam result."
+        },
+        "quizId": {
+          "type": "string",
+          "description": "Reference to Quiz. (Relationship: Quiz 1:N ExamResult)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ExamResult)"
+        },
+        "score": {
+          "type": "number",
+          "description": "The score achieved by the student on the exam."
+        },
+        "submissionTime": {
+          "type": "string",
+          "description": "The timestamp when the student submitted the exam.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the result was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the result was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "quizId",
+        "userId",
+        "score",
+        "submissionTime",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user data. Path-based ownership, so only the user can access their data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}",
+        "definition": {
+          "entityName": "Quiz",
+          "schema": {
+            "$ref": "#/backend/entities/Quiz"
+          },
+          "description": "Stores quizzes created by the user. Path-based ownership, so only the user can access their quizzes.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner)."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}",
+        "definition": {
+          "entityName": "Section",
+          "schema": {
+            "$ref": "#/backend/entities/Section"
+          },
+          "description": "Stores sections within a quiz. Inherits ownership from the quiz.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner)."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            },
+            {
+              "name": "sectionId",
+              "description": "The unique identifier of the section."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}",
+        "definition": {
+          "entityName": "Question",
+          "schema": {
+            "$ref": "#/backend/entities/Question"
+          },
+          "description": "Stores questions within a section. Inherits ownership from the quiz and section.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner)."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            },
+            {
+              "name": "sectionId",
+              "description": "The unique identifier of the section."
+            },
+            {
+              "name": "questionId",
+              "description": "The unique identifier of the question."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/answerOptions/{answerOptionId}",
+        "definition": {
+          "entityName": "AnswerOption",
+          "schema": {
+            "$ref": "#/backend/entities/AnswerOption"
+          },
+          "description": "Stores answer options for a question. Inherits ownership from the question.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner)."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            },
+            {
+              "name": "sectionId",
+              "description": "The unique identifier of the section."
+            },
+            {
+              "name": "questionId",
+              "description": "The unique identifier of the question."
+            },
+            {
+              "name": "answerOptionId",
+              "description": "The unique identifier of the answer option."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/quizzes/{quizId}/sections/{sectionId}/questions/{questionId}/matching/{matchingId}",
+        "definition": {
+          "entityName": "Matching",
+          "schema": {
+            "$ref": "#/backend/entities/Matching"
+          },
+          "description": "Stores matching pairs for a matching question. Inherits ownership from the question.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (owner)."
+            },
+            {
+              "name": "quizId",
+              "description": "The unique identifier of the quiz."
+            },
+            {
+              "name": "sectionId",
+              "description": "The unique identifier of the section."
+            },
+            {
+              "name": "questionId",
+              "description": "The unique identifier of the question."
+            },
+            {
+              "name": "matchingId",
+              "description": "The unique identifier of the matching pair."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/passages/{passageId}",
+        "definition": {
+          "entityName": "Passage",
+          "schema": {
+            "$ref": "#/backend/entities/Passage"
+          },
+          "description": "Stores passages for passage-based questions.  Passages are global so they are not user owned.",
+          "params": [
+            {
+              "name": "passageId",
+              "description": "The unique identifier of the passage."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/passages/{passageId}/passageQuestions/{passageQuestionId}",
+        "definition": {
+          "entityName": "PassageQuestion",
+          "schema": {
+            "$ref": "#/backend/entities/PassageQuestion"
+          },
+          "description": "Stores questions associated with a passage.  Since passages are global, passage questions are global as well.",
+          "params": [
+            {
+              "name": "passageId",
+              "description": "The unique identifier of the passage."
+            },
+            {
+              "name": "passageQuestionId",
+              "description": "The unique identifier of the passage question."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/examResults/{examResultId}",
+        "definition": {
+          "entityName": "ExamResult",
+          "schema": {
+            "$ref": "#/backend/entities/ExamResult"
+          },
+          "description": "Stores exam results. This is a global collection. Security rules will need to ensure users can only access their own results. It includes the userId to support such security rules.",
+          "params": [
+            {
+              "name": "examResultId",
+              "description": "The unique identifier of the exam result."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support a flexible exam platform with various question types and section management. The design prioritizes Authorization Independence by avoiding `get()` calls in security rules, using hierarchical paths for user-owned data and denormalizing data where necessary. Segregation is achieved by storing different data types (users, quizzes, questions, results) in separate collections.\n\nAuthorization Independence is achieved by using the following strategy:\n\n*   Path-based ownership for User-owned quizzes: `/users/{userId}/quizzes/{quizId}`. This ensures that only the owner can manage their quizzes. Section and questions are nested under quizzes.\n\nThe design supports QAPs through:\n\n*   Structural Segregation: separating user data, quiz data, and results into different collections allowing efficient and secure `list` operations without filtering based on data content.\n*   Path Based Ownership: for entities that represent a `User 1:N Entity` relationship (e.g., a `User` has many `Quizzes`), path-based ownership like `/users/{userId}/quizzes/{quizId}` is used. This structure is highly secure and makes ownership-based security rules simple and efficient."
+  }
+}
