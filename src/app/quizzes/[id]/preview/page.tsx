@@ -13,36 +13,48 @@ export default function PreviewQuizPage() {
     const id = params.id as string;
     const { user, isUserLoading: isAuthLoading } = useUser();
     const firestore = useFirestore();
+
     const isNewQuiz = id === 'new';
-    
-    // For new quizzes, we need client-side state to read from localStorage
-    const [localQuiz, setLocalQuiz] = useState<Quiz | null | undefined>(undefined);
+
+    const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
+    const [isLoading, setIsLoading] = useState(true);
 
     const quizDocRef = useMemoFirebase(() => {
         if (isNewQuiz || !user || !firestore) return null;
         return doc(firestore, 'users', user.uid, 'quizzes', id);
     }, [id, user, firestore, isNewQuiz]);
-  
+
     const { data: quizFromDb, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
 
     useEffect(() => {
+        if (isAuthLoading) {
+            setIsLoading(true);
+            return;
+        }
+
         if (isNewQuiz) {
             const storedQuizPreview = localStorage.getItem('quiz-preview');
             if (storedQuizPreview) {
                 try {
-                    setLocalQuiz(JSON.parse(storedQuizPreview) as Quiz);
+                    setQuiz(JSON.parse(storedQuizPreview));
                 } catch (error) {
                     console.error("Failed to parse quiz preview from localStorage", error);
-                    setLocalQuiz(null);
+                    setQuiz(null);
                 }
             } else {
-                setLocalQuiz(null); // No preview data found
+                setQuiz(null);
+            }
+            setIsLoading(false);
+        } else { // Existing quiz
+            if (isQuizLoading) {
+                setIsLoading(true);
+            } else {
+                setQuiz(quizFromDb);
+                setIsLoading(false);
             }
         }
-    }, [isNewQuiz]);
-    
-    const isLoading = isAuthLoading || (!isNewQuiz && isQuizLoading) || (isNewQuiz && localQuiz === undefined);
-    
+    }, [isNewQuiz, isAuthLoading, isQuizLoading, quizFromDb, id]);
+
     if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
@@ -50,8 +62,6 @@ export default function PreviewQuizPage() {
             </div>
         );
     }
-    
-    const quiz = isNewQuiz ? localQuiz : quizFromDb;
 
     if (!quiz) {
         notFound();

@@ -83,7 +83,9 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
   const handlePreview = () => {
     // If it's a new, unsaved quiz, store it in localStorage for the preview page to pick up.
-    localStorage.setItem('quiz-preview', JSON.stringify(quiz));
+    if (params.id === 'new') {
+      localStorage.setItem('quiz-preview', JSON.stringify(quiz));
+    }
   };
   
   const handleSave = async () => {
@@ -131,7 +133,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     }
   };
 
-  const previewId = params.id === 'new' ? 'new' : quiz.id;
+  const previewId = params.id;
 
   return (
     <div className="flex flex-col min-h-screen">
