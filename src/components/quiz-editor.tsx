@@ -91,6 +91,8 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     });
   };
 
+  const previewId = params.id === 'new' ? 'new' : quiz.id;
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
@@ -103,7 +105,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
               <span className="text-sm font-medium text-muted-foreground">
                 Total Points: {calculateTotalPoints()}
               </span>
-              <Link href={`/quizzes/${quiz.id}/preview`} target="_blank" onClick={handlePreview}>
+              <Link href={`/quizzes/${previewId}/preview`} target="_blank" onClick={handlePreview}>
                 <Button variant="outline">
                     <Eye className="mr-2 h-4 w-4" />
                     Preview

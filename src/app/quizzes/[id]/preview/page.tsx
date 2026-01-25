@@ -16,21 +16,21 @@ export default function PreviewQuizPage() {
 
     useEffect(() => {
         // This effect should only run on the client where localStorage is available.
-        let quizData: Quiz | undefined = mockQuizzes.find(q => q.id === id);
+        let quizData: Quiz | undefined;
 
-        if (!quizData) {
+        if (id === 'new') {
             const storedQuizPreview = localStorage.getItem('quiz-preview');
             if (storedQuizPreview) {
                 try {
-                    const parsedQuiz = JSON.parse(storedQuizPreview) as Quiz;
-                    if (parsedQuiz.id === id) {
-                        quizData = parsedQuiz;
-                    }
+                    quizData = JSON.parse(storedQuizPreview) as Quiz;
                 } catch (error) {
                     console.error("Failed to parse quiz preview from localStorage", error);
                 }
             }
+        } else {
+            quizData = mockQuizzes.find(q => q.id === id);
         }
+
         setQuiz(quizData || null); // Set to null if not found
     }, [id]);
 
