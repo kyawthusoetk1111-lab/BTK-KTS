@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Award, ClipboardCheck, Calendar, Activity, Clock, CheckCircle, Search } from 'lucide-react';
+import { BookCopy, Star, Play, Eye, Clock, CheckCircle, Search, Activity } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { subjects } from '@/lib/subjects';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { Input } from './ui/input';
+import { MyGrades } from './my-grades';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -29,17 +30,12 @@ function countQuestions(quiz: Quiz) {
   }, 0);
 }
 
-const mockResults = [
-    { id: 'res-1', quizId: 'quiz-1', quizName: 'General Knowledge Challenge', date: '2024-05-20', score: '8/10', grade: 'A' },
-    { id: 'res-2', quizId: 'quiz-2', quizName: 'Advanced Mathematics', date: '2024-05-18', score: '18/25', grade: 'B*' },
-];
-
-const getGradeColor = (grade: string) => {
-    if (grade.includes('A')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400 border-emerald-500/50';
-    if (grade.includes('B')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400 border-blue-500/50';
-    if (grade.includes('C')) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-400 border-orange-500/50';
-    return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400 border-red-500/50';
-}
+// NOTE: This is now using mock data for quizzes.
+// We can connect this to Firestore in a future step.
+const hasAttempted = (quizId: string) => {
+  // In a real app, you would check against the fetched user's results.
+  return false;
+};
 
 export function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -108,7 +104,7 @@ export function StudentDashboard() {
                  </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredQuizzes.map((quiz) => {
-                    const hasAttempted = mockResults.some(result => result.quizId === quiz.id);
+                    const attempted = hasAttempted(quiz.id);
                     return (
                     <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg border-transparent hover:border-primary/50">
                     <CardHeader>
@@ -137,7 +133,7 @@ export function StudentDashboard() {
                         )}
                     </CardContent>
                     <CardFooter className="flex gap-2 bg-muted/50 p-3 rounded-b-lg">
-                        {hasAttempted ? (
+                        {attempted ? (
                             <Button size="sm" className="w-full flex-1" disabled>
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Attempted
@@ -162,39 +158,12 @@ export function StudentDashboard() {
                 </div>
             </TabsContent>
             <TabsContent value="grades">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>My Grades</CardTitle>
-                        <CardDescription>Here are the results from your recent quiz attempts.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {mockResults.map((result) => (
-                          <Card key={result.id} className="flex flex-col">
-                            <CardHeader className="flex-row items-center justify-between pb-2">
-                              <CardTitle className="text-base font-medium">{result.quizName}</CardTitle>
-                              <Badge variant="outline" className={getGradeColor(result.grade)}>
-                                <Award className="mr-1 h-3 w-3"/>{result.grade}
-                              </Badge>
-                            </CardHeader>
-                            <CardContent className="flex-grow flex justify-between items-center text-sm text-muted-foreground pt-2">
-                              <div className="flex items-center gap-2">
-                                <ClipboardCheck className="h-4 w-4" />
-                                <span>Score: {result.score}</span>
-                              </div>
-                               <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4" />
-                                <span>{result.date}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                </Card>
+                <MyGrades />
             </TabsContent>
         </Tabs>
       </main>
     </div>
   );
 }
+
+    

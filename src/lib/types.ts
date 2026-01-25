@@ -61,3 +61,18 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ExamResult {
+  id: string;
+  quizId: string;
+  quizName: string;
+  score: number;
+  totalPossibleScore: number;
+  grade: string;
+  submissionTime: string;
+  createdAt: string;
+  updatedAt: string;
+  answers: Record<string, any>;
+}
+
+    

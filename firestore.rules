@@ -9,8 +9,6 @@
  * - /users/{userId}/... : All user-specific data, including their profile, quizzes, sections, and questions,
  *   is nested under this path. This creates a secure data silo for each user.
  * - /passages/{passageId}/... : A top-level collection for public, read-only content that can be shared across quizzes.
- * - /examResults/{examResultId}: A top-level collection where each document represents a single exam attempt.
- *   Access is not path-based but is controlled by an internal `userId` field.
  *
  * Key Security Decisions:
  * - Default Deny: All paths are closed by default. Access must be explicitly granted.
@@ -18,9 +16,9 @@
  *   user whose UID matches `{userId}`.
  * - No User Listing: The rules do not allow for querying the top-level `/users` collection, preventing
  *   the exposure of the user base.
- * - Secure Result Handling: Users can create their own exam results and can only read, update, or delete
- *   their own. Listing the entire `examResults` collection is explicitly forbidden to prevent data leaks,
- *   requiring the client application to query specifically for the signed-in user's results.
+ * - Secure Result Handling: Exam results are stored in a subcollection under the user, e.g.,
+ *   `/users/{userId}/examResults/{examResultId}`. This path-based ownership guarantees that
+ *   users can only read, write, and query their own results.
  * - Public Read-Only Content: The `/passages` collection is publicly readable by any user, but all write
  *   operations are disabled to protect shared content integrity.
  *
@@ -28,14 +26,11 @@
  * To ensure high-performance and secure authorization, this ruleset relies on denormalization.
  * - Path-based Ownership: Instead of using `get()` calls to check ownership, the user's ID is part of the
  *   document path (e.g., `/users/{userId}/...`), making ownership checks instantaneous.
- * - Resource-Specific Roles: For `/examResults`, the `userId` is denormalized directly onto the document.
- *   This allows a simple rule (`resource.data.userId == request.auth.uid`) to secure the document without
- *   needing to query other collections.
  *
  * Structural Segregation:
- * The data model separates private user data (`/users/{userId}/quizzes`) from public shared data (`/passages`)
- * and semi-private user-centric data (`/examResults`). This segregation simplifies rules, improves query
- * performance, and enhances security by preventing accidental cross-collection data exposure.
+ * The data model separates private user data (`/users/{userId}/quizzes`) from public shared data (`/passages`).
+ * This segregation simplifies rules, improves query performance, and enhances security by preventing accidental
+ * cross-collection data exposure.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -75,29 +70,6 @@ service cloud.firestore {
     function isImmutable(field) {
         return request.resource.data[field] == resource.data[field];
     }
-
-    /**
-     * Validates that the user creating an ExamResult is setting the owner to themselves.
-     */
-    function isCreatingOwnResult() {
-      return isSignedIn() && request.resource.data.userId == request.auth.uid;
-    }
-
-    /**
-     * Checks if the authenticated user owns the specified ExamResult document.
-     */
-    function isResultOwner() {
-      return isSignedIn() && resource.data.userId == request.auth.uid;
-    }
-
-    /**
-     * Checks if the authenticated user owns an existing ExamResult document.
-     * Used for update and delete operations on results.
-     */
-    function isExistingResultOwner() {
-      return resource != null && isResultOwner();
-    }
-
 
     // -------------------------------------------------------------------------
     // User Data Rules
@@ -181,6 +153,19 @@ service cloud.firestore {
           }
         }
       }
+
+       /**
+       * @description Exam results are private to the user.
+       * @path /users/{userId}/examResults/{examResultId}
+       * @allow (any) an authenticated user operating on their own results.
+       * @deny (any) a user attempting to access another user's results.
+       * @principle Enforces strict path-based ownership.
+       */
+      match /examResults/{examResultId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if isExistingOwner(userId);
+      }
     }
 
 
@@ -215,25 +200,7 @@ service cloud.firestore {
         allow delete: if false; // TODO: Implement admin or teacher role for writes.
       }
     }
-
-    // -------------------------------------------------------------------------
-    // Results Rules
-    // -------------------------------------------------------------------------
-
-    /**
-     * @description Users can create their own exam results and can only read/write their own records.
-     * @path /examResults/{examResultId}
-     * @allow (create) a signed-in student creating a result for themselves (request.resource.data.userId == auth.uid).
-     * @deny (get) a student trying to read another student's exam result.
-     * @deny (list) any user trying to list all results, which would be a data leak.
-     * @principle Enforces document ownership for reads and writes using a `userId` field within the document.
-     */
-    match /examResults/{examResultId} {
-      allow get: if isResultOwner();
-      allow list: if false; // CRITICAL: Prevent listing all results. Client must query by userId.
-      allow create: if isCreatingOwnResult();
-      allow update: if isExistingResultOwner() && isImmutable('userId');
-      allow delete: if isExistingResultOwner();
-    }
   }
 }
+
+    

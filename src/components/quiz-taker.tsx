@@ -74,11 +74,11 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         setIsSaving(true);
         toast({ title: 'Saving progress...' });
 
-        const resultDocRef = doc(firestore, 'examResults', examResultId);
+        const resultDocRef = doc(firestore, 'users', user.uid, 'examResults', examResultId);
         const progressData = {
             id: examResultId,
             quizId: quiz.id,
-            userId: user.uid,
+            quizName: quiz.name,
             answers: answers,
             updatedAt: new Date().toISOString(),
             createdAt: new Date().toISOString(),
@@ -141,7 +141,6 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
 
     const handleSubmit = () => {
         setShowSubmissionModal(false);
-        handleSaveProgress(); // Save final answers
 
         let calculatedScore = 0;
         let possibleScore = 0;
@@ -168,14 +167,19 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         
         if (user && firestore && examResultId) {
             const examResultData = {
+                id: examResultId,
+                quizId: quiz.id,
+                quizName: quiz.name,
+                answers: answers,
                 score: calculatedScore,
                 totalPossibleScore: possibleScore,
                 grade: grade,
                 submissionTime: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
-            const resultDoc = doc(firestore, 'examResults', examResultId);
-            setDocumentNonBlocking(resultDoc, examResultData, { merge: true });
+            const resultDoc = doc(firestore, 'users', user.uid, 'examResults', examResultId);
+            setDocumentNonBlocking(resultDoc, examResultData, { merge: false });
         }
 
         setScore(calculatedScore);
@@ -382,3 +386,5 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         </div>
     )
 }
+
+    
