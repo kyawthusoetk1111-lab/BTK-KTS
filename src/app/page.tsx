@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { FilePlus2, BookCopy, Star, Edit, Play, Eye } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Play, Eye, Library } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUser } from '@/firebase';
@@ -36,12 +36,20 @@ export default function DashboardPage() {
             </Link>
             <div className="flex items-center gap-4">
               {user && (
-                <Link href="/quizzes/new/edit">
-                  <Button>
-                    <FilePlus2 className="mr-2 h-4 w-4" />
-                    Create New Quiz
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/question-bank">
+                    <Button variant="outline">
+                      <Library className="mr-2 h-4 w-4" />
+                      Question Bank
+                    </Button>
+                  </Link>
+                  <Link href="/quizzes/new/edit">
+                    <Button>
+                      <FilePlus2 className="mr-2 h-4 w-4" />
+                      Create New Quiz
+                    </Button>
+                  </Link>
+                </>
               )}
               <AuthButton />
             </div>
