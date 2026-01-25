@@ -10,12 +10,19 @@ interface QuestionRendererProps {
     question: Question;
     answer: any;
     onAnswerChange: (answer: any) => void;
+    passageText?: string;
 }
 
-export function QuestionRenderer({ question, answer, onAnswerChange }: QuestionRendererProps) {
+export function QuestionRenderer({ question, answer, onAnswerChange, passageText }: QuestionRendererProps) {
     
     return (
         <div className="space-y-4">
+             {passageText && (
+                <div className="p-4 bg-muted/50 rounded-lg border">
+                    <h4 className="font-semibold mb-2 text-muted-foreground">Linked Passage</h4>
+                    <p className="whitespace-pre-wrap">{passageText}</p>
+                </div>
+            )}
             <p className="text-lg font-semibold">{question.text}</p>
             
             {question.type === 'multiple-choice' && (
@@ -57,13 +64,17 @@ export function QuestionRenderer({ question, answer, onAnswerChange }: QuestionR
                 />
             )}
 
-            {(question.type === 'matching' || question.type === 'dropdown' || question.type === 'passage') && (
+            {(question.type === 'matching' || question.type === 'dropdown') && (
                 <div className="p-4 bg-muted/50 rounded-lg border text-center text-muted-foreground">
                     <p>This question type is not yet supported in the student view.</p>
+                </div>
+            )}
+            
+            {question.type === 'passage' && !question.passageId && (
+                <div className="p-4 bg-muted/50 rounded-lg border text-sm text-muted-foreground">
+                    <p>This is a passage. Questions linked to it will appear separately.</p>
                 </div>
             )}
         </div>
     )
 }
-
-    

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Quiz, Section } from '@/lib/types';
+import type { Quiz, Question } from '@/lib/types';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
@@ -10,8 +10,11 @@ import { QuestionNavigation } from './quiz/question-navigation';
 import { QuestionRenderer } from './quiz/question-renderer';
 import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { Progress } from './ui/progress';
+import { cn } from '@/lib/utils';
 
 interface QuizTakerProps {
     quiz: Quiz;
@@ -30,7 +33,18 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const [totalPossibleScore, setTotalPossibleScore] = useState(0);
     const [scrollToQuestionId, setScrollToQuestionId] = useState<string | null>(null);
 
+    const [examResultId, setExamResultId] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+    const [unansweredQuestions, setUnansweredQuestions] = useState(0);
+    const [animationDirection, setAnimationDirection] = useState<string | null>(null);
+
     const allQuestions = useMemo(() => quiz.sections.flatMap(s => s.questions), [quiz.sections]);
+
+    useEffect(() => {
+        // Generate a unique ID for this exam attempt when the component mounts.
+        setExamResultId(crypto.randomUUID());
+    }, []);
 
     const questionMap = useMemo(() => {
         const map: { sectionIndex: number, questionId: string }[] = [];
@@ -54,17 +68,53 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         }
     }, [scrollToQuestionId, currentSectionIndex]);
 
+    const handleSaveProgress = () => {
+        if (!user || !firestore || !examResultId || Object.keys(answers).length === 0) return;
+
+        setIsSaving(true);
+        toast({ title: 'Saving progress...' });
+
+        const resultDocRef = doc(firestore, 'examResults', examResultId);
+        const progressData = {
+            id: examResultId,
+            quizId: quiz.id,
+            userId: user.uid,
+            answers: answers,
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+        };
+
+        setDocumentNonBlocking(resultDocRef, progressData, { merge: true });
+
+        // Simulate save time and show confirmation
+        setTimeout(() => {
+            setIsSaving(false);
+            toast({ title: 'Progress saved!', duration: 2000 });
+        }, 1000);
+    };
+
+    const changeSection = (newIndex: number) => {
+        const direction = newIndex > currentSectionIndex ? 'left' : 'right';
+        setAnimationDirection(direction);
+
+        setTimeout(() => {
+            setCurrentSectionIndex(newIndex);
+            setAnimationDirection(null);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300); // Duration should match animation
+    }
+
     const handleNextSection = () => {
         if (currentSectionIndex < quiz.sections.length - 1) {
-            setCurrentSectionIndex(currentSectionIndex + 1);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            handleSaveProgress();
+            changeSection(currentSectionIndex + 1);
         }
     };
 
     const handlePrevSection = () => {
         if (currentSectionIndex > 0) {
-            setCurrentSectionIndex(currentSectionIndex - 1);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            handleSaveProgress();
+            changeSection(currentSectionIndex - 1);
         }
     };
 
@@ -83,7 +133,16 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         setAnswers(prev => ({...prev, [questionId]: answer}));
     }
 
+    const handleOpenSubmitModal = () => {
+        const answeredCount = Object.values(answers).filter(a => a !== undefined && a !== '' && a !== null).length;
+        setUnansweredQuestions(allQuestions.length - answeredCount);
+        setShowSubmissionModal(true);
+    }
+
     const handleSubmit = () => {
+        setShowSubmissionModal(false);
+        handleSaveProgress(); // Save final answers
+
         let calculatedScore = 0;
         let possibleScore = 0;
 
@@ -107,19 +166,16 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
 
         const { grade } = getGradeDetails(calculatedScore, possibleScore);
         
-        if (user && firestore) {
+        if (user && firestore && examResultId) {
             const examResultData = {
-                quizId: quiz.id,
-                userId: user.uid,
                 score: calculatedScore,
                 totalPossibleScore: possibleScore,
                 grade: grade,
                 submissionTime: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
-            const resultsCollection = collection(firestore, 'examResults');
-            addDocumentNonBlocking(resultsCollection, examResultData);
+            const resultDoc = doc(firestore, 'examResults', examResultId);
+            setDocumentNonBlocking(resultDoc, examResultData, { merge: true });
         }
 
         setScore(calculatedScore);
@@ -170,6 +226,10 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         return { percentage, grade, message: '', gradeColor };
     }
 
+    const getPassageText = (passageId?: string): string | undefined => {
+        if (!passageId) return undefined;
+        return allQuestions.find(q => q.id === passageId && q.type === 'passage')?.text;
+    }
 
     if (isSubmitted) {
         const { percentage, grade, message, gradeColor } = getGradeDetails(score, totalPossibleScore);
@@ -208,10 +268,13 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     }
 
     const currentSection = quiz.sections[currentSectionIndex];
+    const isLastSection = currentSectionIndex === quiz.sections.length - 1;
+    const progressValue = ((currentSectionIndex + 1) / quiz.sections.length) * 100;
 
     return (
-        <div className="flex flex-col min-h-screen">
-            <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+        <div className="flex flex-col min-h-screen bg-muted/20">
+            <Progress value={progressValue} className="fixed top-0 left-0 right-0 h-1 z-20 rounded-none" />
+            <header className="sticky top-1 z-10 bg-background/80 backdrop-blur-sm border-b">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex flex-col">
@@ -222,7 +285,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                             {quiz.timerInMinutes && quiz.timerInMinutes > 0 && (
                                 <Timer durationInMinutes={quiz.timerInMinutes} onTimeUp={handleSubmit} />
                             )}
-                            <Button onClick={handleSubmit}>
+                            <Button onClick={handleOpenSubmitModal}>
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Submit
                             </Button>
@@ -233,8 +296,16 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
 
             <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                    <div className="md:col-span-2 lg:col-span-3">
-                        <Card>
+                    <div className="md:col-span-2 lg:col-span-3 overflow-hidden">
+                        <Card
+                            key={currentSection.id}
+                            className={cn(
+                                'transition-all duration-300',
+                                animationDirection === 'left' && 'animate-out slide-out-to-left',
+                                animationDirection === 'right' && 'animate-out slide-out-to-right',
+                                !animationDirection && 'animate-in fade-in'
+                            )}
+                        >
                             <CardHeader>
                                 <CardTitle>{currentSection.name}</CardTitle>
                             </CardHeader>
@@ -247,6 +318,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                                             question={question}
                                             answer={answers[question.id]}
                                             onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
+                                            passageText={getPassageText(question.passageId)}
                                         />
                                     </div>
                                 ))}
@@ -256,15 +328,22 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                                     <ChevronLeft className="mr-2 h-4 w-4" />
                                     Previous Section
                                 </Button>
-                                <Button onClick={handleNextSection} disabled={currentSectionIndex === quiz.sections.length - 1}>
-                                    Next Section
-                                    <ChevronRight className="ml-2 h-4 w-4" />
-                                </Button>
+                                {isLastSection ? (
+                                    <Button onClick={handleOpenSubmitModal}>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Submit Exam
+                                    </Button>
+                                ) : (
+                                    <Button onClick={handleNextSection}>
+                                        Next Section
+                                        <ChevronRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                )}
                             </CardFooter>
                         </Card>
                     </div>
 
-                    <aside className="space-y-6">
+                    <aside className="space-y-6 sticky top-24 self-start">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Questions</CardTitle>
@@ -281,6 +360,25 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                     </aside>
                 </div>
             </main>
+            <AlertDialog open={showSubmissionModal} onOpenChange={setShowSubmissionModal}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {unansweredQuestions > 0 
+                                ? `You have ${unansweredQuestions} unanswered question(s). You can go back and review your answers before submitting.`
+                                : `You have answered all questions. Are you ready to submit your exam?`
+                            }
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSubmit}>
+                            Submit
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
