@@ -2,9 +2,10 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, doc, getDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { setDocumentNonBlocking } from './non-blocking-updates';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -69,8 +70,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
-    if (!auth) { // If no Auth service instance, cannot determine user state
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
+    if (!auth || !firestore) { // If no Auth service instance, cannot determine user state
+      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth or Firestore service not provided.") });
       return;
     }
 
@@ -78,7 +79,27 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
+      async (firebaseUser) => { // Auth state determined
+        if (firebaseUser) {
+          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+          try {
+            const docSnap = await getDoc(userDocRef);
+            if (!docSnap.exists()) {
+              // This is a new user, create their profile.
+              const newUserProfile = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email!,
+                name: firebaseUser.displayName || firebaseUser.email!.split('@')[0],
+                userType: 'teacher', // Default role
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              setDocumentNonBlocking(userDocRef, newUserProfile, { merge: true });
+            }
+          } catch (e) {
+             console.error("Error in onAuthStateChanged checking for user profile", e);
+          }
+        }
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error
@@ -87,7 +108,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+  }, [auth, firestore]); // Depends on the auth instance
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {

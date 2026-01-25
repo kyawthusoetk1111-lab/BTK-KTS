@@ -1,9 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
 import { FilePlus2, BookCopy, Star, Edit } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
+import { AuthButton } from '@/components/auth-button';
+import { useUser } from '@/firebase';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -20,18 +24,27 @@ function countQuestions(quiz: Quiz) {
 }
 
 export default function DashboardPage() {
+  const { user, isUserLoading } = useUser();
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold font-headline text-primary">QuizCraft Pro</h1>
-            <Link href="/quizzes/new/edit">
-              <Button>
-                <FilePlus2 className="mr-2 h-4 w-4" />
-                Create New Quiz
-              </Button>
+            <Link href="/" className="text-2xl font-bold font-headline text-primary">
+              QuizCraft Pro
             </Link>
+            <div className="flex items-center gap-4">
+              {user && (
+                <Link href="/quizzes/new/edit">
+                  <Button>
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    Create New Quiz
+                  </Button>
+                </Link>
+              )}
+              <AuthButton />
+            </div>
           </div>
         </div>
       </header>
