@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockLeaderboard } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Clock, CheckCircle, Search, Activity, FilePlus2 } from 'lucide-react';
-import type { Quiz } from '@/lib/types';
+import { BookCopy, Star, Play, Eye, Clock, CheckCircle, Search, Activity, FilePlus2, ShoppingCart } from 'lucide-react';
+import type { Quiz, Purchase } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { subjects } from '@/lib/subjects';
@@ -20,7 +20,10 @@ import { Leaderboard } from './leaderboard';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
-
+import { usePurchases } from '@/hooks/use-purchases';
+import { PaymentModal } from './payment-modal';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { format } from 'date-fns';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -36,12 +39,55 @@ function countQuestions(quiz: Quiz) {
   }, 0);
 }
 
-// NOTE: This is now using mock data for quizzes.
-// We can connect this to Firestore in a future step.
-const hasAttempted = (quizId: string) => {
-  // In a real app, you would check against the fetched user's results.
-  return false;
-};
+function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoading: boolean }) {
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-40">
+                <LoadingSpinner />
+            </div>
+        );
+    }
+
+    if (purchases.length === 0) {
+        return (
+            <div className="text-center text-muted-foreground py-16">
+                <h3 className="text-lg font-semibold">No Purchases Yet</h3>
+                <p className="text-sm">Your purchased quizzes and subscriptions will appear here.</p>
+            </div>
+        );
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>My Purchases</CardTitle>
+                <CardDescription>A history of your purchased content.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Item</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Date</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {purchases.map(p => (
+                            <TableRow key={p.id}>
+                                <TableCell className="font-medium">{p.itemDescription}</TableCell>
+                                <TableCell className="capitalize">{p.itemType}</TableCell>
+                                <TableCell>{p.amountPaid.toLocaleString()} MMK</TableCell>
+                                <TableCell>{format(new Date(p.purchaseDate), 'PP')}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+}
 
 export function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -49,6 +95,11 @@ export function StudentDashboard() {
   const { profile, isLoading: isProfileLoading } = useUserWithProfile();
   const [selectedLeaderboardSubject, setSelectedLeaderboardSubject] = useState<string>(subjects[0]);
   const firestore = useFirestore();
+
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedQuizForPayment, setSelectedQuizForPayment] = useState<Quiz | null>(null);
+
+  const { purchases, isLoading: arePurchasesLoading } = usePurchases();
 
   const quizzesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -63,7 +114,15 @@ export function StudentDashboard() {
     return subjectMatch && codeMatch;
   });
 
+  const handleBuyNow = (quiz: Quiz) => {
+    setSelectedQuizForPayment(quiz);
+    setPaymentModalOpen(true);
+  };
+
+  const isLoading = areQuizzesLoading || isProfileLoading || arePurchasesLoading;
+
   return (
+    <>
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -88,9 +147,10 @@ export function StudentDashboard() {
         </div>
         
         <Tabs defaultValue="quizzes">
-            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6">
+            <TabsList className="grid w-full grid-cols-4 md:w-[800px] mb-6">
                 <TabsTrigger value="quizzes">Available Quizzes</TabsTrigger>
                 <TabsTrigger value="grades">My Grades & Badges</TabsTrigger>
+                <TabsTrigger value="purchases">My Purchases</TabsTrigger>
                 <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
@@ -118,19 +178,21 @@ export function StudentDashboard() {
                         </Select>
                     </div>
                  </div>
-                 {areQuizzesLoading || isProfileLoading ? (
+                 {isLoading ? (
                    <div className="flex justify-center items-center h-64">
                      <LoadingSpinner />
                    </div>
                  ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredQuizzes && filteredQuizzes.length > 0 ? filteredQuizzes.map((quiz) => {
-                        const attempted = hasAttempted(quiz.id);
+                        const hasQuizAccess = !quiz.isPremium || purchases.some(p => p.itemId === quiz.id);
+
                         return (
                         <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg border-transparent hover:border-primary/50">
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
                               {quiz.subject && <Badge variant="secondary">{quiz.subject}</Badge>}
+                               {quiz.isPremium && <Badge variant="premium"><Star className="mr-1 h-3 w-3" />Premium</Badge>}
                             </div>
                             <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
                             <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
@@ -154,18 +216,18 @@ export function StudentDashboard() {
                             )}
                         </CardContent>
                         <CardFooter className="flex gap-2 bg-muted/50 p-3 rounded-b-lg">
-                            {attempted ? (
-                                <Button size="sm" className="w-full flex-1" disabled>
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Attempted
-                                </Button>
-                            ) : (
-                                <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
+                            {hasQuizAccess ? (
+                                 <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
                                     <Button size="sm" className="w-full">
                                         <Play className="mr-2 h-4 w-4" />
                                         Start Attempt
                                     </Button>
                                 </Link>
+                            ) : (
+                                <Button size="sm" className="w-full" onClick={() => handleBuyNow(quiz)}>
+                                    <ShoppingCart className="mr-2 h-4 w-4" />
+                                    Buy Now ({quiz.price?.toLocaleString()} MMK)
+                                </Button>
                             )}
                             <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
                               <Button size="sm" variant="secondary" className="w-full">
@@ -189,6 +251,9 @@ export function StudentDashboard() {
                     <MyGrades />
                     <MyBadges />
                 </div>
+            </TabsContent>
+            <TabsContent value="purchases">
+                <MyPurchases purchases={purchases} isLoading={arePurchasesLoading} />
             </TabsContent>
             <TabsContent value="leaderboards">
                 <Card>
@@ -216,5 +281,17 @@ export function StudentDashboard() {
         </Tabs>
       </main>
     </div>
+    {selectedQuizForPayment && (
+        <PaymentModal
+            isOpen={paymentModalOpen}
+            onClose={() => setPaymentModalOpen(false)}
+            itemId={selectedQuizForPayment.id}
+            itemDescription={`Quiz: ${selectedQuizForPayment.name}`}
+            amount={selectedQuizForPayment.price || 0}
+        />
+    )}
+    </>
   );
 }
+
+    

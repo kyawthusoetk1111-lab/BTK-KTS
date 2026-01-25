@@ -5,6 +5,7 @@ import { LoadingSpinner } from '@/components/loading-spinner';
 import { TeacherDashboard } from '@/components/teacher-dashboard';
 import { StudentDashboard } from '@/components/student-dashboard';
 import { LandingPage } from '@/components/landing-page';
+import AdminPage from './admin/page';
 
 export default function DashboardRouterPage() {
   const { user, profile, isLoading } = useUserWithProfile();
@@ -33,6 +34,10 @@ export default function DashboardRouterPage() {
       );
   }
 
+  if (profile.userType === 'admin') {
+    return <AdminPage />;
+  }
+
   if (profile.userType === 'teacher') {
     return <TeacherDashboard />;
   }
@@ -49,3 +54,5 @@ export default function DashboardRouterPage() {
       </div>
   );
 }
+
+    

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import SectionEditor from "@/components/section-editor";
-import { PlusCircle, Save, CalendarIcon, Eye, Copy } from "lucide-react";
+import { PlusCircle, Save, CalendarIcon, Eye, Copy, ShieldCheck, Sparkles, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "./ui/label";
@@ -21,6 +21,8 @@ import { Switch } from "./ui/switch";
 import { useParams, useRouter } from "next/navigation";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { useUserWithProfile } from "@/hooks/use-user-with-profile";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -33,7 +35,10 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const router = useRouter();
   const firestore = useFirestore();
   const { user } = useUser();
+  const { profile } = useUserWithProfile();
   const [isSaving, setIsSaving] = useState(false);
+
+  const isProTeacher = profile?.accountTier === 'pro';
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
@@ -297,18 +302,89 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="instant-feedback" className="text-base font-medium">Show Instant Feedback</Label>
-                        <p className="text-sm text-muted-foreground">
-                            Enable practice mode to show students if their answer is correct immediately.
-                        </p>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="instant-feedback" className="text-base font-medium">Show Instant Feedback</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Enable practice mode to show students if their answer is correct immediately.
+                            </p>
+                        </div>
+                        <Switch
+                            id="instant-feedback"
+                            checked={!!quiz.showInstantFeedback}
+                            onCheckedChange={(checked) => handleQuizDetailsChange("showInstantFeedback", checked)}
+                        />
                     </div>
-                    <Switch
-                        id="instant-feedback"
-                        checked={!!quiz.showInstantFeedback}
-                        onCheckedChange={(checked) => handleQuizDetailsChange("showInstantFeedback", checked)}
-                    />
+                    
+                    <div className={cn("rounded-lg border", !isProTeacher && "bg-muted/50")}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="flex items-center justify-between p-4">
+                                        <div className="space-y-0.5">
+                                            <Label htmlFor="anti-cheat" className={cn("text-base font-medium flex items-center gap-2", !isProTeacher && "text-muted-foreground")}>
+                                                <Sparkles className="h-4 w-4 text-amber-500" />
+                                                Premium: Monetize Quiz
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Charge students a fee to take this quiz.
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            id="is-premium"
+                                            checked={!!quiz.isPremium}
+                                            onCheckedChange={(checked) => handleQuizDetailsChange("isPremium", checked)}
+                                            disabled={!isProTeacher}
+                                        />
+                                    </div>
+                                </TooltipTrigger>
+                                {!isProTeacher && <TooltipContent><p>Upgrade to Pro to enable this feature.</p></TooltipContent>}
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        {quiz.isPremium && (
+                            <div className="p-4 border-t space-y-2">
+                                <Label htmlFor="price">Price (MMK)</Label>
+                                <Input 
+                                    id="price"
+                                    type="number"
+                                    placeholder="e.g., 5000"
+                                    value={quiz.price || ''}
+                                    onChange={(e) => handleQuizDetailsChange("price", e.target.value ? parseInt(e.target.value) : undefined)}
+                                    disabled={!isProTeacher}
+                                    className="max-w-xs"
+                                />
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className={cn("rounded-lg border", !isProTeacher && "bg-muted/50")}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="flex items-center justify-between p-4">
+                                        <div className="space-y-0.5">
+                                            <Label htmlFor="anti-cheat" className={cn("text-base font-medium flex items-center gap-2", !isProTeacher && "text-muted-foreground")}>
+                                                <ShieldCheck className="h-4 w-4 text-amber-500" />
+                                                Premium: Anti-Cheat Guard
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Enforces fullscreen and detects tab switching.
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            id="anti-cheat"
+                                            checked={!!quiz.enableAntiCheat}
+                                            onCheckedChange={(checked) => handleQuizDetailsChange("enableAntiCheat", checked)}
+                                            disabled={!isProTeacher}
+                                        />
+                                    </div>
+                                </TooltipTrigger>
+                                {!isProTeacher && <TooltipContent><p>Upgrade to Pro to enable this feature.</p></TooltipContent>}
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </div>
             </CardContent>
           </Card>
@@ -336,3 +412,5 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     </div>
   );
 }
+
+    

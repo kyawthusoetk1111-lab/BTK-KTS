@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, Code } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, Code, Crown } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
@@ -17,6 +17,8 @@ import { GradingDashboard } from './grading-dashboard';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
+import { UpgradeModal } from './upgrade-modal';
+import { PaymentModal } from './payment-modal';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -37,6 +39,9 @@ export function TeacherDashboard() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   const quizzesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -45,11 +50,29 @@ export function TeacherDashboard() {
 
   const { data: quizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
 
+  const isFreeTier = profile?.accountTier === 'free';
+  const quizCount = quizzes?.length || 0;
+  const freeQuizLimit = 3;
+  const hasReachedFreeLimit = isFreeTier && quizCount >= freeQuizLimit;
+
+  const handleCreateQuizClick = (e: React.MouseEvent) => {
+    if (hasReachedFreeLimit) {
+      e.preventDefault();
+      setUpgradeModalOpen(true);
+    }
+  }
+
+  const handleUpgradeNow = () => {
+    setUpgradeModalOpen(false);
+    setPaymentModalOpen(true);
+  }
+
   const filteredQuizzes = selectedSubject === 'all'
     ? quizzes
     : quizzes?.filter(quiz => quiz.subject === selectedSubject);
 
   return (
+    <>
     <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,7 +88,7 @@ export function TeacherDashboard() {
                   <span className="hidden md:inline">Question Bank</span>
                 </Button>
               </Link>
-              <Link href="/quizzes/new/edit">
+              <Link href="/quizzes/new/edit" onClick={handleCreateQuizClick}>
                 <Button size="sm">
                   <FilePlus2 className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Create Quiz</span>
@@ -85,6 +108,20 @@ export function TeacherDashboard() {
               Create, manage, and analyze your quizzes all in one place.
             </p>
           </div>
+           {isFreeTier && (
+              <Card className="bg-amber-50 border-amber-200">
+                  <CardHeader className="p-4">
+                      <CardTitle className="text-base text-amber-900">You are on the Free Plan</CardTitle>
+                      <CardDescription className="text-amber-700">
+                          You have created {quizCount} of {freeQuizLimit} quizzes.
+                      </CardDescription>
+                      <Button size="sm" className="mt-2" variant="premium" onClick={() => setUpgradeModalOpen(true)}>
+                          <Crown className="mr-2 h-4 w-4" />
+                          Upgrade to Pro
+                      </Button>
+                  </CardHeader>
+              </Card>
+          )}
         </div>
 
         <Tabs defaultValue="quizzes">
@@ -156,7 +193,7 @@ export function TeacherDashboard() {
                     <div className="col-span-full text-center text-muted-foreground py-16">
                       <h3 className="text-lg font-semibold">No Quizzes Found</h3>
                       <p className="text-sm">Get started by creating a new quiz.</p>
-                      <Link href="/quizzes/new/edit" className='mt-4 inline-block'>
+                      <Link href="/quizzes/new/edit" className='mt-4 inline-block' onClick={handleCreateQuizClick}>
                         <Button>
                           <FilePlus2 className="mr-2 h-4 w-4" />
                           Create Quiz
@@ -176,5 +213,20 @@ export function TeacherDashboard() {
         </Tabs>
       </main>
     </div>
+    <UpgradeModal 
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        onUpgrade={handleUpgradeNow}
+    />
+    <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        itemId="pro-upgrade"
+        itemDescription="QuizCraft Pro Subscription"
+        amount={5000}
+    />
+    </>
   );
 }
+
+    

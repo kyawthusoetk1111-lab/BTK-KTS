@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Timer } from './quiz/timer';
 import { QuestionNavigation } from './quiz/question-navigation';
 import { QuestionRenderer } from './quiz/question-renderer';
-import { ChevronLeft, ChevronRight, CheckCircle, Menu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Menu, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { LoadingSpinner } from './loading-spinner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { ExamProctorGuard } from './exam-proctor-guard';
+import { usePurchases } from '@/hooks/use-purchases';
 
 interface QuizTakerProps {
     quiz: Quiz;
@@ -54,10 +55,15 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const [unansweredQuestions, setUnansweredQuestions] = useState(0);
     const [animationDirection, setAnimationDirection] = useState<string | null>(null);
 
+    const { purchases, isLoading: arePurchasesLoading } = usePurchases();
+    const hasPurchased = useMemo(() => purchases.some(p => p.itemId === quiz.id), [purchases, quiz.id]);
+
+    const isLocked = quiz.isPremium && !hasPurchased;
+
     const allQuestions = useMemo(() => quiz.sections.flatMap(s => s.questions), [quiz.sections]);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || isLocked) return;
 
         const sessionKey = `quiz-session-${quiz.id}-${user.uid}`;
         const storedSession = localStorage.getItem(sessionKey);
@@ -110,9 +116,8 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
 
         setIsLoaded(true);
 
-    // Using JSON.stringify on quiz.id and user.uid for stable dependency check
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, firestore, quiz.id]);
+    }, [user, firestore, quiz.id, isLocked]);
 
 
     const questionMap = useMemo(() => {
@@ -178,7 +183,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const handlePrevSection = () => {
         if (currentSectionIndex > 0) {
             handleSaveProgress();
-            changeSection(currentSectionIndex - 1);
+            changeSection(currentSectionIndex + 1);
         }
     };
 
@@ -315,6 +320,37 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         return allQuestions.find(q => q.id === passageId && q.type === 'passage')?.text;
     }
 
+    if (arePurchasesLoading) {
+         return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <LoadingSpinner />
+                <p className="ml-4">Loading...</p>
+            </div>
+        );
+    }
+    
+    if (isLocked) {
+        return (
+             <div className="flex items-center justify-center min-h-screen bg-background">
+                <Card className="w-full max-w-md text-center">
+                    <CardHeader>
+                        <CardTitle className="text-2xl font-bold font-headline">Premium Quiz Locked</CardTitle>
+                        <CardDescription>You must purchase this quiz to access it.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Lock className="h-16 w-16 mx-auto text-primary" />
+                        <p>This is a premium quiz. Please go back to the dashboard to purchase it.</p>
+                    </CardContent>
+                    <CardFooter>
+                         <Button className="w-full" onClick={() => router.push('/')}>
+                            Back to Dashboard
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
+    }
+
     if (!isLoaded) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
@@ -365,7 +401,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const progressValue = ((currentSectionIndex + 1) / quiz.sections.length) * 100;
 
     return (
-        <ExamProctorGuard onSubmit={handleSubmit} isQuizActive={!isSubmitted}>
+        <ExamProctorGuard onSubmit={handleSubmit} isQuizActive={!isSubmitted && !!quiz.enableAntiCheat}>
             <div className="flex flex-col min-h-screen bg-muted/20">
                 <Progress value={progressValue} className="fixed top-0 left-0 right-0 h-1 z-20 rounded-none" />
                 <header className="sticky top-1 z-10 bg-background/80 backdrop-blur-sm border-b">
@@ -503,3 +539,5 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         </ExamProctorGuard>
     )
 }
+
+    

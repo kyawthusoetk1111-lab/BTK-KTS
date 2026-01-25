@@ -48,6 +48,18 @@
           "type": "number",
           "description": "The duration of the quiz in minutes."
         },
+        "isPremium": {
+          "type": "boolean",
+          "description": "Whether the quiz requires payment to be taken."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price to take the quiz, if it is premium."
+        },
+        "enableAntiCheat": {
+          "type": "boolean",
+          "description": "Whether to enable the anti-cheat proctoring guard."
+        },
         "createdAt": {
           "type": "string",
           "description": "The timestamp when the quiz was created.",
@@ -367,6 +379,14 @@
           "description": "The email address of the user.",
           "format": "email"
         },
+        "accountTier": {
+          "type": "string",
+          "description": "The subscription tier of the user.",
+          "enum": [
+            "free",
+            "pro"
+          ]
+        },
         "createdAt": {
           "type": "string",
           "description": "The timestamp when the user was created.",
@@ -448,6 +468,114 @@
         "totalPossibleScore",
         "grade",
         "answers"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a pending payment that requires admin verification.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user making the payment."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user, denormalized."
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "The email of the user, denormalized."
+        },
+        "itemId": {
+          "type": "string",
+          "description": "The ID of the item being purchased (e.g., quizId or 'pro-upgrade')."
+        },
+        "itemDescription": {
+          "type": "string",
+          "description": "A description of the item being purchased."
+        },
+        "amount": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string",
+          "default": "MMK"
+        },
+        "screenshotUrl": {
+          "type": "string",
+          "description": "URL of the uploaded payment proof screenshot."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "userName",
+        "userEmail",
+        "itemId",
+        "itemDescription",
+        "amount",
+        "screenshotUrl",
+        "status",
+        "createdAt"
+      ]
+    },
+    "Purchase": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Purchase",
+      "type": "object",
+      "description": "Represents a successfully completed purchase by a user.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "itemType": {
+          "type": "string",
+          "enum": [
+            "quiz",
+            "subscription"
+          ]
+        },
+        "itemDescription": {
+          "type": "string"
+        },
+        "amountPaid": {
+          "type": "number"
+        },
+        "purchaseDate": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "itemId",
+        "itemType",
+        "purchaseDate",
+        "amountPaid"
       ]
     }
   },
@@ -646,8 +774,45 @@
             }
           ]
         }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores all user payment submissions for admin verification.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "The unique identifier of the payment record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/purchases/{purchaseId}",
+        "definition": {
+          "entityName": "Purchase",
+          "schema": {
+            "$ref": "#/backend/entities/Purchase"
+          },
+          "description": "Stores verified purchases for a specific user to unlock content.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "purchaseId",
+              "description": "The unique identifier of the purchase record."
+            }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed to support a flexible exam platform with various question types and section management. The design prioritizes Authorization Independence by avoiding `get()` calls in security rules, using hierarchical paths for user-owned data and denormalizing data where necessary. Segregation is achieved by storing different data types (users, quizzes, questions, results) in separate collections.\n\nAuthorization Independence is achieved by using the following strategy:\n\n*   Path-based ownership for User-owned quizzes: `/users/{userId}/quizzes/{quizId}`. This ensures that only the owner can manage their quizzes. Section and questions are nested under quizzes.\n\n*   Path-based ownership for User-owned exam results: `/users/{userId}/examResults/{examResultId}`. This ensures that only the student can access their results.\n\nThe design supports QAPs through:\n\n*   Structural Segregation: separating user data, quiz data, and results into different collections allowing efficient and secure `list` operations without filtering based on data content.\n*   Path Based Ownership: for entities that represent a `User 1:N Entity` relationship (e.g., a `User` has many `Quizzes`), path-based ownership like `/users/{userId}/quizzes/{quizId}` is used. This structure is highly secure and makes ownership-based security rules simple and efficient."
   }
 }
+    

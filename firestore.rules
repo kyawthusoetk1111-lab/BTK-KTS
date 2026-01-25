@@ -55,6 +55,14 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    /**
+     * Checks if the user has an 'admin' role.
+     * This requires a get() call, so it should be used sparingly, primarily for admin-only write operations.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin';
+    }
 
     /**
      * Checks if a field is immutable during an update operation.
@@ -70,13 +78,14 @@ service cloud.firestore {
 
     /**
      * @description Users can create their own profile and can only read or write their own data.
+     * Admins are allowed to update user profiles (e.g. for upgrading tiers).
      * @path /users/{userId}
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Disallow listing all users for security.
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id;
+      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id || isAdmin();
       allow delete: if isOwner(userId);
 
        /**
@@ -85,6 +94,15 @@ service cloud.firestore {
        */
       match /examResults/{examResultId} {
         allow read, write: if isOwner(userId);
+      }
+      
+      /**
+       * @description A user can read their own purchases. Purchases are created by admins.
+       * @path /users/{userId}/purchases/{purchaseId}
+       */
+      match /purchases/{purchaseId} {
+        allow get, list: if isOwner(userId);
+        allow create, update, delete: if isAdmin();
       }
     }
     
@@ -158,5 +176,20 @@ service cloud.firestore {
         allow write: if false; // TODO: Implement admin or teacher role for writes.
       }
     }
+    
+    // -------------------------------------------------------------------------
+    // Monetization Rules
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Users can create their own payment records. Admins can read/write all payment records for verification.
+     * @path /payments/{paymentId}
+     */
+    match /payments/{paymentId} {
+        allow read, write: if isAdmin();
+        allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+    }
   }
 }
+
+    

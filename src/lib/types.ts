@@ -62,15 +62,19 @@ export interface Quiz {
   endDate?: string;
   timerInMinutes?: number;
   showInstantFeedback?: boolean;
+  isPremium?: boolean;
+  price?: number;
+  enableAntiCheat?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface UserProfile {
   id: string;
-  userType: 'teacher' | 'student';
+  userType: 'teacher' | 'student' | 'admin';
   name: string;
   email: string;
+  accountTier?: 'free' | 'pro';
   createdAt: string;
   updatedAt: string;
   badges?: Badge[];
@@ -116,3 +120,29 @@ export interface Badge {
   description: string;
   icon: LucideIcon;
 }
+
+export interface Payment {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  itemId: string; // e.g. quizId or 'pro-upgrade'
+  itemDescription: string;
+  amount: number;
+  currency: string;
+  screenshotUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export interface Purchase {
+  id: string;
+  userId: string;
+  itemId: string;
+  itemType: 'quiz' | 'subscription';
+  itemDescription: string;
+  amountPaid: number;
+  purchaseDate: string;
+}
+
+    
