@@ -36,7 +36,22 @@ export default function SignupPage() {
       setError('Password should be at least 6 characters.');
       return;
     }
-    initiateEmailSignUp(auth, email, password);
+    initiateEmailSignUp(auth, email, password, (error) => {
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          setError('This email address is already in use by another account.');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address.');
+          break;
+        case 'auth/weak-password':
+          setError('The password is too weak. It must be at least 6 characters long.');
+          break;
+        default:
+          setError('An unexpected error occurred during sign up.');
+          console.error('Signup Error:', error);
+      }
+    });
   };
 
   if (isUserLoading || user) {

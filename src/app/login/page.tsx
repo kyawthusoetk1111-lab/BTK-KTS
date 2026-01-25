@@ -32,7 +32,14 @@ export default function LoginPage() {
       setError('Please enter both email and password.');
       return;
     }
-    initiateEmailSignIn(auth, email, password);
+    initiateEmailSignIn(auth, email, password, (error) => {
+      if (error.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('An unexpected error occurred during login.');
+        console.error('Login Error:', error);
+      }
+    });
   };
 
   if (isUserLoading || user) {
