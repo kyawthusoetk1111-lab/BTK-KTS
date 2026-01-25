@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import SectionEditor from "@/components/section-editor";
-import { PlusCircle, Save, CalendarIcon } from "lucide-react";
+import { PlusCircle, Save, CalendarIcon, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "./ui/label";
@@ -91,6 +91,12 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
               <span className="text-sm font-medium text-muted-foreground">
                 Total Points: {calculateTotalPoints()}
               </span>
+              <Link href={`/quizzes/${quiz.id}/preview`} target="_blank">
+                <Button variant="outline">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                </Button>
+              </Link>
               <Button onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
                 Save Quiz
@@ -213,5 +219,3 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     </div>
   );
 }
-
-    

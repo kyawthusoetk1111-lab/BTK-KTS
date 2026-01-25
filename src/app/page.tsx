@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { FilePlus2, BookCopy, Star, Edit, Play } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Play, Eye } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUser } from '@/firebase';
@@ -78,15 +78,21 @@ export default function DashboardPage() {
               </CardContent>
               <CardFooter className="flex gap-2">
                 <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                  <Button className="w-full">
+                  <Button size="sm" className="w-full">
                     <Play className="mr-2 h-4 w-4" />
-                    Take Quiz
+                    Take
+                  </Button>
+                </Link>
+                 <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
+                  <Button size="sm" variant="secondary" className="w-full">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
                   </Button>
                 </Link>
                 <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
-                  <Button variant="outline" className="w-full">
+                  <Button size="sm" variant="outline" className="w-full">
                     <Edit className="mr-2 h-4 w-4" />
-                    Edit Quiz
+                    Edit
                   </Button>
                 </Link>
               </CardFooter>
@@ -97,5 +103,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
