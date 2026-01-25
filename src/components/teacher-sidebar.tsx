@@ -60,14 +60,19 @@ export function TeacherSidebar() {
               <Activity />
               {state === 'expanded' && <span className="truncate">BTK Education</span>}
             </Link>
-            <SidebarTrigger className="ml-auto text-white hover:bg-white/10 hover:text-white" />
+            <SidebarTrigger className="ml-auto text-emerald-100/80 hover:bg-emerald-400/20 hover:text-white" />
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
           {menuItems.map((item) => {
             const href = getHref(item);
-            const isActive = href !== '#' && (pathname === href || (href === '/' && item.href === '/quizzes'));
+            let isActive;
+             if (item.href === '/quizzes') {
+                isActive = pathname === '/' || pathname.startsWith('/quizzes');
+             } else {
+                isActive = pathname === href;
+             }
             
             return (
               <SidebarMenuItem key={item.label}>
@@ -76,9 +81,9 @@ export function TeacherSidebar() {
                     isActive={isActive}
                     tooltip={{children: item.label, className: "bg-slate-800 text-white border-slate-700"}}
                     className={cn(
-                      'text-gray-300 hover:bg-white/10 hover:text-white justify-start',
+                      'text-emerald-100/70 hover:bg-emerald-400/20 hover:text-white justify-start',
                       isActive &&
-                        'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.6)]'
+                        'bg-emerald-400 text-emerald-950 font-semibold shadow-lg shadow-emerald-400/20 hover:bg-emerald-400/90'
                     )}
                   >
                     <Link href={href}>
