@@ -147,7 +147,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="text-xl font-bold font-headline text-primary">
-                QuizCraft Pro
+                BTK EXAM
             </Link>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
@@ -412,5 +412,3 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     </div>
   );
 }
-
-    

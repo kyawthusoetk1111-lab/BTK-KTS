@@ -17,7 +17,7 @@ export function UpgradeModal({ isOpen, onClose, onUpgrade }: UpgradeModalProps) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-headline">
             <Rocket className="text-primary" />
-            Upgrade to QuizCraft Pro
+            Upgrade to BTK EXAM Pro
           </DialogTitle>
           <DialogDescription className="pt-2">
             You've reached the limit for the free plan. Upgrade to unlock unlimited quizzes and premium features.
@@ -47,5 +47,3 @@ export function UpgradeModal({ isOpen, onClose, onUpgrade }: UpgradeModalProps) 
     </Dialog>
   );
 }
-
-    

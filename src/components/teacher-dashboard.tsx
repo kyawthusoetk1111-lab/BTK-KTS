@@ -309,7 +309,7 @@ export function TeacherDashboard() {
           isOpen={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
           itemId="pro-upgrade"
-          itemDescription="QuizCraft Pro Subscription"
+          itemDescription="BTK EXAM Pro Subscription"
           amount={5000}
       />
        <AlertDialog open={!!quizToDelete} onOpenChange={(isOpen) => !isOpen && setQuizToDelete(null)}>
