@@ -98,10 +98,10 @@ export function LandingPage() {
                         <div className="grid md:grid-cols-2 gap-12 items-center">
                             <div className="text-center md:text-left animate-in fade-in slide-in-from-left-12 duration-1000">
                                 <h1 className="text-4xl md:text-5xl font-bold font-headline tracking-tight text-slate-900 mb-6">
-                                    အနာဂတ်မနက်ဖြန်အတွက် အကောင်းဆုံး Exam Platform
+                                    တောက်ပတဲ့ အနာဂတ်၊ BTK မှာစတင်ပါ
                                 </h1>
                                 <p className="text-lg text-slate-600 max-w-xl mx-auto md:mx-0 mb-8">
-                                    Join thousands of students and teachers using BTK Education to achieve their academic goals.
+                                    ထောင်ပေါင်းများစွာသော ကျောင်းသား၊ ဆရာများနှင့်အတူ သင်၏ပညာရေး ရည်မှန်းချက်များကို BTK Education တွင် အကောင်အထည်ဖော်လိုက်ပါ။
                                 </p>
                                 <Link href="/signup" passHref>
                                     <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-emerald-500/30">Get Started</Button>
@@ -274,3 +274,4 @@ export function LandingPage() {
         </div>
     );
 }
+    
