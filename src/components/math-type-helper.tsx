@@ -4,27 +4,41 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Calculator } from 'lucide-react';
 
-interface MathTypeHelperProps {
+interface MathEquationHelperProps {
   onInsert: (text: string) => void;
 }
 
 const mathSymbols = [
-  '+', '-', '×', '÷', '=', '≠', '<', '>', '≤', '≥',
-  'x²', 'x³', 'xⁿ', '√', '∛', 'ⁿ√', '½', '⅓', '¼',
-  'π', 'θ', 'α', 'β', 'γ', 'δ', '∑', '∫', '∞', '±', '°',
+  // Basic Operators
+  '+', '-', '×', '÷', '±', '=', '≠', '≈',
+  // Comparison
+  '<', '>', '≤', '≥', '≡', '∝',
+  // Exponents and Radicals
+  'x²', 'x³', 'xⁿ', '√', '∛', 'ⁿ√',
+  // Fractions & Misc
+  '½', '⅓', '¼', '°', '∞', '·',
+  // Greek Letters
+  'π', 'θ', 'α', 'β', 'γ', 'δ', 'ε', 'λ',
+  'μ', 'σ', 'φ', 'ω',
+  // Calculus and Vectors
+  '∑', '∫', 'd/dx', '∂', '∇', 'Δ', 'x→',
+  // Logic and Set Theory
+  '∀', '∃', '¬', '∧', '∨', '∈', '∉', '⊂',
+  '⊃', '∩', '∪',
 ];
 
-export function MathTypeHelper({ onInsert }: MathTypeHelperProps) {
+
+export function MathEquationHelper({ onInsert }: MathEquationHelperProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
           <Calculator className="h-4 w-4 mr-2" />
-          Math Helper
+          Math Equation Helper
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2">
-        <div className="grid grid-cols-6 gap-1">
+        <div className="grid grid-cols-8 gap-1">
           {mathSymbols.map((symbol) => (
             <Button
               key={symbol}

@@ -17,7 +17,7 @@ import MatchingEditor from "./quiz/question-types/matching-editor";
 import DropdownEditor from "./quiz/question-types/dropdown-editor";
 import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropdowns-editor";
 import TrueFalseEditor from "./quiz/question-types/true-false-editor";
-import { MathTypeHelper } from "./math-type-helper";
+import { MathEquationHelper } from "./math-type-helper";
 
 interface QuestionEditorProps {
   question: Question;
@@ -99,7 +99,7 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
       <div className="space-y-2">
         <div className="flex justify-between items-center mb-1">
           <Label htmlFor={`question-text-${question.id}`}>{question.type === 'passage' ? 'Passage Text' : 'Question'}</Label>
-          <MathTypeHelper onInsert={handleInsertSymbol} />
+          <MathEquationHelper onInsert={handleInsertSymbol} />
         </div>
         <Textarea
           id={`question-text-${question.id}`}
