@@ -15,6 +15,7 @@ import EssayEditor from "./quiz/question-types/essay-editor";
 import MatchingEditor from "./quiz/question-types/matching-editor";
 import DropdownEditor from "./quiz/question-types/dropdown-editor";
 import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropdowns-editor";
+import TrueFalseEditor from "./quiz/question-types/true-false-editor";
 
 interface QuestionEditorProps {
   question: Question;
@@ -35,6 +36,12 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
       newOptions = [
         { id: crypto.randomUUID(), text: "", isCorrect: false },
         { id: crypto.randomUUID(), text: "", isCorrect: false },
+      ]
+    }
+    if (type === 'true-false') {
+      newOptions = [
+          { id: crypto.randomUUID(), text: "True", isCorrect: false },
+          { id: crypto.randomUUID(), text: "False", isCorrect: false },
       ]
     }
 
@@ -89,6 +96,7 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+              <SelectItem value="true-false">True / False</SelectItem>
               <SelectItem value="short-answer">Short Answer</SelectItem>
               <SelectItem value="essay">Essay</SelectItem>
               <SelectItem value="matching">Matching</SelectItem>
@@ -140,6 +148,12 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
       <div>
         {question.type === 'multiple-choice' && (
           <MultipleChoiceEditor
+            options={question.options}
+            onOptionsChange={(opts) => handleFieldChange('options', opts)}
+          />
+        )}
+        {question.type === 'true-false' && (
+          <TrueFalseEditor
             options={question.options}
             onOptionsChange={(opts) => handleFieldChange('options', opts)}
           />
