@@ -68,11 +68,16 @@ export function TeacherSidebar() {
           {menuItems.map((item) => {
             const href = getHref(item);
             let isActive;
-             if (item.href === '/quizzes') {
+            if (href === '/') {
+                // This handles 'ပင်မစာမျက်နှာ' and 'စာမေးပွဲများ'
                 isActive = pathname === '/' || pathname.startsWith('/quizzes');
-             } else {
-                isActive = pathname === href;
-             }
+            } else if (href === '/results') {
+                // This handles both the main results page and the specific grading pages
+                isActive = pathname.startsWith('/results') || pathname.startsWith('/grading');
+            } else {
+                // This handles all other pages like /question-bank etc.
+                isActive = pathname.startsWith(href);
+            }
             
             return (
               <SidebarMenuItem key={item.label}>
@@ -81,9 +86,9 @@ export function TeacherSidebar() {
                     isActive={isActive}
                     tooltip={{children: item.label, className: "bg-slate-800 text-white border-slate-700"}}
                     className={cn(
-                      'text-emerald-100/70 hover:bg-emerald-400/20 hover:text-white justify-start',
+                      'text-emerald-200/80 hover:bg-primary hover:text-primary-foreground hover:font-semibold justify-start',
                       isActive &&
-                        'bg-emerald-400 text-emerald-950 font-semibold shadow-lg shadow-emerald-400/20 hover:bg-emerald-400/90'
+                        'bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/30'
                     )}
                   >
                     <Link href={href}>
