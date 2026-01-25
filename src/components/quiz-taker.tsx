@@ -1,7 +1,8 @@
 'use client';
 
-import type { Quiz, Question } from '@/lib/types';
+import type { Quiz } from '@/lib/types';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Timer } from './quiz/timer';
@@ -16,12 +17,16 @@ interface QuizTakerProps {
 
 export function QuizTaker({ quiz }: QuizTakerProps) {
     const { toast } = useToast();
+    const router = useRouter();
     const allQuestions = quiz.sections.flatMap(s => 
         s.questions.map(q => ({...q, sectionName: s.name}))
     );
     
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, any>>({});
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [score, setScore] = useState(0);
+    const [totalPossibleScore, setTotalPossibleScore] = useState(0);
 
     const handleNext = () => {
         if (currentQuestionIndex < allQuestions.length - 1) {
@@ -44,12 +49,93 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     }
 
     const handleSubmit = () => {
-        // In a real app, you would save the answers to the backend
-        console.log("Submitting answers:", answers);
+        let calculatedScore = 0;
+        let possibleScore = 0;
+
+        allQuestions.forEach(question => {
+            if (question.type === 'multiple-choice' || question.type === 'true-false') {
+                possibleScore += question.points;
+                const correctAnswer = question.options.find(opt => opt.isCorrect);
+                const userAnswer = answers[question.id];
+
+                if (question.type === 'true-false') {
+                    if (correctAnswer && userAnswer === correctAnswer.text) {
+                        calculatedScore += question.points;
+                    }
+                } else {
+                    if (correctAnswer && userAnswer === correctAnswer.id) {
+                        calculatedScore += question.points;
+                    }
+                }
+            }
+        });
+
+        setScore(calculatedScore);
+        setTotalPossibleScore(possibleScore);
+        setIsSubmitted(true);
+
         toast({
             title: "Quiz Submitted!",
-            description: "Your answers have been successfully submitted.",
+            description: "Your results are ready.",
         });
+    }
+
+    const getGradeDetails = () => {
+        if (totalPossibleScore === 0) {
+            return {
+                percentage: 0,
+                grade: 'N/A',
+                message: "This quiz contains no auto-gradable questions."
+            };
+        }
+        const percentage = (score / totalPossibleScore) * 100;
+        let grade = '';
+        if (percentage >= 90) grade = 'A*';
+        else if (percentage >= 80) grade = 'A';
+        else if (percentage >= 70) grade = 'B*';
+        else if (percentage >= 60) grade = 'B';
+        else if (percentage >= 50) grade = 'C*';
+        else if (percentage >= 40) grade = 'C';
+        else grade = 'D';
+
+        return { percentage, grade, message: '' };
+    }
+
+
+    if (isSubmitted) {
+        const { percentage, grade, message } = getGradeDetails();
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-background">
+                <Card className="w-full max-w-2xl text-center">
+                    <CardHeader>
+                        <CardTitle className="text-3xl font-bold font-headline">Quiz Results</CardTitle>
+                        <CardDescription>You have completed the {quiz.name} quiz.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                             <p className="text-lg text-muted-foreground">Your Grade</p>
+                             <p className="text-7xl font-bold text-primary">{grade}</p>
+                        </div>
+                        <div className="flex justify-around items-center p-4 bg-muted rounded-lg">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Score</p>
+                                <p className="text-2xl font-semibold">{score} / {totalPossibleScore}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Percentage</p>
+                                <p className="text-2xl font-semibold">{percentage.toFixed(1)}%</p>
+                            </div>
+                        </div>
+                        {message && <p className="text-muted-foreground text-sm">{message}</p>}
+                    </CardContent>
+                    <CardFooter>
+                         <Button className="w-full" onClick={() => router.push('/')}>
+                            Back to Dashboard
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
     }
 
     const currentQuestion = allQuestions[currentQuestionIndex];
@@ -124,5 +210,3 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         </div>
     )
 }
-
-    
