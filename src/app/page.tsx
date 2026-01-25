@@ -1,140 +1,51 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockQuizzes } from '@/lib/data';
-import { FilePlus2, BookCopy, Star, Edit, Play, Eye, Library } from 'lucide-react';
-import type { Quiz } from '@/lib/types';
-import { AuthButton } from '@/components/auth-button';
-import { useUser } from '@/firebase';
-import { subjects } from '@/lib/subjects';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { useUserWithProfile } from '@/hooks/use-user-with-profile';
+import { LoadingSpinner } from '@/components/loading-spinner';
+import { TeacherDashboard } from '@/components/teacher-dashboard';
+import { StudentDashboard } from '@/components/student-dashboard';
+import { LandingPage } from '@/components/landing-page';
 
-function calculateTotalPoints(quiz: Quiz) {
-  return quiz.sections.reduce((total, section) => {
-    return total + section.questions.reduce((sectionTotal, question) => {
-      return sectionTotal + question.points;
-    }, 0);
-  }, 0);
-}
+export default function DashboardRouterPage() {
+  const { user, profile, isLoading } = useUserWithProfile();
 
-function countQuestions(quiz: Quiz) {
-  return quiz.sections.reduce((total, section) => {
-    return total + section.questions.length;
-  }, 0);
-}
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
-export default function DashboardPage() {
-  const { user, isUserLoading } = useUser();
-  const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  if (!user) {
+    return <LandingPage />;
+  }
 
-  const filteredQuizzes = selectedSubject === 'all'
-    ? mockQuizzes
-    : mockQuizzes.filter(quiz => quiz.subject === selectedSubject);
+  // A user is logged in, but we might still be waiting for their profile to load.
+  // Or, a profile might not exist if creation failed.
+  if (!profile) {
+    // Show a loading/pending state until the profile is loaded or determined to be non-existent.
+     return (
+        <div className="flex flex-col items-center justify-center h-screen">
+          <LoadingSpinner />
+          <p className="mt-4 text-muted-foreground">Setting up your account...</p>
+        </div>
+      );
+  }
 
+  if (profile.userType === 'teacher') {
+    return <TeacherDashboard />;
+  }
+  
+  if (profile.userType === 'student') {
+    return <StudentDashboard />;
+  }
+
+  // Fallback for any other user type or if userType is not set
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="text-2xl font-bold font-headline text-primary">
-              QuizCraft Pro
-            </Link>
-            <div className="flex items-center gap-4">
-              {user && (
-                <>
-                  <Link href="/question-bank">
-                    <Button variant="outline">
-                      <Library className="mr-2 h-4 w-4" />
-                      Question Bank
-                    </Button>
-                  </Link>
-                  <Link href="/quizzes/new/edit">
-                    <Button>
-                      <FilePlus2 className="mr-2 h-4 w-4" />
-                      Create New Quiz
-                    </Button>
-                  </Link>
-                </>
-              )}
-              <AuthButton />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold font-headline tracking-tight">Your Quizzes</h2>
-            <p className="text-muted-foreground">
-              Manage your existing quizzes or create a new one to get started.
-            </p>
-          </div>
-          <div className="w-full md:w-64">
-              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger>
-                      <SelectValue placeholder="Filter by subject..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="all">All Subjects</SelectItem>
-                      {subjects.map(subject => (
-                          <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredQuizzes.map((quiz) => (
-            <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="font-headline">{quiz.name}</CardTitle>
-                  {quiz.subject && <Badge variant="outline">{quiz.subject}</Badge>}
-                </div>
-                <CardDescription>{quiz.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <BookCopy className="mr-2 h-4 w-4" />
-                    <span>{countQuestions(quiz)} Questions</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Star className="mr-2 h-4 w-4" />
-                    <span>{calculateTotalPoints(quiz)} Points</span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex gap-2">
-                <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                  <Button size="sm" className="w-full">
-                    <Play className="mr-2 h-4 w-4" />
-                    Take
-                  </Button>
-                </Link>
-                 <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                  <Button size="sm" variant="secondary" className="w-full">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Preview
-                  </Button>
-                </Link>
-                <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
-                  <Button size="sm" variant="outline" className="w-full">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </main>
-    </div>
+      <div className="flex flex-col items-center justify-center h-screen">
+          <h2 className="text-2xl font-bold mb-4">Unsupported User Role</h2>
+          <p className="text-muted-foreground">Your account role is not configured for this application.</p>
+      </div>
   );
 }

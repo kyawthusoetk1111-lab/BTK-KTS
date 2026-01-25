@@ -7,15 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function SignupPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userType, setUserType] = useState<'teacher' | 'student'>('student');
   const [error, setError] = useState<string | null>(null);
+  
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
 
@@ -28,15 +33,16 @@ export default function SignupPage() {
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email || !password) {
-      setError('Please enter both email and password.');
+    if (!name || !email || !password) {
+      setError('Please fill in all fields.');
       return;
     }
     if (password.length < 6) {
       setError('Password should be at least 6 characters.');
       return;
     }
-    initiateEmailSignUp(auth, email, password, (error) => {
+    
+    initiateEmailSignUp(auth, firestore, email, password, name, userType, (error) => {
       switch (error.code) {
         case 'auth/email-already-in-use':
           setError('This email address is already in use by another account.');
@@ -66,11 +72,22 @@ export default function SignupPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold font-headline">Sign Up</CardTitle>
-          <CardDescription>Enter your information to create an account.</CardDescription>
+          <CardTitle className="text-2xl font-bold font-headline">Create an Account</CardTitle>
+          <CardDescription>Enter your information to get started.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -91,6 +108,23 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+            </div>
+             <div className="space-y-2">
+                <Label>I am a...</Label>
+                <RadioGroup
+                    value={userType}
+                    onValueChange={(value: 'teacher' | 'student') => setUserType(value)}
+                    className="flex space-x-4"
+                >
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="teacher" id="r-teacher" />
+                        <Label htmlFor="r-teacher">Teacher</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="student" id="r-student" />
+                        <Label htmlFor="r-student">Student</Label>
+                    </div>
+                </RadioGroup>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full">

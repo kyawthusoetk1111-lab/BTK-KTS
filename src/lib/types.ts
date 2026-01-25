@@ -52,4 +52,11 @@ export interface Quiz {
   timerInMinutes?: number;
 }
 
-    
+export interface UserProfile {
+  id: string;
+  userType: 'teacher' | 'student';
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}

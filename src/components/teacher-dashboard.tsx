@@ -1,0 +1,158 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { mockQuizzes } from '@/lib/data';
+import { FilePlus2, BookCopy, Star, Edit, Play, Eye, Library } from 'lucide-react';
+import type { Quiz } from '@/lib/types';
+import { AuthButton } from '@/components/auth-button';
+import { useUser } from '@/firebase';
+import { subjects } from '@/lib/subjects';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+
+function calculateTotalPoints(quiz: Quiz) {
+  return quiz.sections.reduce((total, section) => {
+    return total + section.questions.reduce((sectionTotal, question) => {
+      return sectionTotal + question.points;
+    }, 0);
+  }, 0);
+}
+
+function countQuestions(quiz: Quiz) {
+  return quiz.sections.reduce((total, section) => {
+    return total + section.questions.length;
+  }, 0);
+}
+
+export function TeacherDashboard() {
+  const { user } = useUser();
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
+
+  const filteredQuizzes = selectedSubject === 'all'
+    ? mockQuizzes
+    : mockQuizzes.filter(quiz => quiz.subject === selectedSubject);
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="text-2xl font-bold font-headline text-primary">
+              QuizCraft Pro
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/question-bank">
+                <Button variant="outline">
+                  <Library className="mr-2 h-4 w-4" />
+                  Question Bank
+                </Button>
+              </Link>
+              <Link href="/quizzes/new/edit">
+                <Button>
+                  <FilePlus2 className="mr-2 h-4 w-4" />
+                  Create New Quiz
+                </Button>
+              </Link>
+              <AuthButton />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
+          <div>
+            <h2 className="text-3xl font-bold font-headline tracking-tight">Teacher Dashboard</h2>
+            <p className="text-muted-foreground">
+              Manage your quizzes, view student results, and create new content.
+            </p>
+          </div>
+        </div>
+
+        <Tabs defaultValue="quizzes">
+            <TabsList className="mb-4">
+                <TabsTrigger value="quizzes">My Quizzes</TabsTrigger>
+                <TabsTrigger value="results">Student Results</TabsTrigger>
+            </TabsList>
+            <TabsContent value="quizzes">
+                 <div className="flex justify-end mb-4">
+                    <div className="w-full md:w-64">
+                        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by subject..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Subjects</SelectItem>
+                                {subjects.map(subject => (
+                                    <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                 </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredQuizzes.map((quiz) => (
+                    <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                        <CardTitle className="font-headline">{quiz.name}</CardTitle>
+                        {quiz.subject && <Badge variant="outline">{quiz.subject}</Badge>}
+                        </div>
+                        <CardDescription>{quiz.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                            <BookCopy className="mr-2 h-4 w-4" />
+                            <span>{countQuestions(quiz)} Questions</span>
+                        </div>
+                        <div className="flex items-center">
+                            <Star className="mr-2 h-4 w-4" />
+                            <span>{calculateTotalPoints(quiz)} Points</span>
+                        </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex gap-2">
+                        <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
+                        <Button size="sm" className="w-full">
+                            <Play className="mr-2 h-4 w-4" />
+                            Take
+                        </Button>
+                        </Link>
+                        <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
+                        <Button size="sm" variant="secondary" className="w-full">
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview
+                        </Button>
+                        </Link>
+                        <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
+                        <Button size="sm" variant="outline" className="w-full">
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                        </Button>
+                        </Link>
+                    </CardFooter>
+                    </Card>
+                ))}
+                </div>
+            </TabsContent>
+            <TabsContent value="results">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Student Results</CardTitle>
+                        <CardDescription>This feature is coming soon. You'll be able to see detailed analytics of your students' performance here.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="text-center text-muted-foreground py-12">
+                        <p>No results to display yet.</p>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}

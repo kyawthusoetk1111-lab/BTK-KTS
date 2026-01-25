@@ -2,10 +2,9 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, getDoc } from 'firebase/firestore';
+import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
-import { setDocumentNonBlocking } from './non-blocking-updates';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -79,27 +78,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      async (firebaseUser) => { // Auth state determined
-        if (firebaseUser) {
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          try {
-            const docSnap = await getDoc(userDocRef);
-            if (!docSnap.exists()) {
-              // This is a new user, create their profile.
-              const newUserProfile = {
-                id: firebaseUser.uid,
-                email: firebaseUser.email!,
-                name: firebaseUser.displayName || firebaseUser.email!.split('@')[0],
-                userType: 'teacher', // Default role
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              };
-              setDocumentNonBlocking(userDocRef, newUserProfile, { merge: true });
-            }
-          } catch (e) {
-             console.error("Error in onAuthStateChanged checking for user profile", e);
-          }
-        }
+      (firebaseUser) => { // Auth state determined
+        // Profile creation is now handled explicitly during signup.
+        // This listener just reports the current auth state.
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error

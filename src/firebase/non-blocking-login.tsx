@@ -4,8 +4,10 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
 } from 'firebase/auth';
+import { doc, Firestore } from 'firebase/firestore';
+import { setDocumentNonBlocking } from './non-blocking-updates';
+import type { UserProfile } from '@/lib/types';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -19,20 +21,41 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 /** Initiate email/password sign-up (non-blocking). */
 export function initiateEmailSignUp(
   authInstance: Auth,
+  firestore: Firestore,
   email: string,
   password: string,
+  name: string,
+  userType: 'teacher' | 'student',
   onError?: (error: any) => void
 ): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password).catch((error) => {
-    if (onError) {
-      onError(error);
-    } else {
-      console.error('Signup Error:', error);
-    }
-  });
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await'.
+  createUserWithEmailAndPassword(authInstance, email, password)
+    .then((userCredential) => {
+      // After user is created in Auth, create their profile in Firestore.
+      const user = userCredential.user;
+      const userDocRef = doc(firestore, 'users', user.uid);
+      
+      const newUserProfile: UserProfile = {
+        id: user.uid,
+        email: user.email!,
+        name: name,
+        userType: userType,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Use a non-blocking write to create the user's profile document.
+      setDocumentNonBlocking(userDocRef, newUserProfile, { merge: false });
+    })
+    .catch((error) => {
+      if (onError) {
+        onError(error);
+      } else {
+        console.error('Signup Error:', error);
+      }
+    });
 }
+
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(
