@@ -372,6 +372,14 @@
           "type": "number",
           "description": "The score achieved by the student on the exam."
         },
+        "totalPossibleScore": {
+          "type": "number",
+          "description": "The total possible score for the auto-graded parts of the exam."
+        },
+        "grade": {
+          "type": "string",
+          "description": "The letter grade (e.g., A*, A, B) calculated from the score."
+        },
         "submissionTime": {
           "type": "string",
           "description": "The timestamp when the student submitted the exam.",
@@ -395,7 +403,9 @@
         "score",
         "submissionTime",
         "createdAt",
-        "updatedAt"
+        "updatedAt",
+        "totalPossibleScore",
+        "grade"
       ]
     }
   },
@@ -615,4 +625,3 @@
     "reasoning": "The Firestore structure is designed to support a flexible exam platform with various question types and section management. The design prioritizes Authorization Independence by avoiding `get()` calls in security rules, using hierarchical paths for user-owned data and denormalizing data where necessary. Segregation is achieved by storing different data types (users, quizzes, questions, results) in separate collections.\n\nAuthorization Independence is achieved by using the following strategy:\n\n*   Path-based ownership for User-owned quizzes: `/users/{userId}/quizzes/{quizId}`. This ensures that only the owner can manage their quizzes. Section and questions are nested under quizzes.\n\nThe design supports QAPs through:\n\n*   Structural Segregation: separating user data, quiz data, and results into different collections allowing efficient and secure `list` operations without filtering based on data content.\n*   Path Based Ownership: for entities that represent a `User 1:N Entity` relationship (e.g., a `User` has many `Quizzes`), path-based ownership like `/users/{userId}/quizzes/{quizId}` is used. This structure is highly secure and makes ownership-based security rules simple and efficient."
   }
 }
-    

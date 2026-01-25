@@ -10,6 +10,8 @@ import { QuestionNavigation } from './quiz/question-navigation';
 import { QuestionRenderer } from './quiz/question-renderer';
 import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 interface QuizTakerProps {
     quiz: Quiz;
@@ -18,6 +20,9 @@ interface QuizTakerProps {
 export function QuizTaker({ quiz }: QuizTakerProps) {
     const { toast } = useToast();
     const router = useRouter();
+    const firestore = useFirestore();
+    const { user } = useUser();
+
     const allQuestions = quiz.sections.flatMap(s => 
         s.questions.map(q => ({...q, sectionName: s.name}))
     );
@@ -70,6 +75,23 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
             }
         });
 
+        const { grade } = getGradeDetails(calculatedScore, possibleScore);
+        
+        if (user && firestore) {
+            const examResultData = {
+                quizId: quiz.id,
+                userId: user.uid,
+                score: calculatedScore,
+                totalPossibleScore: possibleScore,
+                grade: grade,
+                submissionTime: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            const resultsCollection = collection(firestore, 'examResults');
+            addDocumentNonBlocking(resultsCollection, examResultData);
+        }
+
         setScore(calculatedScore);
         setTotalPossibleScore(possibleScore);
         setIsSubmitted(true);
@@ -80,30 +102,47 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         });
     }
 
-    const getGradeDetails = () => {
-        if (totalPossibleScore === 0) {
+    const getGradeDetails = (currentScore: number, totalScore: number) => {
+        if (totalScore === 0) {
             return {
                 percentage: 0,
                 grade: 'N/A',
-                message: "This quiz contains no auto-gradable questions."
+                message: "This quiz contains no auto-gradable questions.",
+                gradeColor: "text-muted-foreground",
             };
         }
-        const percentage = (score / totalPossibleScore) * 100;
+        const percentage = (currentScore / totalScore) * 100;
         let grade = '';
-        if (percentage >= 90) grade = 'A*';
-        else if (percentage >= 80) grade = 'A';
-        else if (percentage >= 70) grade = 'B*';
-        else if (percentage >= 60) grade = 'B';
-        else if (percentage >= 50) grade = 'C*';
-        else if (percentage >= 40) grade = 'C';
-        else grade = 'D';
+        let gradeColor = '';
+        if (percentage >= 90) {
+            grade = 'A*';
+            gradeColor = 'text-emerald-600';
+        } else if (percentage >= 80) {
+            grade = 'A';
+            gradeColor = 'text-emerald-600';
+        } else if (percentage >= 70) {
+            grade = 'B*';
+            gradeColor = 'text-blue-600';
+        } else if (percentage >= 60) {
+            grade = 'B';
+            gradeColor = 'text-blue-600';
+        } else if (percentage >= 50) {
+            grade = 'C*';
+            gradeColor = 'text-orange-500';
+        } else if (percentage >= 40) {
+            grade = 'C';
+            gradeColor = 'text-orange-500';
+        } else {
+            grade = 'D';
+            gradeColor = 'text-red-600';
+        }
 
-        return { percentage, grade, message: '' };
+        return { percentage, grade, message: '', gradeColor };
     }
 
 
     if (isSubmitted) {
-        const { percentage, grade, message } = getGradeDetails();
+        const { percentage, grade, message, gradeColor } = getGradeDetails(score, totalPossibleScore);
         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <Card className="w-full max-w-2xl text-center">
@@ -114,7 +153,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
                              <p className="text-lg text-muted-foreground">Your Grade</p>
-                             <p className="text-7xl font-bold text-primary">{grade}</p>
+                             <p className={`text-7xl font-bold ${gradeColor}`}>{grade}</p>
                         </div>
                         <div className="flex justify-around items-center p-4 bg-muted rounded-lg">
                             <div>
