@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Timer } from './quiz/timer';
 import { QuestionNavigation } from './quiz/question-navigation';
 import { QuestionRenderer } from './quiz/question-renderer';
-import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Menu } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from './loading-spinner';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 
 interface QuizTakerProps {
     quiz: Quiz;
@@ -37,6 +38,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const [examResultId, setExamResultId] = useState<string | null>(null);
     const [deadline, setDeadline] = useState<number | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isNavOpen, setIsNavOpen] = useState(false);
 
     const [isSaving, setIsSaving] = useState(false);
     const [showSubmissionModal, setShowSubmissionModal] = useState(false);
@@ -179,6 +181,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                 setCurrentSectionIndex(sectionIndex);
             }
             setScrollToQuestionId(questionId);
+            setIsNavOpen(false);
         }
     }
     
@@ -358,17 +361,42 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
             <header className="sticky top-1 z-10 bg-background/80 backdrop-blur-sm border-b">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex flex-col">
-                            <h1 className="text-xl font-bold font-headline text-primary">{quiz.name}</h1>
-                            <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
-                        </div>
                         <div className="flex items-center gap-4">
+                            <div className="md:hidden">
+                                <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button variant="outline" size="icon">
+                                            <Menu className="h-5 w-5" />
+                                            <span className="sr-only">Open question navigation</span>
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="left" className="w-3/4">
+                                        <SheetHeader>
+                                            <SheetTitle>Questions</SheetTitle>
+                                        </SheetHeader>
+                                        <div className="py-4">
+                                            <QuestionNavigation
+                                                sections={quiz.sections}
+                                                currentSectionIndex={currentSectionIndex}
+                                                answers={answers}
+                                                onQuestionSelect={handleQuestionSelect}
+                                            />
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="text-lg md:text-xl font-bold font-headline text-primary">{quiz.name}</h1>
+                                <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 md:gap-4">
                             {deadline && (
                                 <Timer deadline={deadline} onTimeUp={() => handleSubmit(true)} />
                             )}
-                            <Button onClick={handleOpenSubmitModal}>
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Submit
+                            <Button onClick={handleOpenSubmitModal} size="sm">
+                                <CheckCircle className="h-4 w-4 md:mr-2" />
+                                <span className="hidden md:inline">Submit</span>
                             </Button>
                         </div>
                     </div>
@@ -425,7 +453,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                         </Card>
                     </div>
 
-                    <aside className="space-y-6 sticky top-24 self-start">
+                    <aside className="hidden md:block space-y-6 sticky top-24 self-start">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Questions</CardTitle>

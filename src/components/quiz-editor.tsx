@@ -144,21 +144,27 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
             <Link href="/" className="text-xl font-bold font-headline text-primary">
                 QuizCraft Pro
             </Link>
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
                 Total Points: {calculateTotalPoints()}
               </span>
               <Link href={`/quizzes/${previewId}/preview`} target="_blank" onClick={handlePreview}>
-                <Button variant="outline">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Preview
+                <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Preview</span>
                 </Button>
               </Link>
-              <Button onClick={handleSave} disabled={isSaving}>
+              <Button onClick={handleSave} disabled={isSaving} size="sm">
                 {isSaving ? (
-                    <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div> Saving...</>
+                    <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground sm:mr-2"></div> 
+                        <span className="hidden sm:inline">Saving...</span>
+                    </>
                 ) : (
-                    <><Save className="mr-2 h-4 w-4" /> Save Quiz</>
+                    <>
+                        <Save className="h-4 w-4 sm:mr-2" /> 
+                        <span className="hidden sm:inline">Save Quiz</span>
+                    </>
                 )}
               </Button>
             </div>

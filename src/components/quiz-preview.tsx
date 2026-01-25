@@ -7,7 +7,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { QuestionNavigation } from './quiz/question-navigation';
 import { QuestionRenderer } from './quiz/question-renderer';
-import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface QuizPreviewProps {
     quiz: Quiz;
@@ -18,6 +19,8 @@ export function QuizPreview({ quiz }: QuizPreviewProps) {
 
     const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
     const [scrollToQuestionId, setScrollToQuestionId] = useState<string | null>(null);
+    const [isNavOpen, setIsNavOpen] = useState(false);
+
 
     const questionMap = useMemo(() => {
         const map: { sectionIndex: number, questionId: string }[] = [];
@@ -59,6 +62,7 @@ export function QuizPreview({ quiz }: QuizPreviewProps) {
             setCurrentSectionIndex(sectionIndex);
         }
         setScrollToQuestionId(questionId);
+        setIsNavOpen(false);
     }
     
     const currentSection = quiz.sections[currentSectionIndex];
@@ -68,13 +72,38 @@ export function QuizPreview({ quiz }: QuizPreviewProps) {
             <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex flex-col">
-                            <h1 className="text-xl font-bold font-headline text-primary">{quiz.name} (Preview)</h1>
-                             <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
+                        <div className="flex items-center gap-4">
+                            <div className="md:hidden">
+                                <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button variant="outline" size="icon">
+                                            <Menu className="h-5 w-5" />
+                                            <span className="sr-only">Open question navigation</span>
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="left" className="w-3/4">
+                                        <SheetHeader>
+                                            <SheetTitle>Questions</SheetTitle>
+                                        </SheetHeader>
+                                        <div className="py-4">
+                                            <QuestionNavigation
+                                                sections={quiz.sections}
+                                                currentSectionIndex={currentSectionIndex}
+                                                answers={{}} // No answers in preview
+                                                onQuestionSelect={handleQuestionSelect}
+                                            />
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="text-lg md:text-xl font-bold font-headline text-primary">{quiz.name} (Preview)</h1>
+                                <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
+                            </div>
                         </div>
-                        <Button variant="outline" onClick={() => router.back()}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back
+                        <Button variant="outline" onClick={() => router.back()} size="sm">
+                            <ArrowLeft className="h-4 w-4 md:mr-2" />
+                            <span className="hidden md:inline">Back</span>
                         </Button>
                     </div>
                 </div>
@@ -113,7 +142,7 @@ export function QuizPreview({ quiz }: QuizPreviewProps) {
                         </Card>
                     </div>
 
-                    <aside className="space-y-6">
+                    <aside className="hidden md:block space-y-6 sticky top-24 self-start">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Questions</CardTitle>

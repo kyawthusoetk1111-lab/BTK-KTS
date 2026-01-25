@@ -58,17 +58,17 @@ export function TeacherDashboard() {
               <Activity />
               QuizCraft Pro
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <Link href="/question-bank">
-                <Button variant="outline">
-                  <Library className="mr-2 h-4 w-4" />
-                  Question Bank
+                <Button variant="outline" size="sm">
+                  <Library className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Question Bank</span>
                 </Button>
               </Link>
               <Link href="/quizzes/new/edit">
-                <Button>
-                  <FilePlus2 className="mr-2 h-4 w-4" />
-                  Create Quiz
+                <Button size="sm">
+                  <FilePlus2 className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Create Quiz</span>
                 </Button>
               </Link>
               <AuthButton />
