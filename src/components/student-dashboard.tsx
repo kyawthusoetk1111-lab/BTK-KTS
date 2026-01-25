@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Award, ClipboardCheck, Calendar, Activity } from 'lucide-react';
+import { BookCopy, Star, Play, Eye, Award, ClipboardCheck, Calendar, Activity, Clock, CheckCircle } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { subjects } from '@/lib/subjects';
@@ -29,9 +29,8 @@ function countQuestions(quiz: Quiz) {
 }
 
 const mockResults = [
-    { id: 'res-1', quizName: 'General Knowledge Challenge', date: '2024-05-20', score: '8/10', grade: 'A' },
-    { id: 'res-2', quizName: 'Advanced Mathematics', date: '2024-05-18', score: '18/25', grade: 'B*' },
-    { id: 'res-3', quizName: 'Science Basics', date: '2024-05-15', score: '5/15', grade: 'D' },
+    { id: 'res-1', quizId: 'quiz-1', quizName: 'General Knowledge Challenge', date: '2024-05-20', score: '8/10', grade: 'A' },
+    { id: 'res-2', quizId: 'quiz-2', quizName: 'Advanced Mathematics', date: '2024-05-18', score: '18/25', grade: 'B*' },
 ];
 
 const getGradeColor = (grade: string) => {
@@ -95,7 +94,9 @@ export function StudentDashboard() {
                     </div>
                  </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredQuizzes.map((quiz) => (
+                {filteredQuizzes.map((quiz) => {
+                    const hasAttempted = mockResults.some(result => result.quizId === quiz.id);
+                    return (
                     <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg border-transparent hover:border-primary/50">
                     <CardHeader>
                         <div className="flex justify-between items-start mb-2">
@@ -104,25 +105,38 @@ export function StudentDashboard() {
                         <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
                         <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-grow">
+                    <CardContent className="flex-grow space-y-2">
                         <div className="flex justify-between text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                              <BookCopy className="h-4 w-4" />
-                              <span>{countQuestions(quiz)} Questions</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                              <Star className="h-4 w-4" />
-                              <span>{calculateTotalPoints(quiz)} Points</span>
-                          </div>
+                            <div className="flex items-center gap-2">
+                                <BookCopy className="h-4 w-4" />
+                                <span>{countQuestions(quiz)} Questions</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Star className="h-4 w-4" />
+                                <span>{calculateTotalPoints(quiz)} Points</span>
+                            </div>
                         </div>
+                        {quiz.timerInMinutes && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                <span>{quiz.timerInMinutes} minute timer</span>
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter className="flex gap-2 bg-muted/50 p-3 rounded-b-lg">
-                        <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                          <Button size="sm" className="w-full">
-                              <Play className="mr-2 h-4 w-4" />
-                              Take Quiz
-                          </Button>
-                        </Link>
+                        {hasAttempted ? (
+                            <Button size="sm" className="w-full flex-1" disabled>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Attempted
+                            </Button>
+                        ) : (
+                            <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
+                                <Button size="sm" className="w-full">
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Start Attempt
+                                </Button>
+                            </Link>
+                        )}
                         <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
                           <Button size="sm" variant="secondary" className="w-full">
                               <Eye className="mr-2 h-4 w-4" />
@@ -131,7 +145,7 @@ export function StudentDashboard() {
                         </Link>
                     </CardFooter>
                     </Card>
-                ))}
+                )})}
                 </div>
             </TabsContent>
             <TabsContent value="grades">
