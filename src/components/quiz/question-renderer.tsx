@@ -89,7 +89,7 @@ export function QuestionRenderer({ question, answer, onAnswerChange, passageText
               <div className="space-y-4 my-4">
                 {question.imageUrl && (
                   <div className="relative w-full aspect-video">
-                    <Image src={question.imageUrl} alt="Question content" layout="fill" objectFit="contain" className="rounded-lg border" />
+                    <Image src={question.imageUrl} alt="Question content" fill objectFit="contain" className="rounded-lg border" />
                   </div>
                 )}
                 {question.audioUrl && (
