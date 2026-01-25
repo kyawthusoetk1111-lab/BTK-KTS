@@ -8,6 +8,7 @@ export const mockQuizzes: Quiz[] = [
     subject: 'General Knowledge',
     examCode: 'GKC-101',
     timerInMinutes: 10,
+    showInstantFeedback: false,
     sections: [
       {
         id: 'sec-1-1',
@@ -65,6 +66,7 @@ export const mockQuizzes: Quiz[] = [
     subject: 'Mathematics',
     examCode: 'MATH-202',
     timerInMinutes: 60,
+    showInstantFeedback: false,
     sections: [
       {
         id: 'sec-2-1',

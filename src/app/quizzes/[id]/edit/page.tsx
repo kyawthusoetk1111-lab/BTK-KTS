@@ -36,6 +36,7 @@ export default function EditQuizPage() {
       name: 'Untitled Quiz',
       description: 'Enter a description for your new quiz.',
       examCode: crypto.randomUUID().slice(0, 6).toUpperCase(),
+      showInstantFeedback: false,
       sections: [
         {
           id: crypto.randomUUID(),

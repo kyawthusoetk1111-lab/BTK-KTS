@@ -323,6 +323,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                                             answer={answers[question.id]}
                                             onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
                                             passageText={getPassageText(question.passageId)}
+                                            showInstantFeedback={quiz.showInstantFeedback}
                                         />
                                     </div>
                                 ))}
@@ -386,5 +387,3 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         </div>
     )
 }
-
-    

@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { Calendar } from "./ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subjects } from "@/lib/subjects";
+import { Switch } from "./ui/switch";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -28,7 +29,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
-    value: string | number | undefined
+    value: string | number | boolean | undefined
   ) => {
     setQuiz((prev) => ({ ...prev, [field]: value }));
   };
@@ -231,6 +232,20 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                             onChange={(e) => handleQuizDetailsChange("timerInMinutes", e.target.value ? parseInt(e.target.value) : undefined)}
                         />
                     </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="instant-feedback" className="text-base font-medium">Show Instant Feedback</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Enable practice mode to show students if their answer is correct immediately.
+                        </p>
+                    </div>
+                    <Switch
+                        id="instant-feedback"
+                        checked={!!quiz.showInstantFeedback}
+                        onCheckedChange={(checked) => handleQuizDetailsChange("showInstantFeedback", checked)}
+                    />
                 </div>
             </CardContent>
           </Card>

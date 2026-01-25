@@ -51,6 +51,7 @@ export interface Quiz {
   startDate?: string;
   endDate?: string;
   timerInMinutes?: number;
+  showInstantFeedback?: boolean;
 }
 
 export interface UserProfile {
@@ -74,5 +75,3 @@ export interface ExamResult {
   updatedAt: string;
   answers: Record<string, any>;
 }
-
-    
