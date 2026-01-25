@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Wand2 } from "lucide-react";
+import { Wand2, Image as ImageIcon, Music } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import MultipleChoiceEditor from "./quiz/question-types/multiple-choice-editor";
@@ -122,6 +122,34 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
                 </div>
             </div>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`question-image-url-${question.id}`}>Image URL (Online only)</Label>
+        <div className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+            <Input
+                id={`question-image-url-${question.id}`}
+                placeholder="https://example.com/image.png"
+                value={question.imageUrl || ''}
+                onChange={(e) => handleFieldChange("imageUrl", e.target.value)}
+            />
+        </div>
+         {question.imageUrl && <img src={question.imageUrl} alt="Question preview" className="mt-2 rounded-md border max-h-48 object-contain" />}
+      </div>
+
+       <div className="space-y-2">
+        <Label htmlFor={`question-audio-url-${question.id}`}>Audio URL (Online only)</Label>
+        <div className="flex items-center gap-2">
+            <Music className="h-4 w-4 text-muted-foreground" />
+            <Input
+                id={`question-audio-url-${question.id}`}
+                placeholder="https://example.com/audio.mp3"
+                value={question.audioUrl || ''}
+                onChange={(e) => handleFieldChange("audioUrl", e.target.value)}
+            />
+        </div>
+        {question.audioUrl && <audio controls src={question.audioUrl} className="mt-2 w-full" />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

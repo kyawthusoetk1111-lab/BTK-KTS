@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { LatexRenderer } from '../latex-renderer';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface QuestionRendererProps {
     question: Question;
@@ -84,6 +85,23 @@ export function QuestionRenderer({ question, answer, onAnswerChange, passageText
             )}
             <LatexRenderer text={question.text} className="text-lg font-semibold" />
             
+            {(question.imageUrl || question.audioUrl) && (
+              <div className="space-y-4 my-4">
+                {question.imageUrl && (
+                  <div className="relative w-full aspect-video">
+                    <Image src={question.imageUrl} alt="Question content" layout="fill" objectFit="contain" className="rounded-lg border" />
+                  </div>
+                )}
+                {question.audioUrl && (
+                  <div>
+                    <audio controls src={question.audioUrl} className="w-full">
+                        Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                )}
+              </div>
+            )}
+
             {question.type === 'multiple-choice' && (
                  <RadioGroup onValueChange={onAnswerChange} value={answer} className="space-y-2">
                     {question.options.map(opt => (

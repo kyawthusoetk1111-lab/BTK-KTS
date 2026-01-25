@@ -39,6 +39,8 @@ export interface Question {
   dropdowns?: InlineDropdown[];
   passageId?: string;
   ownerId?: string;
+  imageUrl?: string;
+  audioUrl?: string;
 }
 
 export interface Section {

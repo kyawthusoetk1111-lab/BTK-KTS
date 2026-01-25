@@ -146,6 +146,14 @@
           "type": "number",
           "description": "The points assigned to this question."
         },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL for an image associated with the question."
+        },
+        "audioUrl": {
+          "type": "string",
+          "description": "URL for an audio file associated with the question."
+        },
         "createdAt": {
           "type": "string",
           "description": "The timestamp when the question was created.",
