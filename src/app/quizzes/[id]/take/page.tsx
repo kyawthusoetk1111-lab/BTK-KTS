@@ -22,9 +22,9 @@ export default function TakeQuizPage() {
       }, [user, isUserLoading, router]);
 
     const quizQuery = useMemoFirebase(() => {
-        if (!firestore || !id) return null;
+        if (!firestore || !id || !user) return null;
         return query(collectionGroup(firestore, 'quizzes'), where('id', '==', id), limit(1));
-    }, [firestore, id]);
+    }, [firestore, id, user]);
 
     const { data: quizzes, isLoading: isQuizLoading } = useCollection<Quiz>(quizQuery);
     
