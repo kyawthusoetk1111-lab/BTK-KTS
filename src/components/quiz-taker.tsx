@@ -17,6 +17,7 @@ import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from './loading-spinner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+import { ExamProctorGuard } from './exam-proctor-guard';
 
 interface QuizTakerProps {
     quiz: Quiz;
@@ -208,7 +209,8 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     }
 
     const handleSubmit = (isTimeUp: boolean = false) => {
-        if (!isLoaded || !user) return;
+        if (!isLoaded || !user || isSubmitted) return;
+        
         if (!isTimeUp) {
             setShowSubmissionModal(false);
         }
@@ -363,139 +365,141 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const progressValue = ((currentSectionIndex + 1) / quiz.sections.length) * 100;
 
     return (
-        <div className="flex flex-col min-h-screen bg-muted/20">
-            <Progress value={progressValue} className="fixed top-0 left-0 right-0 h-1 z-20 rounded-none" />
-            <header className="sticky top-1 z-10 bg-background/80 backdrop-blur-sm border-b">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-4">
-                            <div className="md:hidden">
-                                <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
-                                    <SheetTrigger asChild>
-                                        <Button variant="outline" size="icon">
-                                            <Menu className="h-5 w-5" />
-                                            <span className="sr-only">Open question navigation</span>
-                                        </Button>
-                                    </SheetTrigger>
-                                    <SheetContent side="left" className="w-3/4">
-                                        <SheetHeader>
-                                            <SheetTitle>Questions</SheetTitle>
-                                        </SheetHeader>
-                                        <div className="py-4">
-                                            <QuestionNavigation
-                                                sections={quiz.sections}
-                                                currentSectionIndex={currentSectionIndex}
-                                                answers={answers}
-                                                onQuestionSelect={handleQuestionSelect}
+        <ExamProctorGuard onSubmit={handleSubmit} isQuizActive={!isSubmitted}>
+            <div className="flex flex-col min-h-screen bg-muted/20">
+                <Progress value={progressValue} className="fixed top-0 left-0 right-0 h-1 z-20 rounded-none" />
+                <header className="sticky top-1 z-10 bg-background/80 backdrop-blur-sm border-b">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="md:hidden">
+                                    <Sheet open={isNavOpen} onOpenChange={setIsNavOpen}>
+                                        <SheetTrigger asChild>
+                                            <Button variant="outline" size="icon">
+                                                <Menu className="h-5 w-5" />
+                                                <span className="sr-only">Open question navigation</span>
+                                            </Button>
+                                        </SheetTrigger>
+                                        <SheetContent side="left" className="w-3/4">
+                                            <SheetHeader>
+                                                <SheetTitle>Questions</SheetTitle>
+                                            </SheetHeader>
+                                            <div className="py-4">
+                                                <QuestionNavigation
+                                                    sections={quiz.sections}
+                                                    currentSectionIndex={currentSectionIndex}
+                                                    answers={answers}
+                                                    onQuestionSelect={handleQuestionSelect}
+                                                />
+                                            </div>
+                                        </SheetContent>
+                                    </Sheet>
+                                </div>
+                                <div className="flex flex-col">
+                                    <h1 className="text-lg md:text-xl font-bold font-headline text-primary">{quiz.name}</h1>
+                                    <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 md:gap-4">
+                                {deadline && (
+                                    <Timer deadline={deadline} onTimeUp={() => handleSubmit(true)} />
+                                )}
+                                <Button onClick={handleOpenSubmitModal} size="sm">
+                                    <CheckCircle className="h-4 w-4 md:mr-2" />
+                                    <span className="hidden md:inline">Submit</span>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                        <div className="md:col-span-2 lg:col-span-3 overflow-hidden">
+                            <Card
+                                key={currentSection.id}
+                                className={cn(
+                                    'transition-all duration-300',
+                                    animationDirection === 'left' && 'animate-out slide-out-to-left',
+                                    animationDirection === 'right' && 'animate-out slide-out-to-right',
+                                    !animationDirection && 'animate-in fade-in'
+                                )}
+                            >
+                                <CardHeader>
+                                    <CardTitle>{currentSection.name}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-8">
+                                    {currentSection.questions.map((question, index) => (
+                                        <div key={question.id} id={`question-cont-${question.id}`} className="p-6 border rounded-lg">
+                                            <CardTitle className="mb-4">Question {index + 1}</CardTitle>
+                                            <CardDescription className="mb-4">{question.points} points</CardDescription>
+                                            <QuestionRenderer 
+                                                question={question}
+                                                answer={answers[question.id]}
+                                                onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
+                                                passageText={getPassageText(question.passageId)}
+                                                showInstantFeedback={quiz.showInstantFeedback}
                                             />
                                         </div>
-                                    </SheetContent>
-                                </Sheet>
-                            </div>
-                            <div className="flex flex-col">
-                                <h1 className="text-lg md:text-xl font-bold font-headline text-primary">{quiz.name}</h1>
-                                <p className="text-sm text-muted-foreground">Section {currentSectionIndex + 1} of {quiz.sections.length}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 md:gap-4">
-                            {deadline && (
-                                <Timer deadline={deadline} onTimeUp={() => handleSubmit(true)} />
-                            )}
-                            <Button onClick={handleOpenSubmitModal} size="sm">
-                                <CheckCircle className="h-4 w-4 md:mr-2" />
-                                <span className="hidden md:inline">Submit</span>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                    <div className="md:col-span-2 lg:col-span-3 overflow-hidden">
-                        <Card
-                            key={currentSection.id}
-                            className={cn(
-                                'transition-all duration-300',
-                                animationDirection === 'left' && 'animate-out slide-out-to-left',
-                                animationDirection === 'right' && 'animate-out slide-out-to-right',
-                                !animationDirection && 'animate-in fade-in'
-                            )}
-                        >
-                            <CardHeader>
-                                <CardTitle>{currentSection.name}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-8">
-                                {currentSection.questions.map((question, index) => (
-                                    <div key={question.id} id={`question-cont-${question.id}`} className="p-6 border rounded-lg">
-                                        <CardTitle className="mb-4">Question {index + 1}</CardTitle>
-                                        <CardDescription className="mb-4">{question.points} points</CardDescription>
-                                        <QuestionRenderer 
-                                            question={question}
-                                            answer={answers[question.id]}
-                                            onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
-                                            passageText={getPassageText(question.passageId)}
-                                            showInstantFeedback={quiz.showInstantFeedback}
-                                        />
-                                    </div>
-                                ))}
-                            </CardContent>
-                             <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={handlePrevSection} disabled={currentSectionIndex === 0}>
-                                    <ChevronLeft className="mr-2 h-4 w-4" />
-                                    Previous Section
-                                </Button>
-                                {isLastSection ? (
-                                    <Button onClick={handleOpenSubmitModal}>
-                                        <CheckCircle className="mr-2 h-4 w-4" />
-                                        Submit Exam
+                                    ))}
+                                </CardContent>
+                                 <CardFooter className="flex justify-between">
+                                    <Button variant="outline" onClick={handlePrevSection} disabled={currentSectionIndex === 0}>
+                                        <ChevronLeft className="mr-2 h-4 w-4" />
+                                        Previous Section
                                     </Button>
-                                ) : (
-                                    <Button onClick={handleNextSection}>
-                                        Next Section
-                                        <ChevronRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                )}
-                            </CardFooter>
-                        </Card>
-                    </div>
+                                    {isLastSection ? (
+                                        <Button onClick={handleOpenSubmitModal}>
+                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                            Submit Exam
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={handleNextSection}>
+                                            Next Section
+                                            <ChevronRight className="ml-2 h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </CardFooter>
+                            </Card>
+                        </div>
 
-                    <aside className="hidden md:block space-y-6 sticky top-24 self-start">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Questions</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <QuestionNavigation
-                                    sections={quiz.sections}
-                                    currentSectionIndex={currentSectionIndex}
-                                    answers={answers}
-                                    onQuestionSelect={handleQuestionSelect}
-                                />
-                            </CardContent>
-                        </Card>
-                    </aside>
-                </div>
-            </main>
-            <AlertDialog open={showSubmissionModal} onOpenChange={setShowSubmissionModal}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {unansweredQuestions > 0 
-                                ? `You have ${unansweredQuestions} unanswered question(s). You can go back and review your answers before submitting.`
-                                : `You have answered all questions. Are you ready to submit your exam?`
-                            }
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleSubmit(false)}>
-                            Submit
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </div>
+                        <aside className="hidden md:block space-y-6 sticky top-24 self-start">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Questions</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <QuestionNavigation
+                                        sections={quiz.sections}
+                                        currentSectionIndex={currentSectionIndex}
+                                        answers={answers}
+                                        onQuestionSelect={handleQuestionSelect}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </aside>
+                    </div>
+                </main>
+                <AlertDialog open={showSubmissionModal} onOpenChange={setShowSubmissionModal}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {unansweredQuestions > 0 
+                                    ? `You have ${unansweredQuestions} unanswered question(s). You can go back and review your answers before submitting.`
+                                    : `You have answered all questions. Are you ready to submit your exam?`
+                                }
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleSubmit(false)}>
+                                Submit
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </ExamProctorGuard>
     )
 }
