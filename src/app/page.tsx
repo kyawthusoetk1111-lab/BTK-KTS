@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,9 @@ import { FilePlus2, BookCopy, Star, Edit, Play, Eye, Library } from 'lucide-reac
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUser } from '@/firebase';
+import { subjects } from '@/lib/subjects';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -25,6 +29,11 @@ function countQuestions(quiz: Quiz) {
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
+
+  const filteredQuizzes = selectedSubject === 'all'
+    ? mockQuizzes
+    : mockQuizzes.filter(quiz => quiz.subject === selectedSubject);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -58,18 +67,36 @@ export default function DashboardPage() {
       </header>
 
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-4 mb-8">
-          <h2 className="text-3xl font-bold font-headline tracking-tight">Your Quizzes</h2>
-          <p className="text-muted-foreground">
-            Manage your existing quizzes or create a new one to get started.
-          </p>
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold font-headline tracking-tight">Your Quizzes</h2>
+            <p className="text-muted-foreground">
+              Manage your existing quizzes or create a new one to get started.
+            </p>
+          </div>
+          <div className="w-full md:w-64">
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger>
+                      <SelectValue placeholder="Filter by subject..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">All Subjects</SelectItem>
+                      {subjects.map(subject => (
+                          <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockQuizzes.map((quiz) => (
+          {filteredQuizzes.map((quiz) => (
             <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg">
               <CardHeader>
-                <CardTitle className="font-headline">{quiz.name}</CardTitle>
+                <div className="flex justify-between items-start">
+                  <CardTitle className="font-headline">{quiz.name}</CardTitle>
+                  {quiz.subject && <Badge variant="outline">{quiz.subject}</Badge>}
+                </div>
                 <CardDescription>{quiz.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">

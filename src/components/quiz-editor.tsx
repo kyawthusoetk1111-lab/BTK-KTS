@@ -15,6 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar } from "./ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { subjects } from "@/lib/subjects";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -130,12 +132,21 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
               </div>
                <div>
                 <Label htmlFor="quiz-subject">Subject</Label>
-                <Input
-                    id="quiz-subject"
-                    placeholder="Quiz Subject"
+                <Select
                     value={quiz.subject || ''}
-                    onChange={(e) => handleQuizDetailsChange("subject", e.target.value)}
-                />
+                    onValueChange={(value) => handleQuizDetailsChange('subject', value)}
+                >
+                    <SelectTrigger id="quiz-subject">
+                        <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {subjects.map((subject) => (
+                            <SelectItem key={subject} value={subject}>
+                                {subject}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">

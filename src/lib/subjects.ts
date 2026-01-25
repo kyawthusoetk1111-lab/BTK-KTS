@@ -1,0 +1,17 @@
+export const subjects = [
+    "Myanmar",
+    "English",
+    "Mathematics",
+    "ပထဝီဝင်",
+    "သမိုင်းစာ",
+    "သိပ္ပံဘာသာ",
+    "လူမှုရေးဘာသာ",
+    "Chemistry",
+    "Physics",
+    "Biology",
+    "Economic",
+    "STEM 1",
+    "STEM 2",
+    "STEM 3",
+    "စာရိတ္တနှင့်ပြည်သူ့နီတိ",
+];
