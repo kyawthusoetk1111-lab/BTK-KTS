@@ -2,7 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Crown, Star, Clock } from 'lucide-react';
+import { Trophy, Star, Clock } from 'lucide-react';
 import type { LeaderboardEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -11,9 +11,9 @@ interface LeaderboardProps {
 }
 
 const getRankColor = (rank: number) => {
-    if (rank === 1) return 'text-amber-500';
+    if (rank === 1) return 'text-emerald-400';
     if (rank === 2) return 'text-slate-400';
-    if (rank === 3) return 'text-orange-600';
+    if (rank === 3) return 'text-yellow-600';
     return 'text-muted-foreground';
 }
 
@@ -28,7 +28,7 @@ export function Leaderboard({ entries }: LeaderboardProps) {
   }
   
   return (
-    <Card>
+    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
       <CardHeader>
         <CardTitle>Top 10 Performers</CardTitle>
       </CardHeader>
@@ -48,7 +48,7 @@ export function Leaderboard({ entries }: LeaderboardProps) {
                 <TableCell className="font-bold">
                     <div className="flex items-center gap-2">
                         <div className={cn('text-lg w-6 h-6 flex items-center justify-center', getRankColor(entry.rank))}>
-                           {entry.rank <= 3 ? <Crown className="h-6 w-6 fill-current" /> : <span className="text-base">{entry.rank}</span>}
+                           {entry.rank <= 3 ? <Trophy className="h-6 w-6 fill-current" /> : <span className="text-base">{entry.rank}</span>}
                         </div>
                     </div>
                 </TableCell>

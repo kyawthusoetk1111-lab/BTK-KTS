@@ -51,14 +51,14 @@ export function TeacherSidebar() {
 
   return (
     <Sidebar
-      className="border-r border-purple-500/30 bg-slate-900/50 backdrop-blur-lg"
+      className="border-r border-emerald-500/30 bg-emerald-950/20 backdrop-blur-lg"
       collapsible="icon"
     >
       <SidebarHeader>
         <div className="flex w-full items-center gap-2">
             <Link href="/" className="flex items-center gap-2 text-xl font-bold font-headline text-white">
               <Activity />
-              {state === 'expanded' && <span className="truncate">QuizCraft Pro</span>}
+              {state === 'expanded' && <span className="truncate">BTK Education</span>}
             </Link>
             <SidebarTrigger className="ml-auto text-white hover:bg-white/10 hover:text-white" />
         </div>
@@ -74,7 +74,7 @@ export function TeacherSidebar() {
                   className={cn(
                     'text-gray-300 hover:bg-white/10 hover:text-white justify-start',
                     pathname === item.href &&
-                      'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.6)]'
+                      'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.6)]'
                   )}
                 >
                   <Link href={getHref(item)}>

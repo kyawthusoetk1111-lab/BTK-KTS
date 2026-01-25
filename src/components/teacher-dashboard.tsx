@@ -107,7 +107,7 @@ export function TeacherDashboard() {
     <>
       <SidebarProvider defaultOpen={true}>
         <TeacherSidebar />
-        <SidebarInset className="bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-950 text-white">
+        <SidebarInset className="bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
           <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
               <div>
@@ -134,7 +134,7 @@ export function TeacherDashboard() {
                     </Card>
                 )}
                  <Link href="/quizzes/new/edit" onClick={handleCreateQuizClick}>
-                    <Button size="sm" className="bg-white/90 text-purple-900 hover:bg-white">
+                    <Button size="sm" className="bg-emerald-500 text-slate-950 hover:bg-emerald-600 font-bold">
                         <FilePlus2 className="h-4 w-4 md:mr-2" />
                         <span className="hidden md:inline">စာမေးပွဲအသစ်ဖန်တီးမည်</span>
                     </Button>
@@ -148,7 +148,7 @@ export function TeacherDashboard() {
                 <div className="space-y-8">
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium text-gray-300">စုစုပေါင်း ဖြေဆိုသူအရေအတွက်</CardTitle>
                                 <Users className="h-5 w-5 text-gray-300" style={{filter: 'drop-shadow(0 0 2px #fff)'}}/>
@@ -158,7 +158,7 @@ export function TeacherDashboard() {
                                 <p className="text-xs text-gray-400">+50 since last week</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium text-gray-300">Active Exams</CardTitle>
                                 <ClipboardCheck className="h-5 w-5 text-gray-300" style={{filter: 'drop-shadow(0 0 2px #fff)'}}/>
@@ -168,7 +168,7 @@ export function TeacherDashboard() {
                                 <p className="text-xs text-gray-400">2 currently live</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium text-gray-300">Average Score</CardTitle>
                                 <Star className="h-5 w-5 text-gray-300" style={{filter: 'drop-shadow(0 0 2px #fff)'}}/>
@@ -181,7 +181,7 @@ export function TeacherDashboard() {
                     </div>
 
                     {/* Chart */}
-                    <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
                         <CardHeader>
                             <CardTitle>ကျောင်းသားများ၏ တိုးတက်မှု</CardTitle>
                             <CardDescription className="text-gray-300">Average score of all students over the last 6 months.</CardDescription>
@@ -190,11 +190,11 @@ export function TeacherDashboard() {
                             <ChartContainer config={chartConfig} className="h-72 w-full">
                                 <ResponsiveContainer>
                                     <LineChart data={performanceData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.2)" />
                                         <XAxis dataKey="month" stroke="rgba(255,255,255,0.7)" />
                                         <YAxis stroke="rgba(255,255,255,0.7)" />
-                                        <ChartTooltip cursor={{fill: 'rgba(255,255,255,0.1)'}} content={<ChartTooltipContent indicator="line" labelClassName="text-black dark:text-white" />} />
-                                        <Line type="monotone" dataKey="averageScore" stroke="#8884d8" strokeWidth={2} dot={{fill: '#8884d8', r: 5}} activeDot={{ r: 8, fill: '#fff', stroke: '#8884d8' }} />
+                                        <ChartTooltip cursor={{fill: 'rgba(16,185,129,0.1)'}} content={<ChartTooltipContent indicator="line" labelClassName="text-black dark:text-white" />} />
+                                        <Line type="monotone" dataKey="averageScore" stroke="hsl(var(--primary))" strokeWidth={2} dot={{fill: 'hsl(var(--primary))', r: 5}} activeDot={{ r: 8, fill: '#fff', stroke: 'hsl(var(--primary))' }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </ChartContainer>
@@ -208,7 +208,7 @@ export function TeacherDashboard() {
                             {quizzes && quizzes.length > 0 ? quizzes.map((quiz) => {
                                 const status = getQuizStatus(quiz);
                                 return (
-                                    <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg bg-white/10 backdrop-blur-md border border-white/20 text-white overflow-hidden hover:border-white/40">
+                                    <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20">
                                     <CardHeader>
                                         <div className="flex justify-between items-start mb-2">
                                             <Badge variant={status.variant}>{status.text}</Badge>
@@ -229,15 +229,15 @@ export function TeacherDashboard() {
                                         </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="flex gap-2 bg-black/20 p-3">
+                                    <CardFooter className="flex gap-2 bg-black/30 p-3">
                                         <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
-                                        <Button size="sm" variant="outline" className="w-full bg-transparent text-white border-white/40 hover:bg-white/10">
+                                        <Button size="sm" variant="outline" className="w-full bg-transparent text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/10">
                                             <Edit className="mr-2 h-4 w-4" />
                                             Edit
                                         </Button>
                                         </Link>
                                         <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                                        <Button size="sm" variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white">
+                                        <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
                                             <Eye className="mr-2 h-4 w-4" />
                                             Preview
                                         </Button>
@@ -246,11 +246,11 @@ export function TeacherDashboard() {
                                     </Card>
                                 )
                             }) : (
-                            <div className="col-span-full text-center text-gray-300 py-16 bg-white/5 rounded-lg">
+                            <div className="col-span-full text-center text-gray-300 py-16 bg-emerald-900/10 rounded-lg">
                                 <h3 className="text-lg font-semibold">No Quizzes Found</h3>
                                 <p className="text-sm">Get started by creating a new quiz.</p>
                                 <Link href="/quizzes/new/edit" className='mt-4 inline-block' onClick={handleCreateQuizClick}>
-                                <Button className="bg-white/90 text-purple-900 hover:bg-white">
+                                <Button className="bg-emerald-500 text-slate-950 hover:bg-emerald-600 font-bold">
                                     <FilePlus2 className="mr-2 h-4 w-4" />
                                     စာမေးပွဲအသစ်ဖန်တီးမည်
                                 </Button>

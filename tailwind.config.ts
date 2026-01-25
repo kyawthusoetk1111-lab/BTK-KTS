@@ -17,7 +17,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
+        body: ['Inter', 'Noto Sans Myanmar', 'sans-serif'],
         headline: ['Space Grotesk', 'sans-serif'],
         code: ['monospace'],
       },
@@ -85,10 +85,15 @@ export default {
             height: '0',
           },
         },
+        'pulse-green': {
+            '0%, 100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)' },
+            '50%': { boxShadow: '0 0 0 4px rgba(16, 185, 129, 0)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-green': 'pulse-green 2s infinite',
       },
     },
   },

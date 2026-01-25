@@ -58,7 +58,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
     }
 
     return (
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
+        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
             <CardHeader>
                 <CardTitle>My Purchases</CardTitle>
                 <CardDescription className="text-gray-300">A history of your purchased content.</CardDescription>
@@ -66,7 +66,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
             <CardContent>
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-white/20 hover:bg-white/10">
+                        <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
                             <TableHead className="text-gray-200">Item</TableHead>
                             <TableHead className="text-gray-200">Type</TableHead>
                             <TableHead className="text-gray-200">Amount</TableHead>
@@ -75,7 +75,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
                     </TableHeader>
                     <TableBody>
                         {purchases.map(p => (
-                            <TableRow key={p.id} className="border-white/20 hover:bg-white/10">
+                            <TableRow key={p.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
                                 <TableCell className="font-medium">{p.itemDescription}</TableCell>
                                 <TableCell className="capitalize">{p.itemType}</TableCell>
                                 <TableCell>{p.amountPaid.toLocaleString()} MMK</TableCell>
@@ -123,13 +123,13 @@ export function StudentDashboard() {
 
   return (
     <>
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-indigo-950 text-white">
-      <header className="sticky top-0 z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
+      <header className="sticky top-0 z-10 bg-black/20 backdrop-blur-lg border-b border-emerald-500/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-white">
               <Activity />
-              QuizCraft Pro
+              BTK Education
             </Link>
             <AuthButton />
           </div>
@@ -147,11 +147,11 @@ export function StudentDashboard() {
         </div>
         
         <Tabs defaultValue="quizzes">
-            <TabsList className="grid w-full grid-cols-4 md:w-[800px] mb-6 bg-white/10 text-gray-300">
-                <TabsTrigger value="quizzes" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">သင်ခန်းစာများ</TabsTrigger>
-                <TabsTrigger value="grades" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
-                <TabsTrigger value="purchases" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">My Purchases</TabsTrigger>
-                <TabsTrigger value="leaderboards" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">Leaderboards</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 md:w-[800px] mb-6 bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-gray-300">
+                <TabsTrigger value="quizzes" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">သင်ခန်းစာများ</TabsTrigger>
+                <TabsTrigger value="grades" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
+                <TabsTrigger value="purchases" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">My Purchases</TabsTrigger>
+                <TabsTrigger value="leaderboards" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">Leaderboards</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
                 <div className="flex flex-col md:flex-row gap-4 justify-end mb-4">
@@ -161,15 +161,15 @@ export function StudentDashboard() {
                             placeholder="Search by exam code..."
                             value={searchCode}
                             onChange={(e) => setSearchCode(e.target.value)}
-                            className="pl-9 bg-white/10 border-white/20 placeholder:text-gray-400"
+                            className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
                         />
                     </div>
                     <div className="w-full md:w-64">
                         <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                            <SelectTrigger className="bg-white/10 border-white/20">
+                            <SelectTrigger className="bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
                                 <SelectValue placeholder="Filter by subject..." />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 text-white border-slate-700">
+                            <SelectContent className="bg-slate-900 text-white border-slate-700">
                                 <SelectItem value="all" className="focus:bg-slate-700">All Subjects</SelectItem>
                                 {subjects.map(subject => (
                                     <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
@@ -184,14 +184,14 @@ export function StudentDashboard() {
                    </div>
                  ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredQuizzes && filteredQuizzes.length > 0 ? filteredQuizzes.map((quiz) => {
+                    {filteredQuizzes && filteredQuizzes.length > 0 ? filteredQuizzes.map((quiz, index) => {
                         const hasQuizAccess = !quiz.isPremium || purchases.some(p => p.itemId === quiz.id);
 
                         return (
-                        <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg bg-white/10 backdrop-blur-md border border-white/20 text-white overflow-hidden">
+                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animationDelay: `${index * 100}ms`, animation: 'fade-in-up 0.5s ease-out forwards', opacity: 0 }}>
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
-                              {quiz.subject && <Badge variant="secondary" className="bg-white/20 text-white">{quiz.subject}</Badge>}
+                              {quiz.subject && <Badge variant="secondary" className="bg-black/30 text-gray-300">{quiz.subject}</Badge>}
                                {quiz.isPremium && <Badge variant="premium"><Star className="mr-1 h-3 w-3" />Premium</Badge>}
                             </div>
                             <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
@@ -215,22 +215,22 @@ export function StudentDashboard() {
                                 </div>
                             )}
                         </CardContent>
-                        <CardFooter className="flex gap-2 bg-black/20 p-3">
+                        <CardFooter className="flex gap-2 bg-black/30 p-3">
                             {hasQuizAccess ? (
                                  <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                                    <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white">
+                                    <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold">
                                         <Play className="mr-2 h-4 w-4" />
                                         စာမေးပွဲစတင်မည်
                                     </Button>
                                 </Link>
                             ) : (
-                                <Button size="sm" className="w-full bg-sky-500 hover:bg-sky-600 text-white" onClick={() => handleBuyNow(quiz)}>
+                                <Button size="sm" className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold" onClick={() => handleBuyNow(quiz)}>
                                     <ShoppingCart className="mr-2 h-4 w-4" />
                                     Buy Now ({quiz.price?.toLocaleString()} MMK)
                                 </Button>
                             )}
                             <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                              <Button size="sm" variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white">
+                              <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
                                   <Eye className="mr-2 h-4 w-4" />
                                   Preview
                               </Button>
@@ -256,7 +256,7 @@ export function StudentDashboard() {
                 <MyPurchases purchases={purchases} isLoading={arePurchasesLoading} />
             </TabsContent>
             <TabsContent value="leaderboards">
-                <Card className="bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
                     <CardHeader>
                         <CardTitle>Leaderboards</CardTitle>
                         <CardDescription className="text-gray-300">See how you stack up against your peers.</CardDescription>
@@ -264,10 +264,10 @@ export function StudentDashboard() {
                     <CardContent className="space-y-4">
                         <div className="w-full md:w-64">
                             <Select value={selectedLeaderboardSubject} onValueChange={setSelectedLeaderboardSubject}>
-                                <SelectTrigger className="bg-white/10 border-white/20">
+                                <SelectTrigger className="bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
                                     <SelectValue placeholder="Select a subject..." />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-800 text-white border-slate-700">
+                                <SelectContent className="bg-slate-900 text-white border-slate-700">
                                     {subjects.map(subject => (
                                         <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
                                     ))}
