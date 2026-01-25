@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Award, ClipboardCheck, Calendar, Activity, Clock, CheckCircle } from 'lucide-react';
+import { BookCopy, Star, Play, Eye, Award, ClipboardCheck, Calendar, Activity, Clock, CheckCircle, Search } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { subjects } from '@/lib/subjects';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
+import { Input } from './ui/input';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -42,11 +43,14 @@ const getGradeColor = (grade: string) => {
 
 export function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [searchCode, setSearchCode] = useState<string>('');
   const { profile } = useUserWithProfile();
 
-  const filteredQuizzes = selectedSubject === 'all'
-    ? mockQuizzes
-    : mockQuizzes.filter(quiz => quiz.subject === selectedSubject);
+  const filteredQuizzes = mockQuizzes.filter(quiz => {
+    const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
+    const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
+    return subjectMatch && codeMatch;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -78,7 +82,16 @@ export function StudentDashboard() {
                 <TabsTrigger value="grades">My Grades</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
-                <div className="flex justify-end mb-4">
+                <div className="flex flex-col md:flex-row gap-4 justify-end mb-4">
+                    <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search by exam code..."
+                            value={searchCode}
+                            onChange={(e) => setSearchCode(e.target.value)}
+                            className="pl-9"
+                        />
+                    </div>
                     <div className="w-full md:w-64">
                         <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                             <SelectTrigger>

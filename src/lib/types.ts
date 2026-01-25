@@ -45,6 +45,7 @@ export interface Quiz {
   id: string;
   name: string;
   description: string;
+  examCode?: string;
   sections: Section[];
   subject?: string;
   startDate?: string;

@@ -18,6 +18,10 @@
           "type": "string",
           "description": "A description of the quiz."
         },
+        "examCode": {
+          "type": "string",
+          "description": "A unique code for the quiz that students can use to access it."
+        },
         "totalPoints": {
           "type": "number",
           "description": "The total points possible for the quiz."

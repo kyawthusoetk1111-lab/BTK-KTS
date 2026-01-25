@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, BarChart2 } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, BarChart2, Code } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
@@ -101,6 +101,7 @@ export function TeacherDashboard() {
                     <CardHeader>
                         <div className="flex justify-between items-start mb-2">
                            {quiz.subject && <Badge variant="secondary">{quiz.subject}</Badge>}
+                           {quiz.examCode && <Badge variant="outline"><Code className="mr-1 h-3 w-3" />{quiz.examCode}</Badge>}
                         </div>
                         <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
                         <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>

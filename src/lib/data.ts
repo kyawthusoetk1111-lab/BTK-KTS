@@ -6,6 +6,7 @@ export const mockQuizzes: Quiz[] = [
     name: 'General Knowledge Challenge',
     description: 'A fun quiz to test your general knowledge across various domains.',
     subject: 'General Knowledge',
+    examCode: 'GKC-101',
     timerInMinutes: 10,
     sections: [
       {
@@ -62,6 +63,7 @@ export const mockQuizzes: Quiz[] = [
     name: 'Advanced Mathematics',
     description: 'A challenging quiz for math enthusiasts focusing on calculus and algebra.',
     subject: 'Mathematics',
+    examCode: 'MATH-202',
     timerInMinutes: 60,
     sections: [
       {
@@ -82,5 +84,3 @@ export const mockQuizzes: Quiz[] = [
     ],
   },
 ];
-
-    

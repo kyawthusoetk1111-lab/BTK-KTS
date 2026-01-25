@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import SectionEditor from "@/components/section-editor";
-import { PlusCircle, Save, CalendarIcon, Eye } from "lucide-react";
+import { PlusCircle, Save, CalendarIcon, Eye, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "./ui/label";
@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { Calendar } from "./ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subjects } from "@/lib/subjects";
+import { Badge } from "./ui/badge";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -112,7 +113,23 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
         <div className="max-w-4xl mx-auto space-y-8">
           <Card>
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-2xl font-bold font-headline tracking-tight">Quiz Details</h2>
+              <div className="flex justify-between items-start">
+                  <h2 className="text-2xl font-bold font-headline tracking-tight">Quiz Details</h2>
+                  {quiz.examCode && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">Exam Code:</span>
+                        <Badge variant="outline" className="font-mono text-base px-3 py-1">{quiz.examCode}</Badge>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                            if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                navigator.clipboard.writeText(quiz.examCode || '');
+                                toast({ title: 'Copied!', description: 'Exam code copied to clipboard.' });
+                            }
+                        }}>
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    </div>
+                  )}
+              </div>
               <div>
                 <Input
                   placeholder="Quiz Name"
