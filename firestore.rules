@@ -86,7 +86,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && request.resource.data.id == resource.data.id || isAdmin();
-      allow delete: if isOwner(userId);
+      allow delete: if isOwner(userId) || isAdmin();
 
        /**
        * @description Exam results are private to the user. Path-based ownership.
@@ -191,5 +191,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
