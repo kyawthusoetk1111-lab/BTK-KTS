@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Crown, Users, ClipboardCheck, TrendingUp, Settings } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Crown, Users, ClipboardCheck, TrendingUp, Settings, Trash2 } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 import { UpgradeModal } from './upgrade-modal';
 import { PaymentModal } from './payment-modal';
@@ -17,6 +17,17 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TeacherSidebar } from '@/components/teacher-sidebar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 const getQuizStatus = (quiz: Quiz): { text: 'Live' | 'Draft' | 'Closed'; variant: 'live' | 'draft' | 'closed' } => {
     const now = new Date();
@@ -73,9 +84,11 @@ export function TeacherDashboard() {
   const { profile, isLoading: isProfileLoading } = useUserWithProfile();
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
 
   const quizzesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -100,6 +113,20 @@ export function TeacherDashboard() {
     setUpgradeModalOpen(false);
     setPaymentModalOpen(true);
   }
+
+  const handleDeleteConfirm = () => {
+    if (!quizToDelete || !firestore) return;
+
+    const quizRef = doc(firestore, 'quizzes', quizToDelete.id);
+    deleteDocumentNonBlocking(quizRef);
+
+    toast({
+      title: "Success",
+      description: "စာမေးပွဲကို အောင်မြင်စွာ ဖျက်လိုက်ပါပြီ။"
+    });
+
+    setQuizToDelete(null);
+  };
 
   const isLoading = areQuizzesLoading || isProfileLoading;
 
@@ -229,19 +256,28 @@ export function TeacherDashboard() {
                                         </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="flex gap-2 bg-black/30 p-3">
+                                    <CardFooter className="flex items-center gap-2 bg-black/30 p-3">
                                         <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
-                                        <Button size="sm" variant="outline" className="w-full bg-transparent text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/10">
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            Edit
-                                        </Button>
+                                            <Button size="sm" variant="outline" className="w-full bg-transparent text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/10">
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Edit
+                                            </Button>
                                         </Link>
                                         <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                                        <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
-                                            <Eye className="mr-2 h-4 w-4" />
-                                            Preview
-                                        </Button>
+                                            <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                Preview
+                                            </Button>
                                         </Link>
+                                        <Button 
+                                            size="icon" 
+                                            variant="destructive" 
+                                            className="bg-red-500/20 text-red-400 hover:bg-red-500/40 hover:text-red-300 border border-red-500/40 flex-shrink-0"
+                                            onClick={() => setQuizToDelete(quiz)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Delete Quiz</span>
+                                        </Button>
                                     </CardFooter>
                                     </Card>
                                 )
@@ -276,6 +312,27 @@ export function TeacherDashboard() {
           itemDescription="QuizCraft Pro Subscription"
           amount={5000}
       />
+       <AlertDialog open={!!quizToDelete} onOpenChange={(isOpen) => !isOpen && setQuizToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ဒီစာမေးပွဲကို ဖျက်ရန် သေချာပါသလား?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the quiz {'"'}
+              {quizToDelete?.name}
+              {'"'}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className={buttonVariants({ variant: "destructive" })}
+            >
+              Confirm Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
