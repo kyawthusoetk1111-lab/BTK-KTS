@@ -14,6 +14,7 @@ export default function EditQuizPage() {
   const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
+  const isNewQuiz = id === 'new';
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -22,13 +23,15 @@ export default function EditQuizPage() {
   }, [user, isAuthLoading, router]);
 
   const quizDocRef = useMemoFirebase(() => {
-    if (id === 'new' || !user || !firestore) return null;
+    if (isNewQuiz || !user || !firestore) return null;
     return doc(firestore, 'users', user.uid, 'quizzes', id);
-  }, [id, user, firestore]);
+  }, [id, user, firestore, isNewQuiz]);
   
   const { data: quizFromDb, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
 
-  if (isAuthLoading || (id !== 'new' && isQuizLoading)) {
+  const isLoading = isAuthLoading || (!isNewQuiz && isQuizLoading);
+
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner />
@@ -36,10 +39,8 @@ export default function EditQuizPage() {
     );
   }
 
-  let quiz: Quiz | undefined | null;
-
-  if (id === 'new') {
-    quiz = {
+  if (isNewQuiz) {
+    const newQuiz: Quiz = {
       id: crypto.randomUUID(),
       name: 'Untitled Quiz',
       description: 'Enter a description for your new quiz.',
@@ -55,22 +56,12 @@ export default function EditQuizPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-  } else {
-    quiz = quizFromDb;
+    return <QuizEditor initialQuiz={newQuiz} />;
   }
 
-  if (!quiz) {
-    if (id !== 'new' && !isQuizLoading) {
-      // If we are not loading and there's no quiz, it's a 404
-      notFound();
-    }
-    // If it's a new quiz, or still loading, don't 404 yet
-     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
+  if (!quizFromDb) {
+    notFound();
   }
 
-  return <QuizEditor initialQuiz={quiz} />;
+  return <QuizEditor initialQuiz={quizFromDb} />;
 }

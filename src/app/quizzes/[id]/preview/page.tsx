@@ -13,59 +13,48 @@ export default function PreviewQuizPage() {
     const id = params.id as string;
     const { user, isUserLoading: isAuthLoading } = useUser();
     const firestore = useFirestore();
+    const isNewQuiz = id === 'new';
     
-    // State to hold the quiz data, whether from DB or localStorage
-    const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
+    // For new quizzes, we need client-side state to read from localStorage
+    const [localQuiz, setLocalQuiz] = useState<Quiz | null | undefined>(undefined);
 
-    // Fetching logic for existing quizzes from Firestore
     const quizDocRef = useMemoFirebase(() => {
-        if (id === 'new' || !user || !firestore) return null;
+        if (isNewQuiz || !user || !firestore) return null;
         return doc(firestore, 'users', user.uid, 'quizzes', id);
-    }, [id, user, firestore]);
+    }, [id, user, firestore, isNewQuiz]);
   
     const { data: quizFromDb, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
 
     useEffect(() => {
-        if (id === 'new') {
+        if (isNewQuiz) {
             const storedQuizPreview = localStorage.getItem('quiz-preview');
             if (storedQuizPreview) {
                 try {
-                    const parsedQuiz = JSON.parse(storedQuizPreview) as Quiz;
-                    setQuiz(parsedQuiz);
+                    setLocalQuiz(JSON.parse(storedQuizPreview) as Quiz);
                 } catch (error) {
                     console.error("Failed to parse quiz preview from localStorage", error);
-                    setQuiz(null); // Set to null on parsing error
+                    setLocalQuiz(null);
                 }
             } else {
-                setQuiz(null); // No preview data found
-            }
-        } else {
-            // For existing quizzes, rely on the data from the useDoc hook
-            if (!isQuizLoading) {
-                 setQuiz(quizFromDb || null);
+                setLocalQuiz(null); // No preview data found
             }
         }
-    }, [id, quizFromDb, isQuizLoading]);
-
-
-    if (isAuthLoading || (quiz === undefined && id !== 'new')) {
+    }, [isNewQuiz]);
+    
+    const isLoading = isAuthLoading || (!isNewQuiz && isQuizLoading) || (isNewQuiz && localQuiz === undefined);
+    
+    if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center">
                 <LoadingSpinner />
             </div>
         );
     }
-
-    if (quiz === null && !isQuizLoading) {
-        notFound();
-    }
+    
+    const quiz = isNewQuiz ? localQuiz : quizFromDb;
 
     if (!quiz) {
-         return (
-            <div className="flex h-screen w-full items-center justify-center">
-                <LoadingSpinner />
-            </div>
-        );
+        notFound();
     }
 
     return <QuizPreview quiz={quiz} />;
