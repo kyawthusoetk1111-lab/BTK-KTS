@@ -7,9 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import SectionEditor from "@/components/section-editor";
-import { PlusCircle, Save } from "lucide-react";
+import { PlusCircle, Save, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { Label } from "./ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar } from "./ui/calendar";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -20,11 +25,17 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const { toast } = useToast();
 
   const handleQuizDetailsChange = (
-    field: "name" | "description",
-    value: string
+    field: keyof Quiz,
+    value: string | number
   ) => {
     setQuiz((prev) => ({ ...prev, [field]: value }));
   };
+  
+  const handleDateChange = (field: "startDate" | "endDate", date: Date | undefined) => {
+    if (date) {
+        setQuiz((prev) => ({ ...prev, [field]: date.toISOString() }));
+    }
+}
 
   const addSection = () => {
     const newSection: Section = {
@@ -111,6 +122,71 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                   }
                 />
               </div>
+               <div>
+                <Label htmlFor="quiz-subject">Subject</Label>
+                <Input
+                    id="quiz-subject"
+                    placeholder="Quiz Subject"
+                    value={quiz.subject || ''}
+                    onChange={(e) => handleQuizDetailsChange("subject", e.target.value)}
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="start-date">Start Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn("w-full justify-start text-left font-normal", !quiz.startDate && "text-muted-foreground")}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {quiz.startDate ? format(new Date(quiz.startDate), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                                mode="single"
+                                selected={quiz.startDate ? new Date(quiz.startDate) : undefined}
+                                onSelect={(date) => handleDateChange('startDate', date)}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="end-date">End Date</Label>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn("w-full justify-start text-left font-normal", !quiz.endDate && "text-muted-foreground")}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {quiz.endDate ? format(new Date(quiz.endDate), "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                                mode="single"
+                                selected={quiz.endDate ? new Date(quiz.endDate) : undefined}
+                                onSelect={(date) => handleDateChange('endDate', date)}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="timer">Timer (minutes)</Label>
+                    <Input
+                        id="timer"
+                        type="number"
+                        placeholder="e.g. 60"
+                        value={quiz.timerInMinutes || ''}
+                        onChange={(e) => handleQuizDetailsChange("timerInMinutes", parseInt(e.target.value) || 0)}
+                    />
+                </div>
+            </div>
             </CardContent>
           </Card>
 
@@ -137,3 +213,5 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     </div>
   );
 }
+
+    

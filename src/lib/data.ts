@@ -5,6 +5,8 @@ export const mockQuizzes: Quiz[] = [
     id: 'quiz-1',
     name: 'General Knowledge Challenge',
     description: 'A fun quiz to test your general knowledge across various domains.',
+    subject: 'General Knowledge',
+    timerInMinutes: 10,
     sections: [
       {
         id: 'sec-1-1',
@@ -24,6 +26,18 @@ export const mockQuizzes: Quiz[] = [
             matchingPairs: [],
             dropdowns: [],
           },
+          {
+            id: 'q-1-1-2',
+            type: 'true-false',
+            text: 'The Great Wall of China is visible from the moon.',
+            points: 5,
+            options: [
+                { id: 'opt-tf-1', text: 'True', isCorrect: false },
+                { id: 'opt-tf-2', text: 'False', isCorrect: true },
+            ],
+            matchingPairs: [],
+            dropdowns: [],
+          }
         ],
       },
       {
@@ -47,6 +61,8 @@ export const mockQuizzes: Quiz[] = [
     id: 'quiz-2',
     name: 'Advanced Mathematics',
     description: 'A challenging quiz for math enthusiasts focusing on calculus and algebra.',
+    subject: 'Mathematics',
+    timerInMinutes: 60,
     sections: [
       {
         id: 'sec-2-1',
@@ -66,3 +82,5 @@ export const mockQuizzes: Quiz[] = [
     ],
   },
 ];
+
+    

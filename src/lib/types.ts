@@ -46,4 +46,10 @@ export interface Quiz {
   name: string;
   description: string;
   sections: Section[];
+  subject?: string;
+  startDate?: string;
+  endDate?: string;
+  timerInMinutes?: number;
 }
+
+    
