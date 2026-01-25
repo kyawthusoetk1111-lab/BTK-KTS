@@ -89,12 +89,12 @@ export function QuestionRenderer({ question, answer, onAnswerChange, passageText
               <div className="space-y-4 my-4">
                 {question.imageUrl && (
                   <div className="relative w-full aspect-video">
-                    <Image src={question.imageUrl} alt="Question content" fill objectFit="contain" className="rounded-lg border" />
+                    <Image src={question.imageUrl} alt="Question content" fill style={{ objectFit: 'contain' }} className="rounded-lg border" />
                   </div>
                 )}
                 {question.audioUrl && (
                   <div>
-                    <audio controls src={question.audioUrl} className="w-full">
+                    <audio controls src={question.audioUrl} className="w-full" preload="none">
                         Your browser does not support the audio element.
                     </audio>
                   </div>

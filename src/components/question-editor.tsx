@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { Question, QuestionType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Wand2, Image as ImageIcon, Music, Upload } from "lucide-react";
+import { Wand2, Image as ImageIcon, Music, Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import MultipleChoiceEditor from "./quiz/question-types/multiple-choice-editor";
@@ -19,6 +19,7 @@ import PassageWithDropdownsEditor from "./quiz/question-types/passage-with-dropd
 import TrueFalseEditor from "./quiz/question-types/true-false-editor";
 import { MathEquationHelper } from "./math-type-helper";
 import { LatexRenderer } from "./latex-renderer";
+import { useStorage, useUser, uploadFileToStorage } from "@/firebase";
 
 interface QuestionEditorProps {
   question: Question;
@@ -32,22 +33,40 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
+  const storage = useStorage();
+  const { user } = useUser();
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+
   const handleFieldChange = (field: keyof Question, value: any) => {
     onUpdate({ ...question, [field]: value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'audio') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, fileType: 'image' | 'audio') => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (fileType === 'image') {
-          handleFieldChange('imageUrl', reader.result as string);
-        } else {
-          handleFieldChange('audioUrl', reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file || !user || !storage) {
+        toast({ title: "Upload failed", description: "Could not upload file. Please try again.", variant: "destructive" });
+        return;
+    };
+
+    const setLoading = fileType === 'image' ? setIsUploadingImage : setIsUploadingAudio;
+    setLoading(true);
+
+    try {
+      const downloadURL = await uploadFileToStorage(storage, user.uid, file);
+      if (fileType === 'image') {
+        handleFieldChange('imageUrl', downloadURL);
+      } else {
+        handleFieldChange('audioUrl', downloadURL);
+      }
+      toast({ title: "Upload successful!", description: `${file.name} has been uploaded.` });
+    } catch (error) {
+        console.error("File upload error:", error);
+        toast({ title: "Upload failed", description: "There was a problem uploading your file.", variant: "destructive" });
+    } finally {
+        setLoading(false);
+        // Reset the input value so the same file can be re-uploaded
+        if(e.target) e.target.value = '';
     }
   };
 
@@ -150,10 +169,15 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
                 placeholder="Paste image URL or upload a file"
                 value={question.imageUrl || ''}
                 onChange={(e) => handleFieldChange("imageUrl", e.target.value)}
+                disabled={isUploadingImage}
             />
-            <Button variant="outline" onClick={() => imageInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload
+            <Button variant="outline" onClick={() => imageInputRef.current?.click()} disabled={isUploadingImage}>
+              {isUploadingImage ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {isUploadingImage ? 'Uploading...' : 'Upload'}
             </Button>
             <input 
               type="file"
@@ -175,10 +199,15 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
                 placeholder="Paste audio URL or upload a file"
                 value={question.audioUrl || ''}
                 onChange={(e) => handleFieldChange("audioUrl", e.target.value)}
+                disabled={isUploadingAudio}
             />
-            <Button variant="outline" onClick={() => audioInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload
+            <Button variant="outline" onClick={() => audioInputRef.current?.click()} disabled={isUploadingAudio}>
+               {isUploadingAudio ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              {isUploadingAudio ? 'Uploading...' : 'Upload'}
             </Button>
              <input 
               type="file"
@@ -188,7 +217,7 @@ export default function QuestionEditor({ question, onUpdate, passageQuestions }:
               onChange={(e) => handleFileChange(e, 'audio')}
             />
         </div>
-        {question.audioUrl && <audio controls src={question.audioUrl} className="mt-2 w-full" />}
+        {question.audioUrl && <audio controls src={question.audioUrl} className="mt-2 w-full" preload="none" />}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
