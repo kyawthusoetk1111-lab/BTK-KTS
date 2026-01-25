@@ -19,8 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { subjects } from "@/lib/subjects";
 import { Switch } from "./ui/switch";
 import { useParams, useRouter } from "next/navigation";
-import { useFirestore, useUser, setDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useFirestore, useUser } from "@/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -33,6 +33,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const router = useRouter();
   const firestore = useFirestore();
   const { user } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
@@ -82,12 +83,10 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
   const handlePreview = () => {
     // If it's a new, unsaved quiz, store it in localStorage for the preview page to pick up.
-    if (params.id === 'new') {
-      localStorage.setItem('quiz-preview', JSON.stringify(quiz));
-    }
+    localStorage.setItem('quiz-preview', JSON.stringify(quiz));
   };
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!user || !firestore) {
         toast({
             title: "Error",
@@ -97,6 +96,9 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
         return;
     }
 
+    setIsSaving(true);
+    const isNewQuiz = params.id === 'new';
+
     const quizToSave: Quiz = {
         ...quiz,
         updatedAt: new Date().toISOString(),
@@ -105,16 +107,27 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
     const quizDocRef = doc(firestore, 'users', user.uid, 'quizzes', quiz.id);
 
-    setDocumentNonBlocking(quizDocRef, quizToSave, { merge: true });
+    try {
+        await setDoc(quizDocRef, quizToSave, { merge: true });
 
-    toast({
-      title: "Quiz Saved!",
-      description: "Your quiz has been successfully saved.",
-    });
+        toast({
+          title: "Quiz Saved!",
+          description: "Your quiz has been successfully saved.",
+        });
 
-    // If it was a new quiz, redirect to the edit page for that quiz
-    if (params.id === 'new') {
-        router.replace(`/quizzes/${quiz.id}/edit`);
+        // If it was a new quiz, redirect to the edit page for that quiz
+        if (isNewQuiz) {
+            router.replace(`/quizzes/${quiz.id}/edit`);
+        }
+    } catch (error) {
+        console.error("Error saving quiz:", error);
+        toast({
+            title: "Save Failed",
+            description: "There was an error saving your quiz. Please try again.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSaving(false);
     }
   };
 
@@ -138,9 +151,12 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                     Preview
                 </Button>
               </Link>
-              <Button onClick={handleSave}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Quiz
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving ? (
+                    <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div> Saving...</>
+                ) : (
+                    <><Save className="mr-2 h-4 w-4" /> Save Quiz</>
+                )}
               </Button>
             </div>
           </div>
