@@ -18,7 +18,9 @@ import { Calendar } from "./ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { subjects } from "@/lib/subjects";
 import { Switch } from "./ui/switch";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useFirestore, useUser, setDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -28,6 +30,9 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const [quiz, setQuiz] = useState<Quiz>(initialQuiz);
   const { toast } = useToast();
   const params = useParams();
+  const router = useRouter();
+  const firestore = useFirestore();
+  const { user } = useUser();
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
@@ -83,12 +88,34 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   };
   
   const handleSave = () => {
-    // In a real app, you would send this to your backend API
-    console.log("Saving quiz:", JSON.stringify(quiz, null, 2));
+    if (!user || !firestore) {
+        toast({
+            title: "Error",
+            description: "Could not save quiz. User not logged in.",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    const quizToSave: Quiz = {
+        ...quiz,
+        updatedAt: new Date().toISOString(),
+        createdAt: quiz.createdAt || new Date().toISOString()
+    }
+
+    const quizDocRef = doc(firestore, 'users', user.uid, 'quizzes', quiz.id);
+
+    setDocumentNonBlocking(quizDocRef, quizToSave, { merge: true });
+
     toast({
       title: "Quiz Saved!",
       description: "Your quiz has been successfully saved.",
     });
+
+    // If it was a new quiz, redirect to the edit page for that quiz
+    if (params.id === 'new') {
+        router.replace(`/quizzes/${quiz.id}/edit`);
+    }
   };
 
   const previewId = params.id === 'new' ? 'new' : quiz.id;

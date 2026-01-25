@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockQuizzes } from '@/lib/data';
 import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, Code } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
@@ -15,11 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { StudentAnalytics } from './student-analytics';
 import { GradingDashboard } from './grading-dashboard';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { LoadingSpinner } from './loading-spinner';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
     return total + section.questions.reduce((sectionTotal, question) => {
-      return sectionTotal + question.points;
+      return sectionTotal + (question.points || 0);
     }, 0);
   }, 0);
 }
@@ -31,12 +33,21 @@ function countQuestions(quiz: Quiz) {
 }
 
 export function TeacherDashboard() {
-  const { profile } = useUserWithProfile();
+  const { profile, isLoading: isProfileLoading } = useUserWithProfile();
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
+  const quizzesQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, 'users', user.uid, 'quizzes'), orderBy('createdAt', 'desc'));
+  }, [user, firestore]);
+
+  const { data: quizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
+
   const filteredQuizzes = selectedSubject === 'all'
-    ? mockQuizzes
-    : mockQuizzes.filter(quiz => quiz.subject === selectedSubject);
+    ? quizzes
+    : quizzes?.filter(quiz => quiz.subject === selectedSubject);
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
@@ -98,31 +109,36 @@ export function TeacherDashboard() {
                         </Select>
                     </div>
                  </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredQuizzes.map((quiz) => (
-                    <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg border-transparent hover:border-primary/50">
-                    <CardHeader>
-                        <div className="flex justify-between items-start mb-2">
+                 {areQuizzesLoading || isProfileLoading ? (
+                   <div className="flex justify-center items-center h-64">
+                     <LoadingSpinner />
+                   </div>
+                 ) : (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredQuizzes && filteredQuizzes.length > 0 ? filteredQuizzes.map((quiz) => (
+                      <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg border-transparent hover:border-primary/50">
+                      <CardHeader>
+                          <div className="flex justify-between items-start mb-2">
                            {quiz.subject && <Badge variant="secondary">{quiz.subject}</Badge>}
                            {quiz.examCode && <Badge variant="outline"><Code className="mr-1 h-3 w-3" />{quiz.examCode}</Badge>}
                         </div>
                         <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
                         <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                            <BookCopy className="h-4 w-4" />
-                            <span>{countQuestions(quiz)} Questions</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Star className="h-4 w-4" />
-                            <span>{calculateTotalPoints(quiz)} Points</span>
-                        </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex gap-2 bg-muted/50 p-3 rounded-b-lg">
-                        <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                              <BookCopy className="h-4 w-4" />
+                              <span>{countQuestions(quiz)} Questions</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              <Star className="h-4 w-4" />
+                              <span>{calculateTotalPoints(quiz)} Points</span>
+                          </div>
+                          </div>
+                      </CardContent>
+                      <CardFooter className="flex gap-2 bg-muted/50 p-3 rounded-b-lg">
+                          <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
                           <Button size="sm" variant="outline" className="w-full">
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
@@ -134,10 +150,22 @@ export function TeacherDashboard() {
                               Preview
                           </Button>
                         </Link>
-                    </CardFooter>
-                    </Card>
-                ))}
-                </div>
+                      </CardFooter>
+                      </Card>
+                  )) : (
+                    <div className="col-span-full text-center text-muted-foreground py-16">
+                      <h3 className="text-lg font-semibold">No Quizzes Found</h3>
+                      <p className="text-sm">Get started by creating a new quiz.</p>
+                      <Link href="/quizzes/new/edit" className='mt-4 inline-block'>
+                        <Button>
+                          <FilePlus2 className="mr-2 h-4 w-4" />
+                          Create Quiz
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                  </div>
+                 )}
             </TabsContent>
             <TabsContent value="grading">
                 <GradingDashboard />

@@ -1,26 +1,34 @@
 'use client';
 
 import { QuizEditor } from '@/components/quiz-editor';
-import { mockQuizzes } from '@/lib/data';
 import type { Quiz } from '@/lib/types';
 import { notFound, useRouter, useParams } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useEffect } from 'react';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { doc } from 'firebase/firestore';
 
 export default function EditQuizPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const firestore = useFirestore();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isAuthLoading && !user) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isAuthLoading, router]);
 
-  if (isUserLoading || !user) {
+  const quizDocRef = useMemoFirebase(() => {
+    if (id === 'new' || !user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'quizzes', id);
+  }, [id, user, firestore]);
+  
+  const { data: quizFromDb, isLoading: isQuizLoading } = useDoc<Quiz>(quizDocRef);
+
+  if (isAuthLoading || (id !== 'new' && isQuizLoading)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner />
@@ -44,13 +52,24 @@ export default function EditQuizPage() {
           questions: [],
         },
       ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
   } else {
-    quiz = mockQuizzes.find((q) => q.id === id);
+    quiz = quizFromDb;
   }
 
   if (!quiz) {
-    notFound();
+    if (id !== 'new' && !isQuizLoading) {
+      // If we are not loading and there's no quiz, it's a 404
+      notFound();
+    }
+    // If it's a new quiz, or still loading, don't 404 yet
+     return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return <QuizEditor initialQuiz={quiz} />;

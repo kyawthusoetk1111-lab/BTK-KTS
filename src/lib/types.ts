@@ -54,6 +54,8 @@ export interface Quiz {
   endDate?: string;
   timerInMinutes?: number;
   showInstantFeedback?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UserProfile {
