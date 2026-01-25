@@ -13,6 +13,7 @@ import { subjects } from '@/lib/subjects';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { StudentAnalytics } from './student-analytics';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -137,21 +138,7 @@ export function TeacherDashboard() {
                 </div>
             </TabsContent>
             <TabsContent value="results">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Student Results</CardTitle>
-                        <CardDescription>Analyze your students' performance on their submitted quizzes.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-center text-muted-foreground py-16">
-                        <div className="flex justify-center mb-4">
-                           <div className="p-4 rounded-full bg-primary/10">
-                             <BarChart2 className="h-10 w-10 text-primary" />
-                           </div>
-                        </div>
-                        <h3 className="text-lg font-semibold">Coming Soon</h3>
-                        <p className="text-sm">Detailed student analytics will be available here.</p>
-                    </CardContent>
-                </Card>
+                <StudentAnalytics />
             </TabsContent>
         </Tabs>
       </main>
