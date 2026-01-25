@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
-import { FilePlus2, BookCopy, Star, Edit, Play, Eye, Library } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Activity, BarChart2 } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
-import { useUser } from '@/firebase';
+import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { subjects } from '@/lib/subjects';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,7 @@ function countQuestions(quiz: Quiz) {
 }
 
 export function TeacherDashboard() {
-  const { user } = useUser();
+  const { profile } = useUserWithProfile();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
   const filteredQuizzes = selectedSubject === 'all'
@@ -37,11 +37,12 @@ export function TeacherDashboard() {
     : mockQuizzes.filter(quiz => quiz.subject === selectedSubject);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-muted/40">
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="text-2xl font-bold font-headline text-primary">
+            <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-primary">
+              <Activity />
               QuizCraft Pro
             </Link>
             <div className="flex items-center gap-4">
@@ -54,7 +55,7 @@ export function TeacherDashboard() {
               <Link href="/quizzes/new/edit">
                 <Button>
                   <FilePlus2 className="mr-2 h-4 w-4" />
-                  Create New Quiz
+                  Create Quiz
                 </Button>
               </Link>
               <AuthButton />
@@ -66,15 +67,15 @@ export function TeacherDashboard() {
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-bold font-headline tracking-tight">Teacher Dashboard</h2>
+            <h2 className="text-3xl font-bold font-headline tracking-tight">Welcome, {profile?.name?.split(' ')[0] || 'Teacher'}!</h2>
             <p className="text-muted-foreground">
-              Manage your quizzes, view student results, and create new content.
+              Create, manage, and analyze your quizzes all in one place.
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="quizzes">
-            <TabsList className="mb-4">
+            <TabsList className="grid w-full grid-cols-2 md:w-[400px] mb-6">
                 <TabsTrigger value="quizzes">My Quizzes</TabsTrigger>
                 <TabsTrigger value="results">Student Results</TabsTrigger>
             </TabsList>
@@ -96,44 +97,38 @@ export function TeacherDashboard() {
                  </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredQuizzes.map((quiz) => (
-                    <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg">
+                    <Card key={quiz.id} className="flex flex-col transition-all hover:shadow-lg border-transparent hover:border-primary/50">
                     <CardHeader>
-                        <div className="flex justify-between items-start">
-                        <CardTitle className="font-headline">{quiz.name}</CardTitle>
-                        {quiz.subject && <Badge variant="outline">{quiz.subject}</Badge>}
+                        <div className="flex justify-between items-start mb-2">
+                           {quiz.subject && <Badge variant="secondary">{quiz.subject}</Badge>}
                         </div>
-                        <CardDescription>{quiz.description}</CardDescription>
+                        <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
+                        <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow">
                         <div className="flex justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center">
-                            <BookCopy className="mr-2 h-4 w-4" />
+                        <div className="flex items-center gap-2">
+                            <BookCopy className="h-4 w-4" />
                             <span>{countQuestions(quiz)} Questions</span>
                         </div>
-                        <div className="flex items-center">
-                            <Star className="mr-2 h-4 w-4" />
+                        <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4" />
                             <span>{calculateTotalPoints(quiz)} Points</span>
                         </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="flex gap-2">
-                        <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                        <Button size="sm" className="w-full">
-                            <Play className="mr-2 h-4 w-4" />
-                            Take
-                        </Button>
+                    <CardFooter className="flex gap-2 bg-muted/50 p-3 rounded-b-lg">
+                        <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
+                          <Button size="sm" variant="outline" className="w-full">
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                          </Button>
                         </Link>
                         <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                        <Button size="sm" variant="secondary" className="w-full">
-                            <Eye className="mr-2 h-4 w-4" />
-                            Preview
-                        </Button>
-                        </Link>
-                        <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
-                        <Button size="sm" variant="outline" className="w-full">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                        </Button>
+                          <Button size="sm" variant="secondary" className="w-full">
+                              <Eye className="mr-2 h-4 w-4" />
+                              Preview
+                          </Button>
                         </Link>
                     </CardFooter>
                     </Card>
@@ -144,10 +139,16 @@ export function TeacherDashboard() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Student Results</CardTitle>
-                        <CardDescription>This feature is coming soon. You'll be able to see detailed analytics of your students' performance here.</CardDescription>
+                        <CardDescription>Analyze your students' performance on their submitted quizzes.</CardDescription>
                     </CardHeader>
-                    <CardContent className="text-center text-muted-foreground py-12">
-                        <p>No results to display yet.</p>
+                    <CardContent className="text-center text-muted-foreground py-16">
+                        <div className="flex justify-center mb-4">
+                           <div className="p-4 rounded-full bg-primary/10">
+                             <BarChart2 className="h-10 w-10 text-primary" />
+                           </div>
+                        </div>
+                        <h3 className="text-lg font-semibold">Coming Soon</h3>
+                        <p className="text-sm">Detailed student analytics will be available here.</p>
                     </CardContent>
                 </Card>
             </TabsContent>
