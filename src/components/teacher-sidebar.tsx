@@ -23,6 +23,7 @@ import {
   Settings,
   Activity,
   ShieldCheck,
+  Trophy,
 } from 'lucide-react';
 import { AuthButton } from './auth-button';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ const allMenuItems = [
   { href: '/question-bank', label: 'မေးခွန်းဘဏ်', icon: Database, adminOnly: false },
   { href: '/students', label: 'ကျောင်းသားစီမံခန့်ခွဲမှု', icon: Users, adminOnly: false },
   { href: '/results', label: 'ရလဒ်နှင့် အစီရင်ခံစာ', icon: BarChart3, adminOnly: false },
+  { href: '/rankings', label: 'ထိပ်တန်းစာရင်း', icon: Trophy, adminOnly: false },
   { href: '/billing', label: 'ငွေစာရင်း', icon: Wallet, adminOnly: false },
   { href: '/settings', label: 'ဆက်တင်များ', icon: Settings, adminOnly: false },
   { href: '/admin', label: 'အက်ဒမင် စီမံခန့်ခွဲမှု', icon: ShieldCheck, adminOnly: true },
@@ -81,6 +83,8 @@ export function TeacherSidebar() {
                 isActive = pathname.startsWith('/results') || pathname.startsWith('/grading');
             } else if (href === '/admin') {
                 isActive = pathname.startsWith('/admin');
+            } else if (href === '/rankings') {
+                isActive = pathname.startsWith('/rankings');
             } else {
                 isActive = pathname.startsWith(href);
             }

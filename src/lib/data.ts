@@ -156,22 +156,22 @@ export const mockSubmissions: StudentSubmission[] = [
 
 export const mockLeaderboard: Record<string, LeaderboardEntry[]> = {
   'Mathematics': [
-    { rank: 1, studentName: 'Alice Johnson', score: 100, time: '8m 15s' },
-    { rank: 2, studentName: 'Bob Williams', score: 95, time: '9m 02s' },
-    { rank: 3, studentName: 'Charlie Brown', score: 95, time: '9m 45s' },
-    { rank: 4, studentName: 'David Miller', score: 92, time: '10m 30s' },
-    { rank: 5, studentName: 'Eve Davis', score: 90, time: '11m 05s' },
-    { rank: 6, studentName: 'Frank Garcia', score: 88, time: '12m 00s' },
-    { rank: 7, studentName: 'Grace Rodriguez', score: 85, time: '12m 15s' },
-    { rank: 8, studentName: 'Henry Wilson', score: 82, time: '13m 40s' },
-    { rank: 9, studentName: 'Isabella Martinez', score: 80, time: '14m 22s' },
-    { rank: 10, studentName: 'Jack Anderson', score: 78, time: '15m 01s' },
+    { rank: 1, studentName: 'Alice Johnson', score: 100, time: '8m 15s', avatarUrl: 'https://i.pravatar.cc/150?u=alice', trend: 'up' },
+    { rank: 2, studentName: 'Bob Williams', score: 95, time: '9m 02s', avatarUrl: 'https://i.pravatar.cc/150?u=bob', trend: 'stable' },
+    { rank: 3, studentName: 'Charlie Brown', score: 95, time: '9m 45s', avatarUrl: 'https://i.pravatar.cc/150?u=charlie', trend: 'down' },
+    { rank: 4, studentName: 'David Miller', score: 92, time: '10m 30s', trend: 'up' },
+    { rank: 5, studentName: 'Eve Davis', score: 90, time: '11m 05s', trend: 'down' },
+    { rank: 6, studentName: 'Frank Garcia', score: 88, time: '12m 00s', trend: 'stable' },
+    { rank: 7, studentName: 'Grace Rodriguez', score: 85, time: '12m 15s', trend: 'up' },
+    { rank: 8, studentName: 'Henry Wilson', score: 82, time: '13m 40s', trend: 'stable' },
+    { rank: 9, studentName: 'Isabella Martinez', score: 80, time: '14m 22s', trend: 'down' },
+    { rank: 10, studentName: 'Jack Anderson', score: 78, time: '15m 01s', trend: 'up' },
   ],
   'General Knowledge': [
-    { rank: 1, studentName: 'Diana Prince', score: 98, time: '5m 30s' },
-    { rank: 2, studentName: 'Bruce Wayne', score: 96, time: '6m 10s' },
-    { rank: 3, studentName: 'Clark Kent', score: 95, time: '6m 12s' },
-    { rank: 4, studentName: 'Barry Allen', score: 94, time: '4m 55s' },
+    { rank: 1, studentName: 'Diana Prince', score: 98, time: '5m 30s', avatarUrl: 'https://i.pravatar.cc/150?u=diana', trend: 'up' },
+    { rank: 2, studentName: 'Bruce Wayne', score: 96, time: '6m 10s', avatarUrl: 'https://i.pravatar.cc/150?u=bruce', trend: 'up' },
+    { rank: 3, studentName: 'Clark Kent', score: 95, time: '6m 12s', avatarUrl: 'https://i.pravatar.cc/150?u=clark', trend: 'down' },
+    { rank: 4, studentName: 'Barry Allen', score: 94, time: '4m 55s', trend: 'stable' },
   ]
 };
 

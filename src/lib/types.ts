@@ -112,6 +112,8 @@ export interface LeaderboardEntry {
   studentName: string;
   score: number;
   time: string; // e.g., "5m 32s"
+  avatarUrl?: string;
+  trend?: 'up' | 'down' | 'stable';
 }
 
 export interface Badge {
