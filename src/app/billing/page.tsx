@@ -66,13 +66,11 @@ export default function BillingPage() {
 
       // Header Branding
       try {
-        if (schoolLogoBase64 && schoolLogoBase64.startsWith('data:image')) {
-          doc.addImage(schoolLogoBase64, 'PNG', 15, 15, 25, 25);
+        if (schoolLogoBase64 && schoolLogoBase64.includes('base64,')) {
+          doc.addImage(schoolLogoBase64, 'JPEG', 15, 15, 25, 25);
         }
       } catch (error) {
-        console.error("Logo image error:", error);
-        doc.setFontSize(10);
-        doc.text("[BTK & KTS]", 15, 20); 
+        console.warn("Logo could not be loaded, skipping image...");
       }
     
       doc.setFontSize(22);
@@ -203,7 +201,7 @@ export default function BillingPage() {
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.2)" />
                                         <XAxis dataKey="month" stroke="rgba(255,255,255,0.7)" />
-                                        <YAxis stroke="rgba(255,255,255,0.7)" tickFormatter={(value) => `${value/1000}k`} />
+                                        <YAxis stroke="rgba(255,255,255,0.7)" tickFormatter={(value) => `${'value/1000'}k`} />
                                         <Tooltip cursor={{fill: 'rgba(16,185,129,0.1)'}} content={<ChartTooltipContent indicator="line" labelClassName="text-white" className="bg-slate-900/80 border-slate-700" />} />
                                         <Line type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{fill: 'hsl(var(--chart-1))'}} activeDot={{ r: 8 }} />
                                     </LineChart>
