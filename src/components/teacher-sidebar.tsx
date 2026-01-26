@@ -22,32 +22,39 @@ import {
   Wallet,
   Settings,
   Activity,
+  ShieldCheck,
 } from 'lucide-react';
 import { AuthButton } from './auth-button';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
+import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 
-const menuItems = [
-  { href: '/', label: 'ပင်မစာမျက်နှာ', icon: LayoutDashboard },
-  { href: '/quizzes', label: 'စာမေးပွဲများ', icon: FileText },
-  { href: '/question-bank', label: 'မေးခွန်းဘဏ်', icon: Database },
-  { href: '/students', label: 'ကျောင်းသားစီမံခန့်ခွဲမှု', icon: Users },
-  { href: '/results', label: 'ရလဒ်နှင့် အစီရင်ခံစာ', icon: BarChart3 },
-  { href: '/billing', label: 'ငွေစာရင်း', icon: Wallet },
-  { href: '/settings', label: 'ဆက်တင်များ', icon: Settings },
+const allMenuItems = [
+  { href: '/', label: 'ပင်မစာမျက်နှာ', icon: LayoutDashboard, adminOnly: false },
+  { href: '/quizzes', label: 'စာမေးပွဲများ', icon: FileText, adminOnly: false },
+  { href: '/question-bank', label: 'မေးခွန်းဘဏ်', icon: Database, adminOnly: false },
+  { href: '/students', label: 'ကျောင်းသားစီမံခန့်ခွဲမှု', icon: Users, adminOnly: false },
+  { href: '/results', label: 'ရလဒ်နှင့် အစီရင်ခံစာ', icon: BarChart3, adminOnly: false },
+  { href: '/billing', label: 'ငွေစာရင်း', icon: Wallet, adminOnly: false },
+  { href: '/settings', label: 'ဆက်တင်များ', icon: Settings, adminOnly: false },
+  { href: '/admin', label: 'အက်ဒမင် စီမံခန့်ခွဲမှု', icon: ShieldCheck, adminOnly: true },
 ];
 
 export function TeacherSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const { profile } = useUserWithProfile();
 
-  const getHref = (item: typeof menuItems[0]) => {
+  const getHref = (item: typeof allMenuItems[0]) => {
       // The dashboard at '/' is where quizzes are managed.
       if (item.href === '/quizzes') {
           return '/';
       }
       return item.href;
   }
+  
+  const menuItems = allMenuItems.filter(item => 
+    !item.adminOnly || (item.adminOnly && profile?.userType === 'admin')
+  );
 
   return (
     <Sidebar
@@ -74,6 +81,8 @@ export function TeacherSidebar() {
             } else if (href === '/results') {
                 // This handles both the main results page and the specific grading pages
                 isActive = pathname.startsWith('/results') || pathname.startsWith('/grading');
+            } else if (href === '/admin') {
+                isActive = pathname.startsWith('/admin');
             } else {
                 // This handles all other pages like /question-bank etc.
                 isActive = pathname.startsWith(href);

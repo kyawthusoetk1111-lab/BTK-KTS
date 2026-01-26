@@ -21,6 +21,7 @@ const badgeVariants = cva(
         closed: "border-transparent bg-gray-600 text-white",
         completed: "border-transparent bg-blue-500 text-white",
         new: "border-transparent bg-emerald-500 text-white",
+        admin: "border-transparent bg-emerald-600 text-emerald-50",
       },
     },
     defaultVariants: {
