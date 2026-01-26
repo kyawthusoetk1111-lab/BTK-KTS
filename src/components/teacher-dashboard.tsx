@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Crown, Users, ClipboardCheck, TrendingUp, Settings, Trash2 } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Crown, Users, ClipboardCheck, TrendingUp, Settings, Trash2, Archive } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const getQuizStatus = (quiz: Quiz): { text: 'Live' | 'Draft' | 'Closed'; variant: 'live' | 'draft' | 'closed' } => {
     const now = new Date();
@@ -269,6 +270,24 @@ export function TeacherDashboard() {
                                                 Preview
                                             </Button>
                                         </Link>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                     <Button 
+                                                        size="icon" 
+                                                        variant="outline" 
+                                                        className="bg-transparent border-sky-500/40 text-sky-300 hover:bg-sky-500/10 flex-shrink-0"
+                                                        onClick={() => {toast({title: "Added to Bank!", description: `"${quiz.name}" has been added to your question bank.`})}}
+                                                    >
+                                                        <Archive className="h-4 w-4" />
+                                                        <span className="sr-only">Add to Bank</span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="bg-slate-800 text-white border-slate-700">
+                                                    <p>မေးခွန်းဘဏ်သို့ထည့်ရန်</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                         <Button 
                                             size="icon" 
                                             variant="destructive" 

@@ -1,40 +1,47 @@
 'use client';
 
-import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/loading-spinner';
+import { useState } from 'react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { mockQuizzes } from '@/lib/data';
 import type { Question, Quiz } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft } from 'lucide-react';
+import { Search, Trash2, FileOutput } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { subjects } from '@/lib/subjects';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type BankQuestion = Question & {
     quizName: string;
     quizId: string;
     sectionName: string;
+    subject: string | undefined;
 };
 
 export default function QuestionBankPage() {
-    const { user, isUserLoading } = useUser();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (!isUserLoading && !user) {
-        router.push('/login');
-        }
-    }, [user, isUserLoading, router]);
-
-    if (isUserLoading || !user) {
-        return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <LoadingSpinner />
-        </div>
-        );
-    }
+    const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState('all');
+    const [questionToDelete, setQuestionToDelete] = useState<BankQuestion | null>(null);
 
     const allQuestions: BankQuestion[] = mockQuizzes.flatMap((quiz: Quiz) =>
         quiz.sections.flatMap(section =>
@@ -43,51 +50,128 @@ export default function QuestionBankPage() {
                 quizName: quiz.name,
                 quizId: quiz.id,
                 sectionName: section.name,
+                subject: quiz.subject,
             }))
         )
     );
 
+    const filteredQuestions = allQuestions.filter(q => {
+        const searchMatch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
+        const subjectMatch = selectedSubject === 'all' || q.subject === selectedSubject;
+        return searchMatch && subjectMatch;
+    });
+
+    const handleExport = () => {
+        toast({ title: 'Coming Soon!', description: 'Exporting questions will be available in a future update.' });
+    };
+
+    const handleDelete = () => {
+        toast({ title: 'Coming Soon!', description: 'Deleting from the question bank will be available soon.' });
+        setQuestionToDelete(null);
+    }
+
     return (
-        <div className="flex flex-col min-h-screen bg-muted/20">
-            <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/" passHref>
-                            <Button variant="outline">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Dashboard
-                            </Button>
-                        </Link>
-                        <h1 className="text-2xl font-bold font-headline text-primary">
-                        Question Bank
-                        </h1>
-                        {/* Placeholder for potential actions like "Add New Question" directly to bank */}
-                        <div className="w-[180px]"></div>
+        <>
+            <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50">
+                <div className="flex items-center justify-between space-y-2">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">မေးခွန်းဘဏ် (Question Bank)</h1>
+                        <p className="text-muted-foreground">
+                            Browse, manage, and reuse questions from all your quizzes.
+                        </p>
                     </div>
                 </div>
-            </header>
-            <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="space-y-2 mb-8">
-                    <h2 className="text-3xl font-bold tracking-tight">All Questions</h2>
-                    <p className="text-muted-foreground">
-                        Browse and manage all questions from your quizzes. This is a centralized location to see every question you've created.
-                    </p>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {allQuestions.map(q => (
-                        <Card key={q.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="text-base font-medium line-clamp-3">{q.text || '[No Question Text]'}</CardTitle>
-                                <CardDescription className="text-xs">From: {q.quizName}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow flex justify-between items-center text-sm text-muted-foreground pt-0">
-                                <Badge variant="outline" className="capitalize">{q.type.replace('-', ' ')}</Badge>
-                                <span className="font-semibold">{q.points} pts</span>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col md:flex-row gap-4 justify-between">
+                            <div className="relative w-full md:w-80">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <Input 
+                                    placeholder="Search for questions..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-9 bg-slate-50 border-slate-200 focus:bg-white"
+                                />
+                            </div>
+                            <div className="w-full md:w-64">
+                                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Filter by subject..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Subjects</SelectItem>
+                                        {subjects.filter(s => s !== 'Global').map(subject => (
+                                            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {filteredQuestions.map(q => (
+                                <Card key={q.id} className="flex flex-col">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-base font-medium line-clamp-3">{q.text || '[No Question Text]'}</CardTitle>
+                                        <CardDescription className="text-xs pt-1">
+                                            From: <span className="font-semibold">{q.quizName}</span>
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow flex justify-between items-center text-sm text-muted-foreground">
+                                        <Badge variant="outline" className="capitalize">{q.type.replace('-', ' ')}</Badge>
+                                        <span className="font-semibold">{q.points} pts</span>
+                                    </CardContent>
+                                    <CardFooter className="p-2 border-t flex gap-2">
+                                         <Button variant="outline" size="sm" className="w-full" onClick={handleExport}>
+                                            <FileOutput className="mr-2 h-4 w-4" />
+                                            ဘဏ်ထဲမှထုတ်ယူရန်
+                                        </Button>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button variant="destructive" size="icon" onClick={() => setQuestionToDelete(q)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>မေးခွန်းဘဏ်မှဖျက်ရန်</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                            {filteredQuestions.length === 0 && (
+                                <div className="col-span-full text-center py-12 text-muted-foreground">
+                                    <p>No questions found for your criteria.</p>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </main>
-        </div>
+
+            <AlertDialog open={!!questionToDelete} onOpenChange={(isOpen) => !isOpen && setQuestionToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ဤမေးခွန်းကို မေးခွန်းဘဏ်ထဲမှ အပြီးတိုင်ဖျက်မလား? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                        onClick={handleDelete}
+                        className={cn(buttonVariants({ variant: "destructive" }))}
+                        >
+                        Confirm Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
