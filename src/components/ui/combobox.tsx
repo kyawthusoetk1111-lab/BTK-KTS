@@ -48,7 +48,16 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0"
+        onPointerDownOutside={(e) => {
+          // This prevents the dialog from closing the popover when interacting with it.
+          const target = e.target as HTMLElement;
+          if (target.closest('[role="dialog"]')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <div className="p-2">
             <Input
                 placeholder={searchPlaceholder}

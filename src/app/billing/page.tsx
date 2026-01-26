@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { TeacherSidebar } from '@/components/teacher-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -56,12 +58,65 @@ export default function BillingPage() {
         t.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleDownloadReceipt = (invoiceId: string) => {
-        toast({
-            title: `Downloading Receipt ${invoiceId}`,
-            description: 'This feature is coming soon!',
-        });
-    };
+    const handleDownloadReceipt = (transaction: typeof transactions[0]) => {
+      toast({ title: `Generating Receipt ${transaction.id}` });
+      const doc = new jsPDF();
+  
+      // Placeholder for logo - replace with your actual base64 logo
+      const schoolLogoBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIpSURBVGhD7ZlPqgFRFMcde/N972YwGCAx2FgsNhbBRiwWCSx2FotdoUgsFgvxGywGfBQLwWAw4AsMh/EvSHDk5g3fuTfnvjK4v3P55n/mm5M730lRAICgC+T3k79Pfh/5Y3nZl5Y/S/45+fPkW/L9Rck/JA8kX5A8kExQDBBkgABDBgiggAYIIDCAAAIIEEDgB/zL3e8n9xfj5vM7e8dF95N/3hCIM0GACCaYAAEEB2BAAAMeIECAASZAAIEP8L2/pX++83t1ePxyOtw5d/D74Pz7v/+4ECA/k3xB8kbyz+SX8p4/AwQQmIABAgxwAAIE8ECCASZAAIEH+J5+EvnF+O/ySflj/Kvky/JnDCDPAAEEhiFAAAGeIMAAgQSIF0GACAYYIIAAAwQI4E/g6QcMwV8e3k8+Lt+Ubyf/Uf46+WN52T8p35Kflj+TvA+4YfL7yR8n35Eflz8v9o2wAgEGEGCAAR4gwAADDBAggMABD1CACAEEEDiA/wMGCBDAG4TAmQEEGCAgQAABBDgAAQIYcBABAgQYIIBGAQIEsEAACBDgAgQIIEAECCDwi/w/z5LflH8hP5E8kTxDgiQIIIDQAgQY4LAIECCAABEggMAf+J1+SP4l/yZ/KD8i/yx/Lz8u/yT/Q/Iz+XdyWf5A8kf5e/I7yTvk38v35U/k48nfJG/IX4l/l/+d/Dt57v5+AQCAv3kG5C/kbfIN+WfyLvlX8tfy0/Iv5G0GECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAAChBdggAIGEECAgAAGECDwBQYQYIAIEGCAAQQQQAABAgTQwAD/CgG8A76/b0f5AAAAAElFTkSuQmCC'; 
+  
+      // Header Branding
+      doc.addImage(schoolLogoBase64, 'JPEG', 15, 15, 25, 25); 
+      doc.setFontSize(22);
+      doc.setTextColor(16, 185, 129); // Emerald Green
+      doc.text("BTK & KTS Education", 45, 28);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text("Official Payment Receipt", 45, 36);
+  
+      // Invoice Details
+      doc.setFontSize(12);
+      doc.text(`Invoice ID: ${transaction.id}`, 145, 20);
+      doc.text(`Date: ${transaction.date}`, 145, 27);
+      
+      doc.setFontSize(14);
+      doc.text("Bill To:", 15, 60);
+      doc.setFontSize(12);
+      doc.text(transaction.studentName, 15, 67);
+  
+      // Table for items
+      autoTable(doc, {
+          startY: 80,
+          head: [['Description', 'Amount']],
+          body: [
+              [transaction.plan, `${transaction.amount.toLocaleString()} MMK`]
+          ],
+          theme: 'striped',
+          headStyles: { fillColor: [16, 185, 129] },
+      });
+  
+      // Total and Status
+      const finalY = (doc as any).lastAutoTable.finalY;
+      doc.setFontSize(14);
+      doc.text("Total:", 135, finalY + 15);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${transaction.amount.toLocaleString()} MMK`, 165, finalY + 15);
+  
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text("Status:", 15, finalY + 30);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(transaction.status === 'Paid' ? [34, 197, 94] : [239, 68, 68]);
+      doc.text(transaction.status, 35, finalY + 30);
+  
+      // Footer
+      doc.setTextColor(150);
+      doc.setFontSize(10);
+      doc.text("Thank you for your payment!", 105, 280, { align: 'center' });
+  
+      doc.save(`Receipt-${transaction.id}.pdf`);
+  };
     
     const handleSaveManualEntry = (newEntry: any) => {
         setTransactions(prev => [newEntry, ...prev]);
@@ -201,7 +256,7 @@ export default function BillingPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadReceipt(t.id)}>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadReceipt(t)}>
                                                         <FileText className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
