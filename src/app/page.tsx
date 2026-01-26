@@ -23,13 +23,17 @@ export default function DashboardRouterPage() {
   useEffect(() => {
     if (!isLoading && systemStatus?.isMaintenanceMode) {
         // Redirect non-admins to maintenance page
-        if (!user || (profile && profile.userType === 'student')) {
+        if (!user || (profile && profile.userType !== 'admin')) {
             router.replace('/maintenance');
         }
     }
+    // New logic for admin redirection
+    if (!isLoading && profile?.userType === 'admin') {
+      router.replace('/admin');
+    }
   }, [isLoading, systemStatus, user, profile, router]);
 
-  if (isLoading) {
+  if (isLoading || profile?.userType === 'admin') {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner />
@@ -63,7 +67,7 @@ export default function DashboardRouterPage() {
       );
   }
 
-  if (profile.userType === 'admin' || profile.userType === 'teacher') {
+  if (profile.userType === 'teacher') {
     return <TeacherDashboard />;
   }
   
@@ -79,3 +83,5 @@ export default function DashboardRouterPage() {
       </div>
   );
 }
+
+    
