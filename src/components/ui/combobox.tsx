@@ -36,7 +36,7 @@ export function Combobox({
   const selectedLabel = options.find(option => option.value === value)?.label
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
