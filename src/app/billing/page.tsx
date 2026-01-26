@@ -67,7 +67,7 @@ export default function BillingPage() {
       // Header Branding
       try {
         if (schoolLogoBase64 && schoolLogoBase64.includes('base64,')) {
-          doc.addImage(schoolLogoBase64, 'JPEG', 15, 15, 25, 25);
+          // doc.addImage(schoolLogoBase64, 'JPEG', 15, 15, 25, 25);
         }
       } catch (error) {
         console.warn("Logo could not be loaded, skipping image...");
