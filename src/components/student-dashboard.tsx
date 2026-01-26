@@ -66,7 +66,7 @@ export function StudentDashboard() {
   const firestore = useFirestore();
 
   const [paymentModalState, setPaymentModalState] = useState<{isOpen: boolean, quiz?: Quiz}>({isOpen: false});
-  const { purchases } = usePurchases();
+  const { purchases, isLoading: arePurchasesLoading } = usePurchases();
 
   const quizzesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -83,15 +83,14 @@ export function StudentDashboard() {
   const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection(pendingPaymentsQuery);
 
   const filteredQuizzes = (allQuizzes || []).filter(quiz => {
-    const status = getQuizStatus(quiz);
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
     const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
-    
-    // Only show live quizzes to students
-    return status.variant === 'live' && subjectMatch && codeMatch;
+    return subjectMatch && codeMatch;
   });
 
-  const isLoading = areQuizzesLoading || isProfileLoading || arePendingPaymentsLoading;
+  const isLoading = areQuizzesLoading || isProfileLoading || arePendingPaymentsLoading || arePurchasesLoading;
+  
+  console.log("Total Quizzes found:", allQuizzes?.length);
 
   const hasPurchased = (quizId: string) => purchases.some(p => p.itemId === quizId);
   const isPending = (quizId: string) => pendingPayments?.some(p => p.itemId === quizId);
@@ -169,7 +168,7 @@ export function StudentDashboard() {
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
                               <Badge variant="secondary" className="bg-black/30 text-gray-300">{quiz.subject || 'General'}</Badge>
-                               {getQuizStatus(quiz).variant === 'live' && <Badge variant="live">Live</Badge>}
+                               <Badge variant={getQuizStatus(quiz).variant}>{getQuizStatus(quiz).text}</Badge>
                             </div>
                             <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
                             <CardDescription className="line-clamp-2 text-gray-300">{quiz.description}</CardDescription>
@@ -266,3 +265,5 @@ export function StudentDashboard() {
     </>
   );
 }
+
+    
