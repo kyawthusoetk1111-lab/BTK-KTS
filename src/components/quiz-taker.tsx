@@ -19,9 +19,27 @@ import { LoadingSpinner } from './loading-spinner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { ExamProctorGuard } from './exam-proctor-guard';
 
-interface QuizTakerProps {
-    quiz: Quiz;
-}
+const Watermark = ({ text }: { text: string | null | undefined }) => {
+    if (!text) return null;
+    return (
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+            <div className="absolute inset-[-100%] flex flex-wrap -rotate-45">
+                {Array.from({ length: 50 }).map((_, i) => (
+                    <div key={i} className="w-1/5">
+                        {Array.from({ length: 20 }).map((_, j) => (
+                            <p
+                                key={j}
+                                className="text-2xl font-bold text-slate-900/5 dark:text-white/5 whitespace-nowrap p-8"
+                            >
+                                {text}
+                            </p>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 function calculateTotalQuizPoints(quiz: Quiz): number {
     return quiz.sections.reduce((total, section) => {
@@ -368,9 +386,10 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
 
     return (
         <ExamProctorGuard onSubmit={handleSubmit} isQuizActive={!isSubmitted && !!quiz.enableAntiCheat}>
-            <div className="flex flex-col min-h-screen bg-muted/20">
+            <div className="relative flex flex-col min-h-screen bg-muted/20">
+                <Watermark text={user?.email} />
                 <Progress value={progressValue} className="fixed top-0 left-0 right-0 h-1 z-20 rounded-none" />
-                <header className="sticky top-1 z-10 bg-background/80 backdrop-blur-sm border-b">
+                <header className="relative z-10 sticky top-1 bg-background/80 backdrop-blur-sm border-b">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-4">
@@ -415,7 +434,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                     </div>
                 </header>
 
-                <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <main className="relative z-10 flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
                         <div className="md:col-span-2 lg:col-span-3 overflow-hidden">
                             {currentSection ? (
