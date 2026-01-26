@@ -1,169 +1,274 @@
 'use client';
 
 import { useState } from 'react';
-import { mockQuizzes, mockSubmissions } from '@/lib/data';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle, Download, FileText, Search, Star, TrendingUp } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import Link from 'next/link';
-import { PenBox, Download, ArrowUpDown } from 'lucide-react';
-import type { StudentSubmission } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { mockSubmissions, mockQuizzes } from '@/lib/data';
+import { subjects } from '@/lib/subjects';
+import type { StudentSubmission, Quiz } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
+import { format } from 'date-fns';
+import {
+  ChartContainer,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import { Area, Cell, XAxis, YAxis, CartesianGrid, Legend, Tooltip, ResponsiveContainer, AreaChart, PieChart as RechartsPieChart, Pie } from 'recharts';
 
-export function GradingDashboard() {
-  const { toast } = useToast();
-  const [sortConfig, setSortConfig] = useState<Record<string, 'asc' | 'desc'>>({});
-
-  const quizzesWithSubmissions = mockQuizzes.map(quiz => {
-    const submissions = mockSubmissions.filter(sub => sub.quizId === quiz.id);
-    const needsGradingCount = submissions.filter(sub => sub.status === 'Needs Grading').length;
+// Combine submissions with quiz data
+const detailedSubmissions = mockSubmissions.map(sub => {
+    const quiz = mockQuizzes.find(q => q.id === sub.quizId);
     return {
-      ...quiz,
-      submissions,
-      needsGradingCount,
+        ...sub,
+        subject: quiz?.subject || 'N/A',
+        quizName: quiz?.name || 'Unknown Quiz',
+        // Mocking time spent for now
+        timeSpent: `${Math.floor(Math.random() * 15) + 5}m ${Math.floor(Math.random() * 60)}s`
     }
-  }).filter(quiz => quiz.submissions.length > 0);
+});
 
-  const handleSort = (quizId: string) => {
-    setSortConfig(prev => {
-        const currentDirection = prev[quizId];
-        if (currentDirection === 'asc') return { ...prev, [quizId]: 'desc' };
-        if (currentDirection === 'desc') {
-            const newConfig = { ...prev };
-            delete newConfig[quizId];
-            return newConfig;
-        };
-        return { ...prev, [quizId]: 'asc' };
-    });
-  };
+// Mock data for charts
+const passRateData = [
+  { day: 'Mon', passRate: 75 },
+  { day: 'Tue', passRate: 82 },
+  { day: 'Wed', passRate: 78 },
+  { day: 'Thu', passRate: 88 },
+  { day: 'Fri', passRate: 91 },
+  { day: 'Sat', passRate: 85 },
+  { day: 'Sun', passRate: 93 },
+];
 
-  const getSortedSubmissions = (submissions: StudentSubmission[], quizId: string): StudentSubmission[] => {
-    const direction = sortConfig[quizId];
-    if (!direction) {
-        return submissions;
+const subjectDistributionData = detailedSubmissions.reduce((acc, sub) => {
+    if (!acc[sub.subject!]) {
+        acc[sub.subject!] = 0;
     }
-    return [...submissions].sort((a, b) => {
-        if (a.totalScore < b.totalScore) return direction === 'asc' ? -1 : 1;
-        if (a.totalScore > b.totalScore) return direction === 'asc' ? 1 : -1;
-        const timeA = new Date(a.submissionTime).getTime();
-        const timeB = new Date(b.submissionTime).getTime();
-        return timeA - timeB;
-    });
-  };
+    acc[sub.subject!]++;
+    return acc;
+}, {} as Record<string, number>);
 
-  const exportToCsv = (quizName: string, submissions: StudentSubmission[], quizId: string) => {
-    if (submissions.length === 0) {
-        toast({
-            title: "No data to export",
-            description: "There are no submissions for this quiz.",
-            variant: "destructive"
-        });
-        return;
-    }
+const pieChartData = Object.entries(subjectDistributionData).map(([name, value]) => ({ name, value }));
 
-    const headers = ['Student Name', 'Student ID', 'Score', 'Total Possible Score', 'Date of Attempt'];
-    const sortedSubmissions = getSortedSubmissions(submissions, quizId); 
+const chartConfig: ChartConfig = {
+  passRate: {
+    label: 'Pass Rate (%)',
+    color: 'hsl(var(--chart-1))',
+  },
+};
 
-    const csvRows = [
-        headers.join(','),
-        ...sortedSubmissions.map(sub => [
-            `"${sub.studentName}"`,
-            `"${sub.studentId}"`,
-            sub.totalScore,
-            sub.totalPossibleScore,
-            `"${format(new Date(sub.submissionTime), 'yyyy-MM-dd HH:mm:ss')}"`,
-        ].join(','))
-    ];
+const PIE_CHART_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+export function AnalyticsDashboard() {
+    const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState('all');
     
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${quizName.replace(/ /g, '_')}_submissions.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Stats cards data (mocked)
+    const totalExamsTaken = detailedSubmissions.length;
+    const averageScore = detailedSubmissions.length > 0 ? detailedSubmissions.reduce((sum, sub) => sum + (sub.totalScore / sub.totalPossibleScore * 100), 0) / totalExamsTaken : 0;
+    const topSubject = 'Mathematics'; // Mock
+    const newResultsToday = detailedSubmissions.filter(sub => new Date(sub.submissionTime).toDateString() === new Date().toDateString()).length;
 
-    toast({
-        title: "Export Successful",
-        description: "Your CSV file has started downloading."
+
+    const handleExport = () => {
+        toast({
+            title: "အစီရင်ခံစာ ထုတ်ယူရန်",
+            description: "This feature is coming soon!",
+        });
+    };
+
+    const getScoreColor = (score: number, total: number) => {
+        const percentage = total > 0 ? (score / total) * 100 : 0;
+        if (percentage >= 80) return 'text-emerald-400';
+        if (percentage >= 40) return 'text-amber-400';
+        return 'text-red-400';
+    };
+    
+    const filteredSubmissions = detailedSubmissions.filter(sub => {
+        const searchMatch = sub.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+        const subjectMatch = selectedSubject === 'all' || sub.subject === selectedSubject;
+        return searchMatch && subjectMatch;
     });
-  };
 
-  return (
-    <Accordion type="single" collapsible className="w-full space-y-4">
-      {quizzesWithSubmissions.map(quiz => (
-        <AccordionItem key={quiz.id} value={quiz.id} className="border-b-0">
-          <AccordionTrigger className="p-4 bg-card rounded-lg border hover:no-underline [&[data-state=open]]:rounded-b-none">
-            <div className='flex justify-between items-center w-full pr-4'>
-                <h3 className="font-semibold text-lg">{quiz.name}</h3>
-                <div className="flex items-center gap-2">
-                  {quiz.needsGradingCount > 0 && (
-                      <Badge variant="destructive">{quiz.needsGradingCount} Needs Grading</Badge>
-                  )}
-                </div>
+    return (
+        <div className="space-y-8 animate-in fade-in-50">
+            {/* 1. Smart Overview Cards */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                 <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Exams Taken</CardTitle>
+                        <FileText className="h-4 w-4 text-gray-300" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{totalExamsTaken}</div>
+                        <p className="text-xs text-gray-400">+ {newResultsToday} new results today</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                        <Star className="h-4 w-4 text-gray-300" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{averageScore.toFixed(1)}%</div>
+                        <p className="text-xs text-gray-400">+2.1% from last month</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Top Performing Subject</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-gray-300" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{topSubject}</div>
+                        <p className="text-xs text-gray-400">88% average score</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Needs Grading</CardTitle>
+                        <CheckCircle className="h-4 w-4 text-gray-300" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{mockSubmissions.filter(s => s.status === 'Needs Grading').length}</div>
+                        <p className="text-xs text-gray-400">Waiting for review</p>
+                    </CardContent>
+                </Card>
             </div>
-          </AccordionTrigger>
-          <AccordionContent className="bg-card p-0 rounded-b-lg border border-t-0">
-            <div className="p-4 flex justify-end border-b">
-                <Button variant="outline" size="sm" onClick={() => exportToCsv(quiz.name, quiz.submissions, quiz.id)}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export to Excel
-                </Button>
+            
+            {/* 2. Visual Analytics (Charts) */}
+            <div className="grid gap-6 lg:grid-cols-5">
+                 <Card className="lg:col-span-3 bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <CardHeader>
+                        <CardTitle>Exam Pass Rate (Weekly)</CardTitle>
+                        <CardDescription className="text-gray-300">Percentage of students passing exams this week.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ChartContainer config={chartConfig} className="h-64 w-full">
+                            <AreaChart data={passRateData} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorPassRate" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.2)" />
+                                <XAxis dataKey="day" stroke="rgba(255,255,255,0.7)" />
+                                <YAxis stroke="rgba(255,255,255,0.7)" domain={[50, 100]} />
+                                <Tooltip
+                                    cursor={{fill: 'rgba(16,185,129,0.1)'}}
+                                    content={<ChartTooltipContent indicator="line" labelClassName="text-white" className="bg-slate-900/80 border-slate-700" />}
+                                />
+                                <Area type="monotone" dataKey="passRate" stroke="hsl(var(--chart-1))" fill="url(#colorPassRate)" />
+                            </AreaChart>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
+                 <Card className="lg:col-span-2 bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <CardHeader>
+                        <CardTitle>ဘာသာရပ်အလိုက် ခွဲခြမ်းစိတ်ဖြာမှု</CardTitle>
+                        <CardDescription className="text-gray-300">Distribution of exams taken by subject.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-center">
+                        <ChartContainer config={chartConfig} className="h-64 w-full">
+                             <ResponsiveContainer width="100%" height="100%">
+                                <RechartsPieChart>
+                                    <Pie data={pieChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                        {pieChartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Legend wrapperStyle={{color: 'white'}} />
+                                    <Tooltip content={<ChartTooltipContent hideLabel className="bg-slate-900/80 border-slate-700 text-white" itemStyle={{color: 'white'}}/>} />
+                                </RechartsPieChart>
+                             </ResponsiveContainer>
+                        </ChartContainer>
+                    </CardContent>
+                </Card>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Submitted On</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleSort(quiz.id)} className="w-full justify-end px-2 hover:bg-muted">
-                      Score
-                      <ArrowUpDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-[120px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getSortedSubmissions(quiz.submissions, quiz.id).map(submission => (
-                  <TableRow key={submission.id}>
-                    <TableCell className="font-medium">{submission.studentName}</TableCell>
-                    <TableCell>{format(new Date(submission.submissionTime), 'PPp')}</TableCell>
-                    <TableCell>
-                      <Badge variant={submission.status === 'Graded' ? 'secondary' : 'destructive'}>
-                        {submission.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{submission.totalScore} / {submission.totalPossibleScore}</TableCell>
-                    <TableCell className="text-right">
-                       <Link href={`/grading/${submission.id}`} passHref>
-                            <Button variant="outline" size="sm">
-                                <PenBox className="mr-2 h-4 w-4" />
-                                {submission.status === 'Graded' ? 'View' : 'Grade Now'}
+
+            {/* 3. Advanced Result Table */}
+            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <CardHeader>
+                    <CardTitle>စာမေးပွဲ ရလဒ်များ (All Results)</CardTitle>
+                    <div className="flex flex-col md:flex-row gap-4 justify-between mt-4">
+                        <div className="relative w-full md:w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input 
+                                placeholder="Search by student name..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                <SelectTrigger className="w-full md:w-64 bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
+                                    <SelectValue placeholder="Filter by subject..." />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900 text-white border-slate-700">
+                                    <SelectItem value="all" className="focus:bg-slate-700">All Subjects</SelectItem>
+                                    {subjects.map(subject => (
+                                        <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button variant="outline" onClick={handleExport} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                                <Download className="mr-2 h-4 w-4" />
+                                အစီရင်ခံစာ ထုတ်ယူရန်
                             </Button>
-                       </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-       {quizzesWithSubmissions.length === 0 && (
-        <div className="text-center text-muted-foreground py-16">
-            <h3 className="text-lg font-semibold">No Submissions Yet</h3>
-            <p className="text-sm">When students submit quizzes, they will appear here for grading.</p>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="border border-emerald-500/30 rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                    <TableHead className="text-gray-200 w-[50px]">Rank</TableHead>
+                                    <TableHead className="text-gray-200">Student Name</TableHead>
+                                    <TableHead className="text-gray-200">Subject</TableHead>
+                                    <TableHead className="text-gray-200">Quiz</TableHead>
+                                    <TableHead className="text-gray-200 text-right">Score</TableHead>
+                                    <TableHead className="text-gray-200 text-right">Time Spent</TableHead>
+                                    <TableHead className="text-gray-200 text-right">Date</TableHead>
+                                    <TableHead className="text-gray-200 text-right">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredSubmissions.length > 0 ? filteredSubmissions.sort((a,b) => b.totalScore - a.totalScore).map((sub, index) => (
+                                    <TableRow key={sub.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                        <TableCell className="font-bold text-lg">{index + 1}</TableCell>
+                                        <TableCell>{sub.studentName}</TableCell>
+                                        <TableCell><Badge variant="outline" className="text-gray-300 border-gray-500">{sub.subject}</TableCell></TableCell>
+                                        <TableCell className="font-medium">{sub.quizName}</TableCell>
+                                        <TableCell className={`text-right font-semibold ${getScoreColor(sub.totalScore, sub.totalPossibleScore)}`}>{sub.totalScore}/{sub.totalPossibleScore}</TableCell>
+                                        <TableCell className="text-right text-gray-400">{sub.timeSpent}</TableCell>
+                                        <TableCell className="text-right text-gray-400">{format(new Date(sub.submissionTime), 'PP')}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button asChild variant="outline" size="sm" className="bg-transparent border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/20 hover:text-emerald-200">
+                                                <Link href={`/grading/${sub.id}`}>View Details</Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center text-gray-400">
+                                            No results found for the selected filters.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
         </div>
-      )}
-    </Accordion>
-  );
+    );
 }

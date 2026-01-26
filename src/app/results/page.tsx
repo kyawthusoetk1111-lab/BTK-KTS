@@ -1,6 +1,6 @@
 'use client';
 
-import { GradingDashboard } from "@/components/grading-dashboard";
+import { AnalyticsDashboard } from "@/components/grading-dashboard";
 
 export default function ResultsPage() {
     return (
@@ -13,7 +13,7 @@ export default function ResultsPage() {
                 </p>
               </div>
             </div>
-            <GradingDashboard />
+            <AnalyticsDashboard />
         </main>
     )
 }
