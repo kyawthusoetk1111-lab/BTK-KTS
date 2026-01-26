@@ -90,7 +90,7 @@ export function TeacherDashboard() {
   const quizzesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(collection(firestore, 'quizzes'), where('ownerId', '==', user.uid));
-  }, [user?.uid, firestore]);
+  }, [user, firestore]);
 
   const { data: quizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
 

@@ -114,7 +114,6 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     }
 
     setIsSaving(true);
-    const isNewQuiz = params.id === 'new';
 
     const quizToSave: Quiz = {
         ...quiz,
@@ -134,10 +133,8 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
           description: "Your quiz has been successfully saved.",
         });
 
-        // If it was a new quiz, redirect to the edit page for that quiz
-        if (isNewQuiz) {
-            router.replace(`/quizzes/${quiz.id}/edit`);
-        }
+        router.push('/');
+
     } catch (error) {
         console.error("Error saving quiz:", error);
         toast({
