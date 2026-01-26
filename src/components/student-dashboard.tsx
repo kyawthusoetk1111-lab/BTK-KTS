@@ -198,7 +198,7 @@ export function StudentDashboard() {
                         <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animationDelay: `${index * 100}ms`, animation: 'fade-in-up 0.5s ease-out forwards', opacity: 0 }}>
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
-                              {quiz.subject && <Badge variant="secondary" className="bg-black/30 text-gray-300">{quiz.subject}</Badge>}
+                              <Badge variant="secondary" className="bg-black/30 text-gray-300">{quiz.subject || 'General'}</Badge>
                                {quiz.isPremium && <Badge variant="premium"><Star className="mr-1 h-3 w-3" />Premium</Badge>}
                             </div>
                             <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>

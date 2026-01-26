@@ -37,6 +37,9 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const router = useRouter();
     const firestore = useFirestore();
     const { user } = useUser();
+
+    console.log("Quiz Data:", quiz);
+    console.log("Questions Length:", quiz.sections.reduce((acc, section) => acc + section.questions.length, 0));
     
     const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -396,7 +399,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         );
     }
 
-    const currentSection = quiz.sections[currentSectionIndex];
+    const currentSection = quiz.sections?.[currentSectionIndex];
     const isLastSection = currentSectionIndex === quiz.sections.length - 1;
     const progressValue = ((currentSectionIndex + 1) / quiz.sections.length) * 100;
 
@@ -452,51 +455,68 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
                 <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
                         <div className="md:col-span-2 lg:col-span-3 overflow-hidden">
-                            <Card
-                                key={currentSection.id}
-                                className={cn(
-                                    'transition-all duration-300',
-                                    animationDirection === 'left' && 'animate-out slide-out-to-left',
-                                    animationDirection === 'right' && 'animate-out slide-out-to-right',
-                                    !animationDirection && 'animate-in fade-in'
-                                )}
-                            >
-                                <CardHeader>
-                                    <CardTitle>{currentSection.name}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-8">
-                                    {currentSection.questions.map((question, index) => (
-                                        <div key={question.id} id={`question-cont-${question.id}`} className="p-6 border rounded-lg">
-                                            <CardTitle className="mb-4">Question {index + 1}</CardTitle>
-                                            <CardDescription className="mb-4">{question.points} points</CardDescription>
-                                            <QuestionRenderer 
-                                                question={question}
-                                                answer={answers[question.id]}
-                                                onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
-                                                passageText={getPassageText(question.passageId)}
-                                                showInstantFeedback={quiz.showInstantFeedback}
-                                            />
-                                        </div>
-                                    ))}
-                                </CardContent>
-                                 <CardFooter className="flex justify-between">
-                                    <Button variant="outline" onClick={handlePrevSection} disabled={currentSectionIndex === 0}>
-                                        <ChevronLeft className="mr-2 h-4 w-4" />
-                                        Previous Section
-                                    </Button>
-                                    {isLastSection ? (
-                                        <Button onClick={handleOpenSubmitModal}>
-                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                            Submit Exam
-                                        </Button>
-                                    ) : (
-                                        <Button onClick={handleNextSection}>
-                                            Next Section
-                                            <ChevronRight className="ml-2 h-4 w-4" />
-                                        </Button>
+                            {currentSection ? (
+                                <Card
+                                    key={currentSection.id}
+                                    className={cn(
+                                        'transition-all duration-300',
+                                        animationDirection === 'left' && 'animate-out slide-out-to-left',
+                                        animationDirection === 'right' && 'animate-out slide-out-to-right',
+                                        !animationDirection && 'animate-in fade-in'
                                     )}
-                                </CardFooter>
-                            </Card>
+                                >
+                                    <CardHeader>
+                                        <CardTitle>{currentSection.name}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-8">
+                                        {currentSection.questions.length > 0 ? (
+                                            currentSection.questions.map((question, index) => (
+                                                <div key={question.id} id={`question-cont-${question.id}`} className="p-6 border rounded-lg">
+                                                    <CardTitle className="mb-4">Question {index + 1}</CardTitle>
+                                                    <CardDescription className="mb-4">{question.points} points</CardDescription>
+                                                    <QuestionRenderer 
+                                                        question={question}
+                                                        answer={answers[question.id]}
+                                                        onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
+                                                        passageText={getPassageText(question.passageId)}
+                                                        showInstantFeedback={quiz.showInstantFeedback}
+                                                    />
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center text-muted-foreground py-16">
+                                                <p>This section has no questions.</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                     <CardFooter className="flex justify-between">
+                                        <Button variant="outline" onClick={handlePrevSection} disabled={currentSectionIndex === 0}>
+                                            <ChevronLeft className="mr-2 h-4 w-4" />
+                                            Previous Section
+                                        </Button>
+                                        {isLastSection ? (
+                                            <Button onClick={handleOpenSubmitModal}>
+                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                Submit Exam
+                                            </Button>
+                                        ) : (
+                                            <Button onClick={handleNextSection}>
+                                                Next Section
+                                                <ChevronRight className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </CardFooter>
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Quiz Error</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-center text-destructive">This quiz has no sections or could not be loaded correctly.</p>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
 
                         <aside className="hidden md:block space-y-6 sticky top-24 self-start">
