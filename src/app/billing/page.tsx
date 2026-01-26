@@ -113,8 +113,14 @@ export default function BillingPage() {
       doc.setFont('helvetica', 'normal');
       doc.text("Status:", 15, finalY + 30);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(transaction.status === 'Paid' ? [34, 197, 94] : [239, 68, 68]);
+      
+      if (transaction.status === 'Paid') {
+          doc.setTextColor(34, 197, 94);
+      } else {
+          doc.setTextColor(239, 68, 68);
+      }
       doc.text(transaction.status, 35, finalY + 30);
+      doc.setTextColor(0, 0, 0);
   
       // Footer
       doc.setTextColor(150);
