@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockLeaderboard } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Clock, Search, Activity } from 'lucide-react';
+import { BookCopy, Star, Play, Eye, Clock, Search, Activity, Lock } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
@@ -18,8 +18,10 @@ import { MyGrades } from './my-grades';
 import { MyBadges } from './my-badges';
 import { Leaderboard } from './leaderboard';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
+import { usePurchases } from '@/hooks/use-purchases';
+import { PaymentModal } from './payment-modal';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
@@ -63,26 +65,31 @@ export function StudentDashboard() {
   const [selectedLeaderboardSubject, setSelectedLeaderboardSubject] = useState<string>(subjects[0]);
   const firestore = useFirestore();
 
+  const [paymentModalState, setPaymentModalState] = useState<{isOpen: boolean, quiz?: Quiz}>({isOpen: false});
+  const { purchases } = usePurchases();
+
   const quizzesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'quizzes'));
   }, [firestore]);
 
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
-
-  if (allQuizzes) {
-    console.log("Total Quizzes found:", allQuizzes.length);
-  }
+  const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection(
+    firestore && profile ? query(collection(firestore, 'payments'), where('userId', '==', profile.id), where('status', '==', 'pending')) : null
+  );
 
   const filteredQuizzes = (allQuizzes || []).filter(quiz => {
     const status = getQuizStatus(quiz);
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
     const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
-    // Only show live quizzes to students
+    
     return status.variant === 'live' && subjectMatch && codeMatch;
   });
 
-  const isLoading = areQuizzesLoading || isProfileLoading;
+  const isLoading = areQuizzesLoading || isProfileLoading || arePendingPaymentsLoading;
+
+  const hasPurchased = (quizId: string) => purchases.some(p => p.itemId === quizId);
+  const isPending = (quizId: string) => pendingPayments?.some(p => p.itemId === quizId);
 
   return (
     <>
@@ -147,8 +154,13 @@ export function StudentDashboard() {
                  ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredQuizzes && filteredQuizzes.length > 0 ? filteredQuizzes.map((quiz, index) => {
+                      const isPremium = (quiz.price ?? 0) > 0;
+                      const purchased = hasPurchased(quiz.id);
+                      const pending = isPending(quiz.id);
+                      const locked = isPremium && !purchased && !pending;
+
                         return (
-                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animationDelay: `${index * 100}ms`, animation: 'fade-in-up 0.5s ease-out forwards', opacity: 0 }}>
+                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
                               <Badge variant="secondary" className="bg-black/30 text-gray-300">{quiz.subject || 'General'}</Badge>
@@ -176,18 +188,24 @@ export function StudentDashboard() {
                             )}
                         </CardContent>
                         <CardFooter className="flex gap-2 bg-black/30 p-3">
-                            <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
+                            {locked ? (
+                              <Button size="sm" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold" onClick={() => setPaymentModalState({ isOpen: true, quiz: quiz })}>
+                                <Lock className="mr-2 h-4 w-4" />
+                                Buy Now ({quiz.price} Ks)
+                              </Button>
+                            ) : pending ? (
+                               <Button size="sm" className="w-full font-bold" disabled>
+                                <Clock className="mr-2 h-4 w-4 animate-spin" />
+                                Pending Approval
+                              </Button>
+                            ) : (
+                               <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
                                 <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold">
                                     <Play className="mr-2 h-4 w-4" />
                                     စာမေးပွဲစတင်မည်
                                 </Button>
                             </Link>
-                            <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                              <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  Preview
-                              </Button>
-                            </Link>
+                            )}
                         </CardFooter>
                         </Card>
                     )}) : (
@@ -231,6 +249,15 @@ export function StudentDashboard() {
         </Tabs>
       </main>
     </div>
+    {paymentModalState.quiz && (
+        <PaymentModal 
+            isOpen={paymentModalState.isOpen}
+            onClose={() => setPaymentModalState({ isOpen: false, quiz: undefined })}
+            itemId={paymentModalState.quiz.id}
+            itemDescription={paymentModalState.quiz.name}
+            amount={paymentModalState.quiz.price || 0}
+        />
+    )}
     </>
   );
 }

@@ -89,6 +89,16 @@ export default {
             '0%, 100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)' },
             '50%': { boxShadow: '0 0 0 4px rgba(16, 185, 129, 0)' },
         },
+        'fade-in-up': {
+          'from': {
+            opacity: '0',
+            transform: 'translateY(1rem)'
+          },
+          'to': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          }
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',

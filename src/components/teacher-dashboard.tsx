@@ -235,10 +235,10 @@ export function TeacherDashboard() {
                     <div className="space-y-4">
                         <h2 className="text-2xl font-bold font-headline">လက်ရှိဖြေဆိုနေသော စာမေးပွဲများ</h2>
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {quizzes && quizzes.length > 0 ? quizzes.map((quiz) => {
+                            {quizzes && quizzes.length > 0 ? quizzes.map((quiz, index) => {
                                 const status = getQuizStatus(quiz);
                                 return (
-                                    <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20">
+                                    <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
                                     <CardHeader>
                                         <div className="flex justify-between items-start mb-2">
                                             <Badge variant={status.variant}>{status.text}</Badge>
