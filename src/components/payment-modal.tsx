@@ -127,5 +127,3 @@ export function PaymentModal({ isOpen, onClose, itemId, itemDescription, amount 
     </Dialog>
   );
 }
-
-    

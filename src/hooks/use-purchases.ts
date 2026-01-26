@@ -21,5 +21,3 @@ export function usePurchases() {
     error,
   };
 }
-
-    

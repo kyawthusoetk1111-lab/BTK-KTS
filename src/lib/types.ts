@@ -182,5 +182,3 @@ export interface Expenditure {
   category: 'Salary' | 'Utilities' | 'Marketing' | 'Office Supplies' | 'Other';
   amount: number;
 }
-
-    
