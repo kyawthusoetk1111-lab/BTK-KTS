@@ -99,7 +99,7 @@ export default function SettingsPage() {
         setIsExportingFinancials(false);
     };
 
-    const handleExportJson = async () => {
+    const handleFullBackup = async () => {
         if (!firestore) return;
         setIsExportingJson(true);
         try {
@@ -113,19 +113,18 @@ export default function SettingsPage() {
             
             const jsonString = JSON.stringify(backupData, null, 2);
             const blob = new Blob([jsonString], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
+            const href = URL.createObjectURL(blob);
             
             const link = document.createElement('a');
-            link.href = url;
-            const date = new Date().toISOString().split('T')[0];
-            link.download = `BTK_Full_Backup_${date}.json`;
+            link.href = href;
+            link.download = `BTK_Full_Backup_${new Date().toISOString()}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(href);
             
             updateLastBackup();
-            toast({ title: "Success", description: "Full system backup downloaded." });
+            toast({ title: "Backup Complete", description: "Full system backup downloaded." });
         } catch (error) {
             console.error("Backup error:", error);
             toast({ title: "Backup Failed", variant: "destructive" });
@@ -278,7 +277,7 @@ export default function SettingsPage() {
                                 {isExportingFinancials ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
                                 Download Financials
                             </Button>
-                            <Button onClick={handleExportJson} disabled={isExportingJson} className="bg-sky-500 text-white hover:bg-sky-600">
+                            <Button onClick={handleFullBackup} disabled={isExportingJson} className="bg-sky-500 text-white hover:bg-sky-600">
                                 {isExportingJson ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
                                 Download Full Backup (JSON)
                             </Button>
