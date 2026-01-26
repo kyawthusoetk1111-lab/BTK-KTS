@@ -1,38 +1,153 @@
 'use client';
 
 import { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { Button } from '@/components/ui/button';
-import { Search, UserCog, ShieldOff, Trash2 } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Search, UserCog, ShieldOff, Trash2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export function StudentDirectory() {
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
+    const [loadingActions, setLoadingActions] = useState<string[]>([]);
+    const [userToConfirm, setUserToConfirm] = useState<{user: UserProfile, action: 'delete' | 'suspend'} | null>(null);
+
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
+        // Query for all users, then filter client-side.
         return collection(firestore, 'users');
     }, [firestore]);
 
     const { data: allUsers, isLoading } = useCollection<UserProfile>(usersQuery);
 
-    const students = allUsers?.filter(user => user.userType === 'student') || [];
+    const users = allUsers?.filter(user => user.userType === 'student' || user.userType === 'teacher') || [];
     
-    const filteredStudents = students.filter(student => 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    const filteredUsers = users.filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleActionStart = (action: string, userId: string) => {
+        setLoadingActions(prev => [...prev, `${action}-${userId}`]);
+    };
+
+    const handleActionEnd = (action: string, userId: string) => {
+        setLoadingActions(prev => prev.filter(id => id !== `${action}-${userId}`));
+    };
+    
+    const handleRoleChange = (user: UserProfile) => {
+        if (!firestore) return;
+        
+        const newRole = user.userType === 'student' ? 'teacher' : 'student';
+        handleActionStart('role', user.id);
+
+        const userRef = doc(firestore, 'users', user.id);
+        updateDocumentNonBlocking(userRef, { userType: newRole })
+            .then(() => {
+                toast({
+                    title: 'Role Updated',
+                    description: `${user.name}'s role has been changed to ${newRole}.`
+                });
+            })
+            .catch((error) => {
+                console.error("Error updating role:", error);
+                toast({
+                    title: 'Update Failed',
+                    description: 'Could not update user role.',
+                    variant: 'destructive'
+                });
+            })
+            .finally(() => {
+                handleActionEnd('role', user.id);
+            });
+    };
+
+    const handleSuspend = (user: UserProfile) => {
+        if (!firestore) return;
+
+        const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+        handleActionStart('suspend', user.id);
+        
+        const userRef = doc(firestore, 'users', user.id);
+        updateDocumentNonBlocking(userRef, { status: newStatus })
+            .then(() => {
+                toast({
+                    title: `User ${newStatus === 'active' ? 'Reactivated' : 'Suspended'}`,
+                    description: `${user.name}'s account has been set to ${newStatus}.`,
+                });
+            })
+            .catch(error => {
+                console.error("Error updating status:", error);
+                 toast({
+                    title: 'Update Failed',
+                    description: 'Could not update user status.',
+                    variant: 'destructive'
+                });
+            })
+            .finally(() => {
+                handleActionEnd('suspend', user.id);
+                setUserToConfirm(null);
+            });
+    }
+
+    const handleDelete = (userId: string) => {
+        if(!firestore) return;
+
+        handleActionStart('delete', userId);
+
+        const userRef = doc(firestore, 'users', userId);
+        deleteDocumentNonBlocking(userRef)
+            .then(() => {
+                 toast({
+                    title: 'User Deleted',
+                    description: `User has been deleted successfully.`,
+                 });
+            })
+            .catch(error => {
+                console.error("Error deleting user:", error);
+                toast({
+                    title: 'Delete Failed',
+                    description: 'Could not delete user.',
+                    variant: 'destructive'
+                });
+            })
+            .finally(() => {
+                handleActionEnd('delete', userId);
+                setUserToConfirm(null);
+            });
+    };
+
+    const handleConfirmAction = () => {
+        if (!userToConfirm) return;
+        const { user, action } = userToConfirm;
+        if (action === 'delete') {
+            handleDelete(user.id);
+        } else if (action === 'suspend') {
+            handleSuspend(user);
+        }
+    }
 
     if (isLoading) {
         return (
@@ -43,88 +158,98 @@ export function StudentDirectory() {
     }
     
     return (
-        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
-            <CardHeader>
-                <CardTitle>All Students</CardTitle>
-                <CardDescription className="text-gray-300">Browse and monitor all students enrolled on the platform.</CardDescription>
-                 <div className="relative pt-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input 
-                        placeholder="Search by name or email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500 w-full max-w-sm"
-                    />
-               </div>
-            </CardHeader>
-            <CardContent>
-                <div className="border border-emerald-500/30 rounded-md">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                <TableHead className="text-gray-200">Name</TableHead>
-                                <TableHead className="text-gray-200">Email</TableHead>
-                                <TableHead className="text-gray-200">Joined Date</TableHead>
-                                <TableHead className="text-gray-200">Status</TableHead>
-                                <TableHead className="text-right text-gray-200">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredStudents.length > 0 ? filteredStudents.map((student) => (
-                                <TableRow key={student.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                    <TableCell className="font-medium">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            {student.name}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{student.email}</TableCell>
-                                    <TableCell>{format(new Date(student.createdAt), 'MMM d, yyyy')}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className={cn(student.status === 'suspended' ? 'text-orange-300 border-orange-500/40 bg-orange-900/20' : 'text-emerald-300 border-emerald-500/40 bg-emerald-900/20')}>{student.status || 'active'}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" disabled>
-                                                        <UserCog className="h-4 w-4 text-gray-500" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent className="bg-slate-800 text-white border-slate-700">Admin Action</TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" disabled>
-                                                        <ShieldOff className="h-4 w-4 text-gray-500" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent className="bg-slate-800 text-white border-slate-700">Admin Action</TooltipContent>
-                                            </Tooltip>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="ghost" size="icon" disabled>
-                                                        <Trash2 className="h-4 w-4 text-gray-500" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent className="bg-slate-800 text-white border-slate-700">Admin Action</TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </TableCell>
+        <>
+            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <CardHeader>
+                    <CardTitle>All Students & Teachers</CardTitle>
+                    <CardDescription className="text-gray-300">Browse and manage all students and teachers on the platform.</CardDescription>
+                     <div className="relative pt-4">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input 
+                            placeholder="Search by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500 w-full max-w-sm"
+                        />
+                   </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="border border-emerald-500/30 rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                    <TableHead className="text-gray-200">Name</TableHead>
+                                    <TableHead className="text-gray-200">Email</TableHead>
+                                    <TableHead className="text-gray-200">Joined Date</TableHead>
+                                    <TableHead className="text-gray-200">Role</TableHead>
+                                    <TableHead className="text-gray-200">Status</TableHead>
+                                    <TableHead className="text-right text-gray-200">Actions</TableHead>
                                 </TableRow>
-                            )) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center h-24 text-gray-300">
-                                        No students found.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+                                    <TableRow key={user.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                        <TableCell className="font-medium">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                {user.name}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell>{format(new Date(user.createdAt), 'MMM d, yyyy')}</TableCell>
+                                        <TableCell><Badge variant="outline" className="capitalize">{user.userType}</Badge></TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className={cn(user.status === 'suspended' ? 'text-orange-300 border-orange-500/40 bg-orange-900/20' : 'text-emerald-300 border-emerald-500/40 bg-emerald-900/20')}>{user.status || 'active'}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                           <div className="flex justify-end items-center gap-1">
+                                                <Button variant="ghost" size="icon" className="hover:scale-110 cursor-pointer" onClick={() => handleRoleChange(user)} disabled={loadingActions.includes(`role-${user.id}`)}>
+                                                    {loadingActions.includes(`role-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <UserCog className="h-4 w-4 text-sky-400" />}
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="hover:scale-110 cursor-pointer" onClick={() => setUserToConfirm({user, action: 'suspend'})} disabled={loadingActions.includes(`suspend-${user.id}`)}>
+                                                     {loadingActions.includes(`suspend-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <ShieldOff className="h-4 w-4 text-orange-400" />}
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="hover:scale-110 cursor-pointer" onClick={() => setUserToConfirm({user, action: 'delete'})} disabled={loadingActions.includes(`delete-${user.id}`)}>
+                                                     {loadingActions.includes(`delete-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-red-400" />}
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center h-24 text-gray-300">
+                                            No users found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <AlertDialog open={!!userToConfirm} onOpenChange={(isOpen) => !isOpen && setUserToConfirm(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           {userToConfirm?.action === 'delete' && `This will permanently delete the user '${userToConfirm.user.name}'. This action cannot be undone.`}
+                           {userToConfirm?.action === 'suspend' && `This will ${userToConfirm.user.status === 'suspended' ? 'reactivate' : 'suspend'} the account for '${userToConfirm.user.name}'.`}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmAction}
+                            className={cn(buttonVariants({ variant: userToConfirm?.action === 'delete' ? 'destructive' : 'default' }))}
+                        >
+                            Confirm
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
