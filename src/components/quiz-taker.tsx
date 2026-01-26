@@ -183,7 +183,7 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
     const handlePrevSection = () => {
         if (currentSectionIndex > 0) {
             handleSaveProgress();
-            changeSection(currentSectionIndex + 1);
+            changeSection(currentSectionIndex - 1);
         }
     };
 
@@ -539,5 +539,3 @@ export function QuizTaker({ quiz }: QuizTakerProps) {
         </ExamProctorGuard>
     )
 }
-
-    

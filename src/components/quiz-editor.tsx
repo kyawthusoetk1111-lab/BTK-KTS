@@ -323,7 +323,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                                 <TooltipTrigger asChild>
                                     <div className="flex items-center justify-between p-4">
                                         <div className="space-y-0.5">
-                                            <Label htmlFor="anti-cheat" className={cn("text-base font-medium flex items-center gap-2", !isProTeacher && "text-muted-foreground")}>
+                                            <Label htmlFor="is-premium" className={cn("text-base font-medium flex items-center gap-2", !isProTeacher && "text-muted-foreground")}>
                                                 <Sparkles className="h-4 w-4 text-amber-500" />
                                                 Premium: Monetize Quiz
                                             </Label>
