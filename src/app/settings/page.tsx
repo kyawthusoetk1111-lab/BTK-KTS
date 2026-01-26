@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TeacherSidebar } from '@/components/teacher-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
@@ -8,13 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, Building, AlertTriangle } from 'lucide-react';
+import { Upload, Building, AlertTriangle, CloudDownload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDoc, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, getDocs, collection } from 'firebase/firestore';
 import { Switch } from '@/components/ui/switch';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import type { SystemStatus } from '@/lib/types';
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 
 export default function SettingsPage() {
@@ -27,6 +30,116 @@ export default function SettingsPage() {
     const firestore = useFirestore();
     const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'system', 'status') : null, [firestore]);
     const { data: systemStatus, isLoading: isStatusLoading } = useDoc<SystemStatus>(statusRef);
+
+    const [isExportingStudents, setIsExportingStudents] = useState(false);
+    const [isExportingFinancials, setIsExportingFinancials] = useState(false);
+    const [isExportingJson, setIsExportingJson] = useState(false);
+    const [lastBackup, setLastBackup] = useState<string | null>(null);
+
+    useEffect(() => {
+        const savedBackupDate = localStorage.getItem('lastBackupDate');
+        if (savedBackupDate) {
+        setLastBackup(savedBackupDate);
+        }
+    }, []);
+
+    const updateLastBackup = () => {
+        const now = new Date().toISOString();
+        setLastBackup(now);
+        localStorage.setItem('lastBackupDate', now);
+    };
+
+    const handleExportStudents = async () => {
+        if (!firestore) return;
+        setIsExportingStudents(true);
+        try {
+            const usersQuery = collection(firestore, 'users');
+            const querySnapshot = await getDocs(usersQuery);
+            const allUsers = querySnapshot.docs.map(doc => doc.data());
+            
+            const students = allUsers.filter(user => user.userType === 'student' || user.userType === 'teacher');
+            
+            const worksheet = XLSX.utils.json_to_sheet(students);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+            
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `BTK_Users_Backup_${date}.xlsx`);
+            
+            updateLastBackup();
+            toast({ title: "Success", description: "User data exported." });
+        } catch (error) {
+            console.error("Export error:", error);
+            toast({ title: "Export Failed", variant: "destructive" });
+        }
+        setIsExportingStudents(false);
+    };
+
+    const handleExportFinancials = async () => {
+        if (!firestore) return;
+        setIsExportingFinancials(true);
+        try {
+            const paymentsQuery = collection(firestore, 'payments');
+            const querySnapshot = await getDocs(paymentsQuery);
+            const allPayments = querySnapshot.docs.map(doc => doc.data());
+            
+            const worksheet = XLSX.utils.json_to_sheet(allPayments);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Financials");
+            
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `BTK_Financials_Backup_${date}.xlsx`);
+            
+            updateLastBackup();
+            toast({ title: "Success", description: "Financial records exported." });
+        } catch (error) {
+            console.error("Export error:", error);
+            toast({ title: "Export Failed", variant: "destructive" });
+        }
+        setIsExportingFinancials(false);
+    };
+
+    const handleExportJson = async () => {
+        if (!firestore) return;
+        setIsExportingJson(true);
+        try {
+            const collectionsToBackup = ['users', 'quizzes', 'payments', 'system', 'quizBank'];
+            const backupData: Record<string, any[]> = {};
+
+            for (const collectionName of collectionsToBackup) {
+                const querySnapshot = await getDocs(collection(firestore, collectionName));
+                backupData[collectionName] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
+            
+            const jsonString = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            const date = new Date().toISOString().split('T')[0];
+            link.download = `BTK_Full_Backup_${date}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            updateLastBackup();
+            toast({ title: "Success", description: "Full system backup downloaded." });
+        } catch (error) {
+            console.error("Backup error:", error);
+            toast({ title: "Backup Failed", variant: "destructive" });
+        }
+        setIsExportingJson(false);
+    };
+
+    const isBackupOld = () => {
+        if (!lastBackup) return false;
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return new Date(lastBackup) < sevenDaysAgo;
+    };
+
 
     const handleMaintenanceModeChange = (isMaintenance: boolean) => {
         if (statusRef) {
@@ -145,6 +258,42 @@ export default function SettingsPage() {
                             </Button>
                         </CardFooter>
                     </Card>
+
+                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CloudDownload className="h-6 w-6"/>
+                                ဒေတာအရန်သိမ်းဆည်းရန် (Data Backup)
+                            </CardTitle>
+                            <CardDescription className="text-gray-300">
+                                Export your platform data for safekeeping.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Button onClick={handleExportStudents} disabled={isExportingStudents} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                                {isExportingStudents ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
+                                Download All Users
+                            </Button>
+                            <Button onClick={handleExportFinancials} disabled={isExportingFinancials} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                                {isExportingFinancials ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
+                                Download Financials
+                            </Button>
+                            <Button onClick={handleExportJson} disabled={isExportingJson} className="bg-sky-500 text-white hover:bg-sky-600">
+                                {isExportingJson ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
+                                Download Full Backup (JSON)
+                            </Button>
+                        </CardContent>
+                        <CardFooter className="bg-black/20 p-4">
+                            {lastBackup ? (
+                                <p className={cn("text-sm", isBackupOld() ? "text-amber-300 font-semibold" : "text-gray-400")}>
+                                    Last backup taken: {format(new Date(lastBackup), "PPP p")}
+                                </p>
+                            ) : (
+                                <p className="text-sm text-gray-400">No backup has been taken yet.</p>
+                            )}
+                        </CardFooter>
+                    </Card>
+
 
                     <Card className="bg-amber-800/20 backdrop-blur-md border border-amber-500/30 text-white">
                         <CardHeader>
