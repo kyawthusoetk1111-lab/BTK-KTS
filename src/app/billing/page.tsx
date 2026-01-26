@@ -12,8 +12,9 @@ import { cn } from '@/lib/utils';
 import { DollarSign, Calendar, Users, Clock, Search, FileText, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { ManualPaymentModal } from '@/components/manual-payment-modal';
 
-const transactionsData = [
+const initialTransactionsData = [
   { id: 'INV001', studentName: 'Aung Aung', plan: 'Pro Subscription', date: '2024-05-15', amount: 5000, status: 'Paid' },
   { id: 'INV002', studentName: 'Ma Ma', plan: 'Quiz: Math 101', date: '2024-05-18', amount: 1000, status: 'Paid' },
   { id: 'INV003', studentName: 'Hla Hla', plan: 'Pro Subscription', date: '2024-06-01', amount: 5000, status: 'Pending' },
@@ -42,13 +43,15 @@ const chartConfig = {
 export default function BillingPage() {
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
+    const [transactions, setTransactions] = useState(initialTransactionsData);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const totalRevenue = transactionsData.filter(t => t.status === 'Paid').reduce((sum, t) => sum + t.amount, 0);
-    const thisMonthRevenue = transactionsData.filter(t => t.status === 'Paid' && new Date(t.date).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0);
-    const activeSubscriptions = transactionsData.filter(t => t.plan.includes('Subscription') && t.status === 'Paid').length;
-    const pendingDue = transactionsData.filter(t => t.status === 'Pending' || t.status === 'Overdue').reduce((sum, t) => sum + t.amount, 0);
+    const totalRevenue = transactions.filter(t => t.status === 'Paid').reduce((sum, t) => sum + t.amount, 0);
+    const thisMonthRevenue = transactions.filter(t => t.status === 'Paid' && new Date(t.date).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0);
+    const activeSubscriptions = transactions.filter(t => t.plan.includes('Subscription') && t.status === 'Paid').length;
+    const pendingDue = transactions.filter(t => t.status === 'Pending' || t.status === 'Overdue').reduce((sum, t) => sum + t.amount, 0);
 
-    const filteredTransactions = transactionsData.filter(t => 
+    const filteredTransactions = transactions.filter(t => 
         t.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -60,14 +63,12 @@ export default function BillingPage() {
         });
     };
     
-    const handleAddManualEntry = () => {
-         toast({
-            title: `Add Manual Entry`,
-            description: 'This feature is coming soon!',
-        });
+    const handleSaveManualEntry = (newEntry: any) => {
+        setTransactions(prev => [newEntry, ...prev]);
     }
 
     return (
+        <>
         <SidebarProvider defaultOpen={true}>
             <TeacherSidebar />
             <SidebarInset className="bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
@@ -161,9 +162,9 @@ export default function BillingPage() {
                                         className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
                                     />
                                 </div>
-                                <Button variant="outline" onClick={handleAddManualEntry} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                                <Button onClick={() => setIsModalOpen(true)} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
                                     <Plus className="mr-2 h-4 w-4" />
-                                    Add Manual Entry
+                                    ငွေပေးချေမှုအသစ်ထည့်ရန်
                                 </Button>
                             </div>
                         </CardHeader>
@@ -215,5 +216,11 @@ export default function BillingPage() {
                 </main>
             </SidebarInset>
         </SidebarProvider>
+        <ManualPaymentModal 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSaveManualEntry}
+        />
+        </>
     );
 }
