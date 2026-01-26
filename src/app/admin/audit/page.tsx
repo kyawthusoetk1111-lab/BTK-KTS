@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, History, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { mockSubmissions, mockQuizzes } from '@/lib/data';
+import { AuditHistoryModal } from '@/components/admin/audit-history-modal';
 
 // Combine submission data with quiz data for a more detailed view
 const auditData = mockSubmissions.map(sub => {
@@ -41,6 +42,9 @@ export default function AuditPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGrade, setSelectedGrade] = useState('All');
     const [selectedSubject, setSelectedSubject] = useState('All');
+    
+    const [historyModalOpen, setHistoryModalOpen] = useState(false);
+    const [selectedSubmission, setSelectedSubmission] = useState<(typeof auditData)[0] | null>(null);
 
     const filteredData = auditData.filter(item => {
         const searchMatch = item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,11 +54,9 @@ export default function AuditPage() {
         return searchMatch && gradeMatch && subjectMatch;
     });
 
-    const handleViewHistory = (studentName: string) => {
-        toast({
-            title: 'Audit History',
-            description: `Viewing history for ${studentName}. (This is a placeholder).`,
-        });
+    const handleViewHistory = (submission: (typeof auditData)[0]) => {
+        setSelectedSubmission(submission);
+        setHistoryModalOpen(true);
     };
 
     const handleExport = () => {
@@ -98,101 +100,111 @@ export default function AuditPage() {
     };
 
     return (
-        <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50">
-            <div className="flex items-center justify-between space-y-2">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Exam Audit Trail</h2>
-                    <p className="text-muted-foreground">
-                        Review and verify student grades and submission history.
-                    </p>
+        <>
+            <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50">
+                <div className="flex items-center justify-between space-y-2">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight">Exam Audit Trail</h2>
+                        <p className="text-muted-foreground">
+                            Review and verify student grades and submission history.
+                        </p>
+                    </div>
                 </div>
-            </div>
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col md:flex-row gap-4 justify-between">
-                         <div className="relative w-full md:w-80">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input 
-                                placeholder="Search by student or quiz..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 bg-slate-50 border-slate-200 focus:bg-white"
-                            />
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col md:flex-row gap-4 justify-between">
+                            <div className="relative w-full md:w-80">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <Input 
+                                    placeholder="Search by student or quiz..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-9 bg-slate-50 border-slate-200 focus:bg-white"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                                    <SelectTrigger className="w-full md:w-40">
+                                        <SelectValue placeholder="Filter by grade" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {gradeFilters.map(grade => (
+                                            <SelectItem key={grade} value={grade}>{grade === 'All' ? 'All Grades' : `Grade ${grade}`}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                    <SelectTrigger className="w-full md:w-56">
+                                        <SelectValue placeholder="Filter by subject" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {subjectFilters.map(subject => (
+                                            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button onClick={handleExport} variant="outline">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Export Report
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                             <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                                <SelectTrigger className="w-full md:w-40">
-                                    <SelectValue placeholder="Filter by grade" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {gradeFilters.map(grade => (
-                                        <SelectItem key={grade} value={grade}>{grade === 'All' ? 'All Grades' : `Grade ${grade}`}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                                <SelectTrigger className="w-full md:w-56">
-                                    <SelectValue placeholder="Filter by subject" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {subjectFilters.map(subject => (
-                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Button onClick={handleExport} variant="outline">
-                                <Download className="mr-2 h-4 w-4" />
-                                Export Report
-                            </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="border rounded-md">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Student Name</TableHead>
+                                        <TableHead>Subject</TableHead>
+                                        <TableHead>Quiz</TableHead>
+                                        <TableHead className="text-center">Score</TableHead>
+                                        <TableHead className="text-center">Grade</TableHead>
+                                        <TableHead>Last Updated By</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {filteredData.length > 0 ? filteredData.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell className="font-medium">{item.studentName}</TableCell>
+                                        <TableCell>{item.subject}</TableCell>
+                                        <TableCell>{item.quizName}</TableCell>
+                                        <TableCell className="text-center">{item.totalScore}/{item.totalPossibleScore}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant="outline" className={getGradeColor(item.grade)}>
+                                                {item.grade}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>{item.lastUpdatedBy}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="sm" onClick={() => handleViewHistory(item)}>
+                                                    <History className="mr-2 h-4 w-4" />
+                                                    View History
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                            No results match your filters.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                </TableBody>
+                            </Table>
                         </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="border rounded-md">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student Name</TableHead>
-                                    <TableHead>Subject</TableHead>
-                                    <TableHead>Quiz</TableHead>
-                                    <TableHead className="text-center">Score</TableHead>
-                                    <TableHead className="text-center">Grade</TableHead>
-                                    <TableHead>Last Updated By</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                               {filteredData.length > 0 ? filteredData.map(item => (
-                                   <TableRow key={item.id}>
-                                       <TableCell className="font-medium">{item.studentName}</TableCell>
-                                       <TableCell>{item.subject}</TableCell>
-                                       <TableCell>{item.quizName}</TableCell>
-                                       <TableCell className="text-center">{item.totalScore}/{item.totalPossibleScore}</TableCell>
-                                       <TableCell className="text-center">
-                                           <Badge variant="outline" className={getGradeColor(item.grade)}>
-                                               {item.grade}
-                                           </Badge>
-                                       </TableCell>
-                                       <TableCell>{item.lastUpdatedBy}</TableCell>
-                                       <TableCell className="text-right">
-                                           <Button variant="ghost" size="sm" onClick={() => handleViewHistory(item.studentName)}>
-                                                <History className="mr-2 h-4 w-4" />
-                                                View History
-                                           </Button>
-                                       </TableCell>
-                                   </TableRow>
-                               )) : (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                        No results match your filters.
-                                    </TableCell>
-                                </TableRow>
-                               )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
-        </main>
+                    </CardContent>
+                </Card>
+            </main>
+            {selectedSubmission && (
+                <AuditHistoryModal
+                    isOpen={historyModalOpen}
+                    onClose={() => setHistoryModalOpen(false)}
+                    studentName={selectedSubmission.studentName}
+                    submissionId={selectedSubmission.id}
+                />
+            )}
+        </>
     );
 }

@@ -1,4 +1,4 @@
-import type { Quiz, LeaderboardEntry, Badge, StudentSubmission } from './types';
+import type { Quiz, LeaderboardEntry, Badge, StudentSubmission, AuditLog } from './types';
 import { Award, Rocket, BrainCircuit } from 'lucide-react';
 
 export const mockQuizzes: Quiz[] = [
@@ -187,3 +187,37 @@ export const mockUserBadges: Badge[] = [
     { id: 'badge-2', name: 'Speedster', description: 'Finished a quiz in under 5 minutes.', icon: Rocket },
     { id: 'badge-3', name: 'Knowledge Guru', description: 'Mastered the General Knowledge category.', icon: BrainCircuit },
 ];
+
+export const mockAuditLogs: Record<string, AuditLog[]> = {
+    'sub-1': [
+        {
+            id: 'log-1',
+            submissionId: 'sub-1',
+            timestamp: '2024-05-21T10:00:00Z',
+            updatedBy: 'Mr. Smith',
+            oldScore: 12,
+            newScore: 15,
+            reason: 'Corrected points for short answer.',
+        },
+        {
+            id: 'log-2',
+            submissionId: 'sub-1',
+            timestamp: '2024-05-20T10:30:00Z',
+            updatedBy: 'System',
+            oldScore: 0,
+            newScore: 12,
+            reason: 'Initial auto-grade.',
+        },
+    ],
+    'sub-2': [
+         {
+            id: 'log-3',
+            submissionId: 'sub-2',
+            timestamp: '2024-05-20T11:05:00Z',
+            updatedBy: 'Mr. Smith',
+            oldScore: 0,
+            newScore: 4,
+            reason: 'Graded short answer.',
+        },
+    ]
+};

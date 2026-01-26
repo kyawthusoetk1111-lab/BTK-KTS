@@ -160,3 +160,12 @@ export interface SystemStatus {
   isMaintenanceMode: boolean;
 }
     
+export interface AuditLog {
+  id: string;
+  submissionId: string;
+  timestamp: string;
+  updatedBy: string; // Teacher/Admin name or 'System'
+  oldScore: number;
+  newScore: number;
+  reason?: string;
+}
