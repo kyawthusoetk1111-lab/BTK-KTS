@@ -47,6 +47,16 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     setQuiz((prev) => ({ ...prev, [field]: value }));
   };
   
+  const handlePremiumToggle = (checked: boolean) => {
+    setQuiz(prev => {
+        const newState = { ...prev, isPremium: checked };
+        if (checked && (newState.price === undefined || newState.price === null)) {
+            newState.price = 0;
+        }
+        return newState;
+    });
+  };
+
   const handleDateChange = (field: "startDate" | "endDate", date: Date | undefined) => {
     if (date) {
         setQuiz((prev) => ({ ...prev, [field]: date.toISOString() }));
@@ -334,7 +344,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                                         <Switch
                                             id="is-premium"
                                             checked={!!quiz.isPremium}
-                                            onCheckedChange={(checked) => handleQuizDetailsChange("isPremium", checked)}
+                                            onCheckedChange={handlePremiumToggle}
                                             disabled={!isProTeacher}
                                         />
                                     </div>
