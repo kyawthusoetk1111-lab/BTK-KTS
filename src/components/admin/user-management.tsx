@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UserPlus } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
+import { useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 
 const studentSchema = z.object({
@@ -27,12 +29,12 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 interface UserManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // onSave: (data: Omit<UserProfile, 'id'>) => void; // This would be the save function
 }
 
 export function UserManagementModal({ isOpen, onClose }: UserManagementModalProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const firestore = useFirestore();
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
@@ -46,22 +48,60 @@ export function UserManagementModal({ isOpen, onClose }: UserManagementModalProp
     },
   });
 
-  // This function is a placeholder for what would be a secure, backend-driven user creation process.
-  const onSubmit = (data: StudentFormValues) => {
+  const onSubmit = async (data: StudentFormValues) => {
     setIsSaving(true);
-    toast({
-        title: "Backend Required",
-        description: "Creating users with passwords securely requires a backend function. This UI is ready to be connected.",
-        variant: "destructive"
-    })
-    
-    // In a real implementation, you would trigger a cloud function here
-    // that uses the Firebase Admin SDK to create the user in Auth and Firestore.
-    // e.g., `await createUser({ email: `${data.studentId}@btk-exam.com`, password: data.password, ... })`
-
-    setTimeout(() => {
+    if (!firestore) {
+        toast({ title: "Error", description: "Firestore not available.", variant: "destructive" });
         setIsSaving(false);
-    }, 1000);
+        return;
+    }
+    
+    try {
+        // This is a placeholder ID. A secure implementation would get the real UID
+        // from a Firebase Auth user created via a backend function.
+        const newUserId = crypto.randomUUID(); 
+        const userDocRef = doc(firestore, 'users', newUserId);
+
+        // This profile is created without storing the password, which is a critical security practice.
+        const newUserProfile: UserProfile = {
+            id: newUserId,
+            name: data.name,
+            studentId: data.studentId,
+            email: `${data.studentId}@btk-exam.com`, // The email is derived from the student ID
+            userType: 'student',
+            isFirstLogin: true, // This flag will force a password change on first login
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        await setDoc(userDocRef, newUserProfile);
+
+        toast({
+            title: "Student Profile Created!",
+            description: `${data.name}'s profile has been saved successfully.`,
+        });
+        
+        toast({
+            title: "Action Required",
+            description: "A backend function is needed to securely set this user's initial password in Firebase Authentication.",
+            variant: "destructive",
+            duration: 10000
+        });
+
+        onClose();
+        form.reset();
+
+    } catch (error) {
+        console.error("Error creating student profile:", error);
+        toast({
+            title: "Save Failed",
+            description: "Could not create the student profile. Please try again.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   return (
