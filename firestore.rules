@@ -61,15 +61,16 @@ service cloud.firestore {
      * This requires a get() call, so it should be used sparingly, primarily for admin-only write operations.
      */
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin';
+      let docPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isSignedIn() && exists(docPath) && get(docPath).data.userType == 'admin';
     }
 
     /**
      * Checks if the user is a teacher or an admin.
      */
     function isTeacherOrAdmin() {
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType;
-      return isSignedIn() && (userRole == 'teacher' || userRole == 'admin');
+      let docPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isSignedIn() && exists(docPath) && (get(docPath).data.userType == 'teacher' || get(docPath).data.userType == 'admin');
     }
 
     /**
