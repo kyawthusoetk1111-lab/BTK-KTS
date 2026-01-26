@@ -143,7 +143,7 @@ export default function FinancialsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700 lg:col-span-1">
+                <Card className="border-slate-200 dark:border-slate-700 lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Net Profit</CardTitle>
                         <Scale className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -153,7 +153,7 @@ export default function FinancialsPage() {
                         <p className="text-xs text-emerald-700 dark:text-emerald-400/80">All-time earnings</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700 lg:col-span-1">
+                <Card className="border-slate-200 dark:border-slate-700 lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-sky-800 dark:text-sky-300">This Month's Revenue</CardTitle>
                         <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -163,7 +163,7 @@ export default function FinancialsPage() {
                         <p className="text-xs text-sky-700 dark:text-sky-400/80">+15% from last month</p>
                     </CardContent>
                 </Card>
-                 <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700 lg:col-span-1">
+                 <Card className="border-slate-200 dark:border-slate-700 lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-300">This Month's Expenses</CardTitle>
                         <Wallet className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -173,7 +173,7 @@ export default function FinancialsPage() {
                         <p className="text-xs text-amber-700 dark:text-amber-400/80">From {expenditures?.length || 0} transactions</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700 lg:col-span-1">
+                <Card className="border-slate-200 dark:border-slate-700 lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Total Income</CardTitle>
                         <Landmark className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -183,7 +183,7 @@ export default function FinancialsPage() {
                         <p className="text-xs text-indigo-700 dark:text-indigo-400/80">All-time approved payments</p>
                     </CardContent>
                 </Card>
-                 <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700 lg:col-span-1">
+                 <Card className="border-slate-200 dark:border-slate-700 lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-red-800 dark:text-red-300">Total Expenses</CardTitle>
                         <DollarSign className="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -196,7 +196,7 @@ export default function FinancialsPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700">
+                <Card className="border-slate-200 dark:border-slate-700">
                     <CardHeader>
                         <CardTitle>6-Month Revenue Trend</CardTitle>
                     </CardHeader>
@@ -223,7 +223,7 @@ export default function FinancialsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700">
+                <Card className="border-slate-200 dark:border-slate-700">
                     <CardHeader>
                         <CardTitle>This Month: Income vs. Expense</CardTitle>
                     </CardHeader>
@@ -244,7 +244,7 @@ export default function FinancialsPage() {
                 </Card>
             </div>
             
-            <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-700">
+            <Card className="border-slate-200 dark:border-slate-700">
                 <CardHeader>
                     <CardTitle>Expenditure History</CardTitle>
                     <CardDescription>A log of all recorded business expenses.</CardDescription>

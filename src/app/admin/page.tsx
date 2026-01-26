@@ -117,7 +117,7 @@ export default function AdminPage() {
 
     return (
         <>
-        <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50 bg-slate-50 dark:bg-gray-950">
+        <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50">
             <div className="flex items-center justify-between space-y-2">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Admin Overview</h2>
@@ -132,7 +132,7 @@ export default function AdminPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Total Students</CardTitle>
                         <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -142,7 +142,7 @@ export default function AdminPage() {
                         <p className="text-xs text-emerald-700 dark:text-emerald-400/80">+12 since last month</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-sky-800 dark:text-sky-300">Monthly Revenue</CardTitle>
                         <TrendingUp className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -152,7 +152,7 @@ export default function AdminPage() {
                         <p className="text-xs text-sky-700 dark:text-sky-400/80">+15% from last month</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-300">Monthly Expenses</CardTitle>
                         <Wallet className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -162,7 +162,7 @@ export default function AdminPage() {
                         <p className="text-xs text-amber-700 dark:text-amber-400/80">From {expenditures?.length || 0} transactions</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-800">
+                <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Net Profit</CardTitle>
                         <Scale className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -175,7 +175,7 @@ export default function AdminPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
-                <Card className="lg:col-span-2 bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-800 animate-in fade-in-50 duration-500">
+                <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 animate-in fade-in-50 duration-500">
                     <CardHeader>
                         <CardTitle>Financial Trend</CardTitle>
                         <CardDescription>Revenue vs. Expenses for the last 4 months.</CardDescription>
@@ -198,7 +198,7 @@ export default function AdminPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/60 dark:bg-black/20 backdrop-blur-sm border-slate-200 dark:border-slate-800 animate-in fade-in-50 duration-700">
+                <Card className="border-slate-200 dark:border-slate-800 animate-in fade-in-50 duration-700">
                     <CardHeader>
                         <CardTitle>Recent Activity</CardTitle>
                         <CardDescription>Latest exam score changes.</CardDescription>
