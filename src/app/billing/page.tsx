@@ -62,7 +62,19 @@ export default function BillingPage() {
       toast({ title: `Generating Receipt ${transaction.id}` });
       const doc = new jsPDF();
   
+      const schoolLogoBase64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...'; 
+
       // Header Branding
+      try {
+        if (schoolLogoBase64 && schoolLogoBase64.startsWith('data:image')) {
+          doc.addImage(schoolLogoBase64, 'PNG', 15, 15, 25, 25);
+        }
+      } catch (error) {
+        console.error("Logo image error:", error);
+        doc.setFontSize(10);
+        doc.text("[BTK & KTS]", 15, 20); 
+      }
+    
       doc.setFontSize(22);
       doc.setTextColor(16, 185, 129); // Emerald Green
       doc.text("BTK & KTS Education", 45, 28);
