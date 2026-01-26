@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Trash2, PlusCircle, GripVertical, Library } from "lucide-react";
 import QuestionEditor from "./question-editor";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent } from "./ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 import { QuizBankBrowser } from "./quiz-bank-browser";
 import { useToast } from "@/hooks/use-toast";
 
@@ -148,8 +148,12 @@ export default function SectionEditor({ section, sectionNumber, onUpdate, onDele
         </CardContent>
       </Card>
       <Sheet open={isBankOpen} onOpenChange={setIsBankOpen}>
-        <SheetContent className="w-full max-w-2xl sm:max-w-2xl p-0">
-           <QuizBankBrowser onImport={handleImportFromBank} />
+        <SheetContent className="w-full max-w-2xl sm:max-w-2xl flex flex-col p-0">
+          <SheetHeader className="p-6 border-b">
+            <SheetTitle>Import from Question Bank</SheetTitle>
+            <SheetDescription>Select questions to add to the current section.</SheetDescription>
+          </SheetHeader>
+          <QuizBankBrowser onImport={handleImportFromBank} />
         </SheetContent>
       </Sheet>
     </>

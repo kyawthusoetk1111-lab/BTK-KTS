@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { subjects } from '@/lib/subjects';
@@ -60,13 +59,8 @@ export function QuizBankBrowser({ onImport }: QuizBankBrowserProps) {
   const selectedCount = Object.keys(selectedQuestions).length;
 
   return (
-    <div className="flex flex-col h-full">
-      <CardHeader>
-        <CardTitle>Import from Question Bank</CardTitle>
-        <CardDescription>Select questions to add to the current section.</CardDescription>
-      </CardHeader>
-      
-      <div className="px-6 pb-4 space-y-4 border-b">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="px-6 py-4 space-y-4 border-b">
          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
@@ -125,7 +119,7 @@ export function QuizBankBrowser({ onImport }: QuizBankBrowserProps) {
         </div>
       </ScrollArea>
       
-      <div className="p-4 border-t bg-background">
+      <div className="p-4 border-t bg-background mt-auto">
         <Button 
             className="w-full" 
             disabled={selectedCount === 0}
