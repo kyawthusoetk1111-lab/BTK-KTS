@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Trash2, ShieldOff, Search } from 'lucide-react';
+import { Trash2, ShieldOff, Search, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -31,7 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { UserDetailView } from './user-detail-view';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +43,7 @@ export function UserDirectory() {
     const [userToManage, setUserToManage] = useState<{user: UserProfile, action: 'delete' | 'suspend'} | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [detailedUser, setDetailedUser] = useState<UserProfile | null>(null);
+    const [loadingActions, setLoadingActions] = useState<string[]>([]);
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -58,34 +59,67 @@ export function UserDirectory() {
 
     const handleRoleChange = (userId: string, newRole: 'admin' | 'teacher' | 'student') => {
         if (!firestore) return;
+        const actionKey = `role-${userId}`;
+        setLoadingActions(prev => [...prev, actionKey]);
+
         const userRef = doc(firestore, 'users', userId);
-        updateDocumentNonBlocking(userRef, { userType: newRole });
-        toast({
-            title: 'Role Updated',
-            description: `User role has been changed to ${newRole}.`
-        });
+        updateDocumentNonBlocking(userRef, { userType: newRole })
+            .then(() => {
+                toast({
+                    title: 'Role Updated',
+                    description: `User role has been changed to ${newRole}.`
+                });
+            })
+            .catch((error) => {
+                console.error("Error updating role:", error);
+                toast({
+                    title: 'Update Failed',
+                    description: 'Could not update user role.',
+                    variant: 'destructive'
+                });
+            })
+            .finally(() => {
+                setLoadingActions(prev => prev.filter(id => id !== actionKey));
+            });
     };
 
     const handleConfirmAction = () => {
         if (!firestore || !userToManage) return;
-        const userRef = doc(firestore, 'users', userToManage.user.id);
-
-        if (userToManage.action === 'delete') {
-            deleteDocumentNonBlocking(userRef);
-            toast({
-                title: 'User Deleted',
-                description: `${userToManage.user.name} has been deleted.`,
-                variant: 'destructive'
-            });
-        } else if (userToManage.action === 'suspend') {
-            const newStatus = userToManage.user.status === 'suspended' ? 'active' : 'suspended';
-            updateDocumentNonBlocking(userRef, { status: newStatus });
-            toast({
-                title: `User ${newStatus === 'active' ? 'Reactivated' : 'Suspended'}`,
-                description: `${userToManage.user.name}'s account has been ${newStatus}.`,
-            });
-        }
+        const { user, action } = userToManage;
+        const actionKey = `${action}-${user.id}`;
+        
+        setLoadingActions(prev => [...prev, actionKey]);
         setUserToManage(null);
+
+        if (action === 'delete') {
+            const userRef = doc(firestore, 'users', user.id);
+            deleteDocumentNonBlocking(userRef)
+                .then(() => {
+                     toast({
+                        title: 'User Deleted',
+                        description: `${user.name} has been deleted.`,
+                        variant: 'destructive'
+                    });
+                })
+                .catch(error => console.error("Error deleting user:", error))
+                .finally(() => {
+                    setLoadingActions(prev => prev.filter(id => id !== actionKey));
+                });
+        } else if (action === 'suspend') {
+            const userRef = doc(firestore, 'users', user.id);
+            const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+            updateDocumentNonBlocking(userRef, { status: newStatus })
+                .then(() => {
+                    toast({
+                        title: `User ${newStatus === 'active' ? 'Reactivated' : 'Suspended'}`,
+                        description: `${user.name}'s account has been ${newStatus}.`,
+                    });
+                })
+                .catch(error => console.error("Error suspending user:", error))
+                .finally(() => {
+                    setLoadingActions(prev => prev.filter(id => id !== actionKey));
+                });
+        }
     };
 
     if (isLoading) {
@@ -126,7 +160,9 @@ export function UserDirectory() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+                                {filteredUsers.length > 0 ? filteredUsers.map((user) => {
+                                    const isActionLoading = loadingActions.some(action => action.endsWith(user.id));
+                                    return (
                                     <TableRow key={user.id} onClick={() => setDetailedUser(user)} className="cursor-pointer">
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-3">
@@ -141,10 +177,10 @@ export function UserDirectory() {
                                             <Select
                                                 value={user.userType}
                                                 onValueChange={(newRole: 'admin' | 'teacher' | 'student') => handleRoleChange(user.id, newRole)}
-                                                disabled={user.id === currentUser?.uid}
+                                                disabled={user.id === currentUser?.uid || isActionLoading}
                                             >
                                                 <SelectTrigger className="w-32">
-                                                    <SelectValue placeholder="Select role" />
+                                                    {loadingActions.includes(`role-${user.id}`) ? <Loader2 className="animate-spin h-4 w-4" /> : <SelectValue placeholder="Select role" />}
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="student">Student</SelectItem>
@@ -162,23 +198,23 @@ export function UserDirectory() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setUserToManage({user, action: 'suspend'})}
-                                                disabled={user.id === currentUser?.uid}
+                                                disabled={user.id === currentUser?.uid || isActionLoading}
                                                 title={user.status === 'suspended' ? 'Reactivate User' : 'Suspend User'}
                                             >
-                                                <ShieldOff className="h-4 w-4 text-orange-500" />
+                                                {loadingActions.includes(`suspend-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <ShieldOff className="h-4 w-4 text-orange-500" />}
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setUserToManage({user, action: 'delete'})}
-                                                disabled={user.id === currentUser?.uid}
+                                                disabled={user.id === currentUser?.uid || isActionLoading}
                                                 title="Delete User"
                                             >
-                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                {loadingActions.includes(`delete-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-destructive" />}
                                             </Button>
                                         </TableCell>
                                     </TableRow>
-                                )) : (
+                                )}) : (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center h-24">No users found.</TableCell>
                                     </TableRow>
@@ -218,5 +254,3 @@ export function UserDirectory() {
         </>
     );
 }
-
-    
