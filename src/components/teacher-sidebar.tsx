@@ -31,7 +31,6 @@ import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 
 const allMenuItems = [
   { href: '/', label: 'ပင်မစာမျက်နှာ', icon: LayoutDashboard, adminOnly: false },
-  { href: '/quizzes', label: 'စာမေးပွဲများ', icon: FileText, adminOnly: false },
   { href: '/question-bank', label: 'မေးခွန်းဘဏ်', icon: Database, adminOnly: false },
   { href: '/students', label: 'ကျောင်းသားစီမံခန့်ခွဲမှု', icon: Users, adminOnly: false },
   { href: '/results', label: 'ရလဒ်နှင့် အစီရင်ခံစာ', icon: BarChart3, adminOnly: false },
@@ -46,14 +45,6 @@ export function TeacherSidebar() {
   const { state } = useSidebar();
   const { profile } = useUserWithProfile();
 
-  const getHref = (item: typeof allMenuItems[0]) => {
-      // The dashboard at '/' is where quizzes are managed.
-      if (item.href === '/quizzes') {
-          return '/';
-      }
-      return item.href;
-  }
-  
   const menuItems = allMenuItems.filter(item => 
     !item.adminOnly || (item.adminOnly && profile?.userType === 'admin')
   );
@@ -75,7 +66,7 @@ export function TeacherSidebar() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           {menuItems.map((item) => {
-            const href = getHref(item);
+            const href = item.href;
             let isActive;
             if (href === '/') {
                 isActive = pathname === '/' || pathname.startsWith('/quizzes');

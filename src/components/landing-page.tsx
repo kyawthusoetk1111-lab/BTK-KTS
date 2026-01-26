@@ -77,7 +77,7 @@ export function LandingPage() {
                             <Link href="/login" passHref>
                                 <Button variant="ghost">Login</Button>
                             </Link>
-                            <Link href="/signup" passHref>
+                            <Link href="/login" passHref>
                                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Sign Up</Button>
                             </Link>
                         </div>
@@ -103,7 +103,7 @@ export function LandingPage() {
                                 <p className="text-lg text-slate-600 max-w-xl mx-auto md:mx-0 mb-8">
                                     ထောင်ပေါင်းများစွာသော ကျောင်းသား၊ ဆရာများနှင့်အတူ သင်၏ပညာရေး ရည်မှန်းချက်များကို BTK Education တွင် အကောင်အထည်ဖော်လိုက်ပါ။
                                 </p>
-                                <Link href="/signup" passHref>
+                                <Link href="/login" passHref>
                                     <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-emerald-500/30">Get Started</Button>
                                 </Link>
                             </div>

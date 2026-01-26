@@ -1,7 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { TeacherSidebar } from '@/components/teacher-sidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -174,172 +172,167 @@ export default function SettingsPage() {
     };
 
     return (
-        <SidebarProvider defaultOpen={true}>
-            <TeacherSidebar />
-            <SidebarInset className="bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
-                 <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                    <div>
-                        <h1 className="text-4xl font-bold font-headline tracking-tight">ဆက်တင်များ</h1>
-                        <p className="text-gray-300">
-                            Manage your school's profile, academic settings, and more.
-                        </p>
+        <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div>
+                <h1 className="text-4xl font-bold font-headline tracking-tight">ဆက်တင်များ</h1>
+                <p className="text-gray-300">
+                    Manage your school's profile, academic settings, and more.
+                </p>
+            </div>
+
+            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Building className="h-6 w-6"/>
+                        School Profile
+                    </CardTitle>
+                    <CardDescription className="text-gray-300">
+                        This information will appear on receipts and reports.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center gap-6">
+                        <div className="space-y-2">
+                            <Label>School Logo</Label>
+                            <Avatar className="h-24 w-24 border-2 border-emerald-500/30">
+                                <AvatarImage src={logoPreview || undefined} alt="School Logo" />
+                                <AvatarFallback className="bg-transparent text-gray-400">BTK</AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <div>
+                            <input 
+                                type="file" 
+                                id="logo-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={handleLogoUpload}
+                            />
+                            <Button asChild variant="outline" className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                               <label htmlFor="logo-upload">
+                                 <Upload className="mr-2 h-4 w-4" />
+                                  Upload Logo
+                               </label>
+                            </Button>
+                            <p className="text-xs text-gray-400 mt-2">Recommended: 200x200px PNG</p>
+                        </div>
                     </div>
-
-                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Building className="h-6 w-6"/>
-                                School Profile
-                            </CardTitle>
-                            <CardDescription className="text-gray-300">
-                                This information will appear on receipts and reports.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex items-center gap-6">
-                                <div className="space-y-2">
-                                    <Label>School Logo</Label>
-                                    <Avatar className="h-24 w-24 border-2 border-emerald-500/30">
-                                        <AvatarImage src={logoPreview || undefined} alt="School Logo" />
-                                        <AvatarFallback className="bg-transparent text-gray-400">BTK</AvatarFallback>
-                                    </Avatar>
-                                </div>
-                                <div>
-                                    <input 
-                                        type="file" 
-                                        id="logo-upload" 
-                                        className="hidden" 
-                                        accept="image/*"
-                                        onChange={handleLogoUpload}
-                                    />
-                                    <Button asChild variant="outline" className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
-                                       <label htmlFor="logo-upload">
-                                         <Upload className="mr-2 h-4 w-4" />
-                                          Upload Logo
-                                       </label>
-                                    </Button>
-                                    <p className="text-xs text-gray-400 mt-2">Recommended: 200x200px PNG</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="school-name">School Name</Label>
-                                    <Input 
-                                        id="school-name"
-                                        value={schoolName}
-                                        onChange={(e) => setSchoolName(e.target.value)}
-                                        className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="contact-number">Contact Number</Label>
-                                    <Input 
-                                        id="contact-number"
-                                        value={contactNumber}
-                                        onChange={(e) => setContactNumber(e.target.value)}
-                                        className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="address">Address</Label>
-                                <Textarea 
-                                    id="address"
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
-                                />
-                            </div>
-                        </CardContent>
-                        <CardFooter className="bg-black/20 p-4 flex justify-end">
-                            <Button onClick={handleSaveChanges} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
-                                Save Changes
-                            </Button>
-                        </CardFooter>
-                    </Card>
-
-                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <CloudDownload className="h-6 w-6"/>
-                                ဒေတာအရန်သိမ်းဆည်းရန် (Data Backup)
-                            </CardTitle>
-                            <CardDescription className="text-gray-300">
-                                Export your platform data for safekeeping.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <Button onClick={handleExportStudents} disabled={isExportingStudents} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
-                                {isExportingStudents ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
-                                Download All Users
-                            </Button>
-                            <Button onClick={handleExportFinancials} disabled={isExportingFinancials} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
-                                {isExportingFinancials ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
-                                Download Financials
-                            </Button>
-                            <Button onClick={handleFullBackup} disabled={isExportingJson} className="bg-sky-500 text-white hover:bg-sky-600">
-                                {isExportingJson ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
-                                Download Full Backup (JSON)
-                            </Button>
-                        </CardContent>
-                        <CardFooter className="bg-black/20 p-4">
-                            {lastBackup ? (
-                                <p className={cn("text-sm", isBackupOld() ? "text-amber-300 font-semibold" : "text-gray-400")}>
-                                    Last backup taken: {format(new Date(lastBackup), "PPP p")}
-                                </p>
-                            ) : (
-                                <p className="text-sm text-gray-400">No backup has been taken yet.</p>
-                            )}
-                        </CardFooter>
-                    </Card>
-
-
-                    <Card className="bg-amber-800/20 backdrop-blur-md border border-amber-500/30 text-white">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <AlertTriangle className="h-6 w-6"/>
-                                System Controls
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-black/20 p-4">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="maintenance-mode" className="text-base font-medium">ကျောင်းသားများ ဝင်ရောက်မှုကို ခေတ္တပိတ်ထားရန် (Maintenance Mode)</Label>
-                                    <p className="text-sm text-gray-300">Enabling this will redirect all students to a maintenance page.</p>
-                                </div>
-                                {isStatusLoading ? (
-                                    <LoadingSpinner />
-                                ) : (
-                                    <Switch
-                                        id="maintenance-mode"
-                                        checked={systemStatus?.isMaintenanceMode || false}
-                                        onCheckedChange={handleMaintenanceModeChange}
-                                        className="data-[state=checked]:bg-amber-500"
-                                    />
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-
-                    {/* Placeholder for other sections */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white opacity-50">
-                             <CardHeader>
-                                <CardTitle>Academic Configuration</CardTitle>
-                                <CardDescription className="text-gray-400">Coming Soon</CardDescription>
-                            </CardHeader>
-                        </Card>
-                         <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white opacity-50">
-                             <CardHeader>
-                                <CardTitle>Financial Settings</CardTitle>
-                                <CardDescription className="text-gray-400">Coming Soon</CardDescription>
-                            </CardHeader>
-                        </Card>
+                        <div className="space-y-2">
+                            <Label htmlFor="school-name">School Name</Label>
+                            <Input 
+                                id="school-name"
+                                value={schoolName}
+                                onChange={(e) => setSchoolName(e.target.value)}
+                                className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="contact-number">Contact Number</Label>
+                            <Input 
+                                id="contact-number"
+                                value={contactNumber}
+                                onChange={(e) => setContactNumber(e.target.value)}
+                                className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                            />
+                        </div>
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Textarea 
+                            id="address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                        />
+                    </div>
+                </CardContent>
+                <CardFooter className="bg-black/20 p-4 flex justify-end">
+                    <Button onClick={handleSaveChanges} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                        Save Changes
+                    </Button>
+                </CardFooter>
+            </Card>
 
-                </main>
-            </SidebarInset>
-        </SidebarProvider>
+            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CloudDownload className="h-6 w-6"/>
+                        ဒေတာအရန်သိမ်းဆည်းရန် (Data Backup)
+                    </CardTitle>
+                    <CardDescription className="text-gray-300">
+                        Export your platform data for safekeeping.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button onClick={handleExportStudents} disabled={isExportingStudents} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                        {isExportingStudents ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
+                        Download All Users
+                    </Button>
+                    <Button onClick={handleExportFinancials} disabled={isExportingFinancials} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                        {isExportingFinancials ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
+                        Download Financials
+                    </Button>
+                    <Button onClick={handleFullBackup} disabled={isExportingJson} className="bg-sky-500 text-white hover:bg-sky-600">
+                        {isExportingJson ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
+                        Download Full Backup (JSON)
+                    </Button>
+                </CardContent>
+                <CardFooter className="bg-black/20 p-4">
+                    {lastBackup ? (
+                        <p className={cn("text-sm", isBackupOld() ? "text-amber-300 font-semibold" : "text-gray-400")}>
+                            Last backup taken: {format(new Date(lastBackup), "PPP p")}
+                        </p>
+                    ) : (
+                        <p className="text-sm text-gray-400">No backup has been taken yet.</p>
+                    )}
+                </CardFooter>
+            </Card>
+
+
+            <Card className="bg-amber-800/20 backdrop-blur-md border border-amber-500/30 text-white">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-6 w-6"/>
+                        System Controls
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-black/20 p-4">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="maintenance-mode" className="text-base font-medium">ကျောင်းသားများ ဝင်ရောက်မှုကို ခေတ္တပိတ်ထားရန် (Maintenance Mode)</Label>
+                            <p className="text-sm text-gray-300">Enabling this will redirect all students to a maintenance page.</p>
+                        </div>
+                        {isStatusLoading ? (
+                            <LoadingSpinner />
+                        ) : (
+                            <Switch
+                                id="maintenance-mode"
+                                checked={systemStatus?.isMaintenanceMode || false}
+                                onCheckedChange={handleMaintenanceModeChange}
+                                className="data-[state=checked]:bg-amber-500"
+                            />
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+
+            {/* Placeholder for other sections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white opacity-50">
+                     <CardHeader>
+                        <CardTitle>Academic Configuration</CardTitle>
+                        <CardDescription className="text-gray-400">Coming Soon</CardDescription>
+                    </CardHeader>
+                </Card>
+                 <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white opacity-50">
+                     <CardHeader>
+                        <CardTitle>Financial Settings</CardTitle>
+                        <CardDescription className="text-gray-400">Coming Soon</CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+
+        </main>
     );
 }
