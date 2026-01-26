@@ -8,6 +8,7 @@ import { Users, UserPlus, FileCheck, DollarSign, Search } from 'lucide-react';
 import { UserManagementTable } from '@/components/admin/user-management';
 import type { UserProfile } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { SubjectPerformance } from '@/components/admin/subject-performance';
 
 export default function AdminPage() {
     const firestore = useFirestore();
@@ -80,6 +81,8 @@ export default function AdminPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <SubjectPerformance />
 
             <Card>
                 <CardHeader>

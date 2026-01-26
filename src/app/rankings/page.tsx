@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 
 export default function RankingsPage() {
     const { toast } = useToast();
-    const [selectedSubject, setSelectedSubject] = useState<string>(subjects[0]);
+    const [selectedSubject, setSelectedSubject] = useState<string>('Global');
     
     const leaderboardData: LeaderboardEntry[] = mockLeaderboard[selectedSubject] || [];
     const topThree = leaderboardData.slice(0, 3);

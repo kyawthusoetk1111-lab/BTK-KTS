@@ -155,6 +155,13 @@ export const mockSubmissions: StudentSubmission[] = [
   ];
 
 export const mockLeaderboard: Record<string, LeaderboardEntry[]> = {
+  'Global': [
+    { rank: 1, studentName: 'Alice Johnson', score: 100, time: '8m 15s', avatarUrl: 'https://i.pravatar.cc/150?u=alice', trend: 'up' },
+    { rank: 2, studentName: 'Diana Prince', score: 98, time: '5m 30s', avatarUrl: 'https://i.pravatar.cc/150?u=diana', trend: 'up' },
+    { rank: 3, studentName: 'Bruce Wayne', score: 96, time: '6m 10s', avatarUrl: 'https://i.pravatar.cc/150?u=bruce', trend: 'up' },
+    { rank: 4, studentName: 'Bob Williams', score: 95, time: '9m 02s', avatarUrl: 'https://i.pravatar.cc/150?u=bob', trend: 'stable' },
+    { rank: 5, studentName: 'Clark Kent', score: 95, time: '6m 12s', avatarUrl: 'https://i.pravatar.cc/150?u=clark', trend: 'down' },
+  ],
   'Mathematics': [
     { rank: 1, studentName: 'Alice Johnson', score: 100, time: '8m 15s', avatarUrl: 'https://i.pravatar.cc/150?u=alice', trend: 'up' },
     { rank: 2, studentName: 'Bob Williams', score: 95, time: '9m 02s', avatarUrl: 'https://i.pravatar.cc/150?u=bob', trend: 'stable' },

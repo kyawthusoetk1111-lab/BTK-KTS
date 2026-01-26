@@ -1,4 +1,5 @@
 export const subjects = [
+    "Global",
     "မြန်မာစာ",
     "Myanmar",
     "English",
