@@ -79,6 +79,14 @@ service cloud.firestore {
     function isImmutable(field) {
         return request.resource.data[field] == resource.data[field];
     }
+
+    // -------------------------------------------------------------------------
+    // System Status Rules
+    // -------------------------------------------------------------------------
+    match /system/{docId} {
+      allow get: if isSignedIn();
+      allow write: if isAdmin();
+    }
     
     // -------------------------------------------------------------------------
     // User Data Rules
@@ -208,5 +216,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

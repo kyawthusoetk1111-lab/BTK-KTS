@@ -8,8 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, Building } from 'lucide-react';
+import { Upload, Building, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDoc, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Switch } from '@/components/ui/switch';
+import { LoadingSpinner } from '@/components/loading-spinner';
+import type { SystemStatus } from '@/lib/types';
+
 
 export default function SettingsPage() {
     const { toast } = useToast();
@@ -17,6 +23,21 @@ export default function SettingsPage() {
     const [address, setAddress] = useState('123 Education Lane, Yangon, Myanmar');
     const [contactNumber, setContactNumber] = useState('09-123-456-789');
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+    const firestore = useFirestore();
+    const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'system', 'status') : null, [firestore]);
+    const { data: systemStatus, isLoading: isStatusLoading } = useDoc<SystemStatus>(statusRef);
+
+    const handleMaintenanceModeChange = (isMaintenance: boolean) => {
+        if (statusRef) {
+            // Create the document if it doesn't exist, or merge the field if it does.
+            setDocumentNonBlocking(statusRef, { isMaintenanceMode: isMaintenance, id: 'status' }, { merge: true });
+            toast({
+                title: 'Settings Updated',
+                description: `Maintenance mode has been ${isMaintenance ? 'enabled' : 'disabled'}.`
+            });
+        }
+    };
 
     const handleSaveChanges = () => {
         toast({
@@ -124,6 +145,34 @@ export default function SettingsPage() {
                             </Button>
                         </CardFooter>
                     </Card>
+
+                    <Card className="bg-amber-800/20 backdrop-blur-md border border-amber-500/30 text-white">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <AlertTriangle className="h-6 w-6"/>
+                                System Controls
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-black/20 p-4">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="maintenance-mode" className="text-base font-medium">ကျောင်းသားများ ဝင်ရောက်မှုကို ခေတ္တပိတ်ထားရန် (Maintenance Mode)</Label>
+                                    <p className="text-sm text-gray-300">Enabling this will redirect all students to a maintenance page.</p>
+                                </div>
+                                {isStatusLoading ? (
+                                    <LoadingSpinner />
+                                ) : (
+                                    <Switch
+                                        id="maintenance-mode"
+                                        checked={systemStatus?.isMaintenanceMode || false}
+                                        onCheckedChange={handleMaintenanceModeChange}
+                                        className="data-[state=checked]:bg-amber-500"
+                                    />
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
 
                     {/* Placeholder for other sections */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

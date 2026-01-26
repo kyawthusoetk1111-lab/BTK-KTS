@@ -5,9 +5,29 @@ import { LoadingSpinner } from '@/components/loading-spinner';
 import { TeacherDashboard } from '@/components/teacher-dashboard';
 import { StudentDashboard } from '@/components/student-dashboard';
 import { LandingPage } from '@/components/landing-page';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import type { SystemStatus } from '@/lib/types';
+import { useEffect } from 'react';
 
 export default function DashboardRouterPage() {
-  const { user, profile, isLoading } = useUserWithProfile();
+  const router = useRouter();
+  const firestore = useFirestore();
+  const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'system', 'status') : null, [firestore]);
+  const { data: systemStatus, isLoading: isStatusLoading } = useDoc<SystemStatus>(statusRef);
+  const { user, profile, isLoading: isUserLoading } = useUserWithProfile();
+
+  const isLoading = isUserLoading || isStatusLoading;
+
+  useEffect(() => {
+    if (!isLoading && systemStatus?.isMaintenanceMode) {
+        // Redirect non-admins to maintenance page
+        if (!user || (profile && profile.userType === 'student')) {
+            router.replace('/maintenance');
+        }
+    }
+  }, [isLoading, systemStatus, user, profile, router]);
 
   if (isLoading) {
     return (
@@ -15,6 +35,16 @@ export default function DashboardRouterPage() {
         <LoadingSpinner />
       </div>
     );
+  }
+
+  // If maintenance mode is on, this component will stay on a loading screen until the useEffect redirects.
+  // We add a specific check to prevent rendering the real content for a flicker.
+  if (systemStatus?.isMaintenanceMode && (!profile || profile.userType === 'student')) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <LoadingSpinner />
+        </div>
+      );
   }
 
   if (!user) {

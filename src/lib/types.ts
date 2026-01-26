@@ -155,4 +155,8 @@ export interface Purchase {
   purchaseDate: string;
 }
 
+export interface SystemStatus {
+  id: string;
+  isMaintenanceMode: boolean;
+}
     
