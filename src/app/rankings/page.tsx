@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Download, RefreshCw, Trophy, ArrowUp, ArrowDown, Minus } from 'lucide-react';
@@ -9,16 +9,19 @@ import { mockLeaderboard } from '@/lib/data';
 import type { LeaderboardEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-
-// Let's use the math leaderboard as a sample
-const leaderboardData: LeaderboardEntry[] = mockLeaderboard['Mathematics'] || [];
-const topThree = leaderboardData.slice(0, 3);
-const restOfLeaderboard = leaderboardData.slice(3);
-
-const podiumOrder = [1, 0, 2]; // For visual order: 2nd, 1st, 3rd
+import { subjects } from '@/lib/subjects';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export default function RankingsPage() {
     const { toast } = useToast();
+    const [selectedSubject, setSelectedSubject] = useState<string>(subjects[0]);
+    
+    const leaderboardData: LeaderboardEntry[] = mockLeaderboard[selectedSubject] || [];
+    const topThree = leaderboardData.slice(0, 3);
+    const restOfLeaderboard = leaderboardData.slice(3);
+
+    const podiumOrder = [1, 0, 2]; // For visual order: 2nd, 1st, 3rd
 
     const getTrendIcon = (trend?: 'up' | 'down' | 'stable') => {
         switch (trend) {
@@ -47,7 +50,7 @@ export default function RankingsPage() {
 
     return (
         <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-4xl font-bold font-headline tracking-tight">ထိပ်တန်းဖြေဆိုသူများ (Leaderboard)</h1>
                     <p className="text-gray-300">
@@ -66,69 +69,97 @@ export default function RankingsPage() {
                 </div>
             </div>
 
-            {/* Top 3 Podium */}
-            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-12 items-end">
-                {podiumOrder.map(index => {
-                    const student = topThree[index];
-                    if (!student) return null;
-                    const isFirst = student.rank === 1;
-
-                    return (
-                        <div key={student.rank} className={cn("relative", isFirst && "md:-translate-y-8")}>
-                            <Card className={cn(
-                                "text-center p-6 relative flex flex-col items-center transition-all duration-300",
-                                "bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white",
-                                isFirst && "border-yellow-400/50 shadow-2xl shadow-yellow-500/20"
-                            )}>
-                                {isFirst && <div className="absolute inset-0 shimmer-effect rounded-lg"></div>}
-                                <div className="relative">
-                                    <Avatar className="w-24 h-24 border-4 border-white/20">
-                                        <AvatarImage src={student.avatarUrl} alt={student.studentName} />
-                                        <AvatarFallback>{student.studentName.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="absolute -bottom-2 -right-2">
-                                        {getTrophy(student.rank)}
-                                    </div>
-                                </div>
-                                <h3 className="mt-4 text-xl font-bold">{student.studentName}</h3>
-                                <p className="text-sm text-gray-300">အဆင့် {student.rank}</p>
-                                <div className="mt-4 text-2xl font-semibold text-yellow-300">{student.score.toLocaleString()} <span className="text-base font-normal text-gray-400">အမှတ်</span></div>
-                            </Card>
-                        </div>
-                    );
-                })}
+            <div className="mb-8">
+                <Label className="mb-2 block text-gray-300">Filter by Subject</Label>
+                <div className="w-full md:w-72">
+                    <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                        <SelectTrigger className="bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
+                            <SelectValue placeholder="Filter by subject..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 text-white border-slate-700">
+                            {subjects.map(subject => (
+                                <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
-            {/* Rest of the Leaderboard */}
-            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
-                <CardHeader>
-                    <CardTitle>All Rankings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                <TableHead className="text-gray-200 w-[80px]">အဆင့်</TableHead>
-                                <TableHead className="text-gray-200">Student</TableHead>
-                                <TableHead className="text-gray-200 text-right">အမှတ်စုစုပေါင်း</TableHead>
-                                <TableHead className="text-gray-200 text-right">ဖြေဆိုချိန်</TableHead>
-                                <TableHead className="text-gray-200 text-right">Trend</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {restOfLeaderboard.map(student => (
-                                <TableRow key={student.rank} className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                    <TableCell className="font-bold text-lg">{student.rank}</TableCell>
-                                    <TableCell className="font-medium">{student.studentName}</TableCell>
-                                    <TableCell className="text-right font-semibold">{student.score.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right text-gray-400">{student.time}</TableCell>
-                                    <TableCell className="flex justify-end">{getTrendIcon(student.trend)}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            {leaderboardData.length > 0 ? (
+                <>
+                    {/* Top 3 Podium */}
+                    <div className="relative grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-12 items-end">
+                        {podiumOrder.map(index => {
+                            const student = topThree[index];
+                            if (!student) return null;
+                            const isFirst = student.rank === 1;
+
+                            return (
+                                <div key={student.rank} className={cn("relative", isFirst && "md:-translate-y-8")}>
+                                    <Card className={cn(
+                                        "text-center p-6 relative flex flex-col items-center transition-all duration-300",
+                                        "bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white",
+                                        isFirst && "border-yellow-400/50 shadow-2xl shadow-yellow-500/20"
+                                    )}>
+                                        {isFirst && <div className="absolute inset-0 shimmer-effect rounded-lg"></div>}
+                                        <div className="relative">
+                                            <Avatar className="w-24 h-24 border-4 border-white/20">
+                                                <AvatarImage src={student.avatarUrl} alt={student.studentName} />
+                                                <AvatarFallback>{student.studentName.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute -bottom-2 -right-2">
+                                                {getTrophy(student.rank)}
+                                            </div>
+                                        </div>
+                                        <h3 className="mt-4 text-xl font-bold">{student.studentName}</h3>
+                                        <p className="text-sm text-gray-300">အဆင့် {student.rank}</p>
+                                        <div className="mt-4 text-2xl font-semibold text-yellow-300">{student.score.toLocaleString()} <span className="text-base font-normal text-gray-400">အမှတ်</span></div>
+                                    </Card>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Rest of the Leaderboard */}
+                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <CardHeader>
+                            <CardTitle>All Rankings for {selectedSubject}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                        <TableHead className="text-gray-200 w-[80px]">အဆင့်</TableHead>
+                                        <TableHead className="text-gray-200">Student</TableHead>
+                                        <TableHead className="text-gray-200 text-right">အမှတ်စုစုပေါင်း</TableHead>
+                                        <TableHead className="text-gray-200 text-right">ဖြေဆိုချိန်</TableHead>
+                                        <TableHead className="text-gray-200 text-right">Trend</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {restOfLeaderboard.map(student => (
+                                        <TableRow key={student.rank} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                            <TableCell className="font-bold text-lg">{student.rank}</TableCell>
+                                            <TableCell className="font-medium">{student.studentName}</TableCell>
+                                            <TableCell className="text-right font-semibold">{student.score.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right text-gray-400">{student.time}</TableCell>
+                                            <TableCell className="flex justify-end">{getTrendIcon(student.trend)}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </>
+            ) : (
+                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white text-center py-20">
+                    <CardContent>
+                        <Trophy className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <h3 className="text-xl font-bold">No Leaderboard Data</h3>
+                        <p className="text-gray-400">There are no rankings available for {selectedSubject} yet.</p>
+                    </CardContent>
+                </Card>
+            )}
         </main>
     );
 }
