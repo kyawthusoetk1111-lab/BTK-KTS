@@ -35,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { UserDetailView } from './user-detail-view';
 import { cn } from '@/lib/utils';
+import { UserManagementModal } from './user-management';
 
 
 export function UserDirectory() {
@@ -45,6 +46,7 @@ export function UserDirectory() {
     const [searchTerm, setSearchTerm] = useState('');
     const [detailedUser, setDetailedUser] = useState<UserProfile | null>(null);
     const [loadingActions, setLoadingActions] = useState<string[]>([]);
+    const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -54,8 +56,9 @@ export function UserDirectory() {
     const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
     const filteredUsers = users?.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.studentId?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     ) || [];
 
     const handleRoleChange = (userId: string, newRole: 'admin' | 'teacher' | 'student') => {
@@ -144,12 +147,19 @@ export function UserDirectory() {
         <>
             <Card>
                 <CardHeader>
-                    <CardTitle>All Users</CardTitle>
-                    <CardDescription>Manage all user accounts on the platform.</CardDescription>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                        <div>
+                            <CardTitle>All Users</CardTitle>
+                            <CardDescription>Manage all user accounts on the platform.</CardDescription>
+                        </div>
+                        <Button onClick={() => setIsAddUserModalOpen(true)} className="mt-4 md:mt-0">
+                            <UserPlus /> Add New Student
+                        </Button>
+                    </div>
                      <div className="relative pt-4">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input 
-                            placeholder="Search by name or email..."
+                            placeholder="Search by name, email, or ID..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-9 bg-slate-50 border-slate-200 focus:bg-white w-full max-w-sm"
@@ -162,6 +172,7 @@ export function UserDirectory() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
+                                    <TableHead>Student ID</TableHead>
                                     <TableHead>Email</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Status</TableHead>
@@ -177,11 +188,12 @@ export function UserDirectory() {
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-8 w-8">
-                                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                    <AvatarFallback>{user.name?.charAt(0) || '?'}</AvatarFallback>
                                                 </Avatar>
                                                 {user.name}
                                             </div>
                                         </TableCell>
+                                        <TableCell>{user.studentId || 'N/A'}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>
                                             <Badge variant={getRoleBadgeVariant(user.userType)} className="capitalize">{user.userType}</Badge>
@@ -220,7 +232,7 @@ export function UserDirectory() {
                                     </TableRow>
                                 )}) : (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center h-24">No users found.</TableCell>
+                                        <TableCell colSpan={7} className="text-center h-24">No users found.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -255,6 +267,11 @@ export function UserDirectory() {
                    {detailedUser && <UserDetailView user={detailedUser} />}
                 </SheetContent>
             </Sheet>
+
+            <UserManagementModal 
+                isOpen={isAddUserModalOpen}
+                onClose={() => setIsAddUserModalOpen(false)}
+            />
         </>
     );
 }
