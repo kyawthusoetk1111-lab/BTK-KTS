@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockLeaderboard } from '@/lib/data';
-import { BookCopy, Star, Play, Eye, Clock, Search, Activity, ShoppingCart } from 'lucide-react';
-import type { Quiz, Purchase } from '@/lib/types';
+import { BookCopy, Star, Play, Eye, Clock, Search, Activity, ShoppingCart, Lock } from 'lucide-react';
+import type { Quiz, Purchase, Payment } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { subjects } from '@/lib/subjects';
@@ -18,7 +18,7 @@ import { MyGrades } from './my-grades';
 import { MyBadges } from './my-badges';
 import { Leaderboard } from './leaderboard';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 import { usePurchases } from '@/hooks/use-purchases';
 import { PaymentModal } from './payment-modal';
@@ -92,7 +92,7 @@ function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoadin
 export function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [searchCode, setSearchCode] = useState<string>('');
-  const { profile, isLoading: isProfileLoading } = useUserWithProfile();
+  const { user, profile, isLoading: isProfileLoading } = useUserWithProfile();
   const [selectedLeaderboardSubject, setSelectedLeaderboardSubject] = useState<string>(subjects[0]);
   const firestore = useFirestore();
 
@@ -106,7 +106,13 @@ export function StudentDashboard() {
     return query(collection(firestore, 'quizzes'));
   }, [firestore]);
 
+  const pendingPaymentsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'payments'), where('userId', '==', user.uid), where('status', '==', 'pending'));
+  }, [firestore, user]);
+
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
+  const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection<Payment>(pendingPaymentsQuery);
 
   const filteredQuizzes = (allQuizzes || []).filter(quiz => {
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
@@ -119,7 +125,7 @@ export function StudentDashboard() {
     setPaymentModalOpen(true);
   };
 
-  const isLoading = areQuizzesLoading || isProfileLoading || arePurchasesLoading;
+  const isLoading = areQuizzesLoading || isProfileLoading || arePurchasesLoading || arePendingPaymentsLoading;
 
   return (
     <>
@@ -185,7 +191,8 @@ export function StudentDashboard() {
                  ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredQuizzes && filteredQuizzes.length > 0 ? filteredQuizzes.map((quiz, index) => {
-                        const hasQuizAccess = !quiz.isPremium || purchases.some(p => p.itemId === quiz.id);
+                        const hasPurchased = !quiz.isPremium || purchases.some(p => p.itemId === quiz.id);
+                        const isPending = pendingPayments?.some(p => p.itemId === quiz.id);
 
                         return (
                         <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animationDelay: `${index * 100}ms`, animation: 'fade-in-up 0.5s ease-out forwards', opacity: 0 }}>
@@ -216,19 +223,31 @@ export function StudentDashboard() {
                             )}
                         </CardContent>
                         <CardFooter className="flex gap-2 bg-black/30 p-3">
-                            {hasQuizAccess ? (
-                                 <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                                    <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold">
-                                        <Play className="mr-2 h-4 w-4" />
-                                        စာမေးပွဲစတင်မည်
-                                    </Button>
-                                </Link>
-                            ) : (
-                                <Button size="sm" className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold" onClick={() => handleBuyNow(quiz)}>
-                                    <ShoppingCart className="mr-2 h-4 w-4" />
-                                    Buy Now ({quiz.price?.toLocaleString()} MMK)
-                                </Button>
-                            )}
+                            {(() => {
+                                if (hasPurchased) {
+                                    return (
+                                        <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
+                                            <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold">
+                                                <Play className="mr-2 h-4 w-4" />
+                                                စာမေးပွဲစတင်မည်
+                                            </Button>
+                                        </Link>
+                                    );
+                                } else if (isPending) {
+                                    return (
+                                        <Button size="sm" disabled className="w-full font-bold flex-1">
+                                            Pending Approval
+                                        </Button>
+                                    );
+                                } else {
+                                    return (
+                                        <Button size="sm" className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold flex-1" onClick={() => handleBuyNow(quiz)}>
+                                            <Lock className="mr-2 h-4 w-4" />
+                                            Buy Now ({quiz.price?.toLocaleString()} MMK)
+                                        </Button>
+                                    );
+                                }
+                            })()}
                             <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
                               <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
                                   <Eye className="mr-2 h-4 w-4" />

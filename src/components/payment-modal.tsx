@@ -67,8 +67,8 @@ export function PaymentModal({ isOpen, onClose, itemId, itemDescription, amount 
       addDocumentNonBlocking(paymentRef, newPayment);
 
       toast({
-        title: 'Payment Submitted!',
-        description: 'Your payment is being verified. You will be notified once it is approved.',
+        title: 'ငွေပေးချေမှု တင်ပြပြီးပါပြီ။',
+        description: 'Admin အတည်ပြုချက်ကို စောင့်ဆိုင်းပေးပါ။',
       });
       onClose();
       setScreenshotFile(null);
