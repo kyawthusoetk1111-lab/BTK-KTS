@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Trash2, ShieldOff, Search, Loader2, UserPlus } from 'lucide-react';
+import { Trash2, ShieldOff, Search, Loader2, UserPlus, KeyRound } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +42,7 @@ export function UserDirectory() {
     const firestore = useFirestore();
     const { user: currentUser } = useUser();
     const { toast } = useToast();
-    const [userToManage, setUserToManage] = useState<{user: UserProfile, action: 'delete' | 'suspend'} | null>(null);
+    const [userToManage, setUserToManage] = useState<{user: UserProfile, action: 'delete' | 'suspend' | 'reset'} | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [detailedUser, setDetailedUser] = useState<UserProfile | null>(null);
     const [loadingActions, setLoadingActions] = useState<string[]>([]);
@@ -109,6 +109,14 @@ export function UserDirectory() {
                 .finally(() => {
                     setLoadingActions(prev => prev.filter(id => id !== actionKey));
                 });
+        } else if (action === 'reset') {
+            setUserToManage(null);
+            setLoadingActions(prev => prev.filter(id => id !== actionKey));
+            toast({
+                title: "Backend Function Required",
+                description: `Resetting passwords requires a secure backend function. This UI is ready to be connected.`,
+                variant: "destructive",
+            });
         } else if (action === 'suspend') {
             const userRef = doc(firestore, 'users', user.id);
             const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
@@ -220,6 +228,10 @@ export function UserDirectory() {
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
 
+                                                <Button variant="ghost" size="icon" disabled={isCurrentUser || loadingActions.includes(`reset-${user.id}`)} onClick={() => setUserToManage({user, action: 'reset'})}>
+                                                    {loadingActions.includes(`reset-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <KeyRound className="h-4 w-4 text-blue-600" />}
+                                                </Button>
+                                                
                                                 <Button variant="ghost" size="icon" disabled={isCurrentUser || loadingActions.includes(`suspend-${user.id}`)} onClick={() => setUserToManage({user, action: 'suspend'})}>
                                                     {loadingActions.includes(`suspend-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <ShieldOff className="h-4 w-4 text-orange-600" />}
                                                 </Button>
@@ -247,16 +259,17 @@ export function UserDirectory() {
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                            {userToManage?.action === 'delete' && `This will permanently delete the user profile for '${userToManage.user.name}'. This action cannot be undone.`}
-                           {userToManage?.action === 'suspend' && `This will ${userToManage.user.status === 'suspended' ? 'reactivate' : 'suspend'} the account for '${userToManage.user.name}'. Suspended users cannot log in.`}
+                           {userToManage?.action === 'suspend' && `This will ${userToManage.user.status === 'suspended' ? 'reactivate' : 'suspend'} the account for '${userToManage.user.name}'.`}
+                           {userToManage?.action === 'reset' && `This action will reset the password for '${userToManage.user.name}'. They will be required to set a new password on their next login.`}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleConfirmAction}
-                            className={buttonVariants({ variant: userToManage?.action === 'delete' ? 'destructive' : 'default' })}
+                            className={cn(buttonVariants({ variant: userToManage?.action === 'delete' ? 'destructive' : 'default' }))}
                         >
-                            {userToManage?.action === 'delete' ? 'Delete User' : userToManage?.user.status === 'suspended' ? 'Reactivate' : 'Suspend'}
+                            {userToManage?.action === 'delete' ? 'Delete User' : userToManage?.action === 'suspend' ? (userToManage.user.status === 'suspended' ? 'Reactivate' : 'Suspend') : 'Reset Password'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
