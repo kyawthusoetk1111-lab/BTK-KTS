@@ -84,7 +84,7 @@ service cloud.firestore {
     // System Status Rules
     // -------------------------------------------------------------------------
     match /system/{docId} {
-      allow get: if isSignedIn();
+      allow get: if true;
       allow write: if isAdmin();
     }
     
