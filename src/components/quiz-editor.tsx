@@ -21,8 +21,6 @@ import { Switch } from "./ui/switch";
 import { useParams, useRouter } from "next/navigation";
 import { useFirestore, useUser } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useUserWithProfile } from "@/hooks/use-user-with-profile";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Badge } from "@/components/badge";
 
 interface QuizEditorProps {
@@ -36,10 +34,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const router = useRouter();
   const firestore = useFirestore();
   const { user } = useUser();
-  const { profile } = useUserWithProfile();
   const [isSaving, setIsSaving] = useState(false);
-
-  const isProTeacher = profile?.accountTier === 'pro';
 
   const handleQuizDetailsChange = (
     field: keyof Quiz,
@@ -332,31 +327,23 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                         />
                     </div>
                     
-                    <div className={cn("rounded-lg border", !isProTeacher && "bg-muted/50")}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex items-center justify-between p-4">
-                                        <div className="space-y-0.5">
-                                            <Label htmlFor="is-premium" className={cn("text-base font-medium flex items-center gap-2", !isProTeacher && "text-muted-foreground")}>
-                                                <Sparkles className="h-4 w-4 text-amber-500" />
-                                                Premium: Monetize Quiz
-                                            </Label>
-                                            <p className="text-sm text-muted-foreground">
-                                                Charge students a fee to take this quiz.
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            id="is-premium"
-                                            checked={!!quiz.isPremium}
-                                            onCheckedChange={handlePremiumToggle}
-                                            disabled={!isProTeacher}
-                                        />
-                                    </div>
-                                </TooltipTrigger>
-                                {!isProTeacher && <TooltipContent><p>Upgrade to Pro to enable this feature.</p></TooltipContent>}
-                            </Tooltip>
-                        </TooltipProvider>
+                    <div className="rounded-lg border">
+                        <div className="flex items-center justify-between p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="is-premium" className="text-base font-medium flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-amber-500" />
+                                    Monetize Quiz
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Charge students a fee to take this quiz.
+                                </p>
+                            </div>
+                            <Switch
+                                id="is-premium"
+                                checked={!!quiz.isPremium}
+                                onCheckedChange={handlePremiumToggle}
+                            />
+                        </div>
 
                         {quiz.isPremium && (
                             <div className="p-4 border-t space-y-2">
@@ -371,38 +358,29 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
                                     placeholder="e.g., 5000"
                                     value={quiz.price ?? 0}
                                     onChange={(e) => handleQuizDetailsChange("price", Math.max(0, parseInt(e.target.value, 10) || 0))}
-                                    disabled={!isProTeacher}
                                     className="max-w-xs"
                                 />
                             </div>
                         )}
                     </div>
                     
-                    <div className={cn("rounded-lg border", !isProTeacher && "bg-muted/50")}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="flex items-center justify-between p-4">
-                                        <div className="space-y-0.5">
-                                            <Label htmlFor="anti-cheat" className={cn("text-base font-medium flex items-center gap-2", !isProTeacher && "text-muted-foreground")}>
-                                                <ShieldCheck className="h-4 w-4 text-amber-500" />
-                                                Premium: Anti-Cheat Guard
-                                            </Label>
-                                            <p className="text-sm text-muted-foreground">
-                                                Enforces fullscreen and detects tab switching.
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            id="anti-cheat"
-                                            checked={!!quiz.enableAntiCheat}
-                                            onCheckedChange={(checked) => handleQuizDetailsChange("enableAntiCheat", checked)}
-                                            disabled={!isProTeacher}
-                                        />
-                                    </div>
-                                </TooltipTrigger>
-                                {!isProTeacher && <TooltipContent><p>Upgrade to Pro to enable this feature.</p></TooltipContent>}
-                            </Tooltip>
-                        </TooltipProvider>
+                    <div className="rounded-lg border">
+                        <div className="flex items-center justify-between p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="anti-cheat" className="text-base font-medium flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-amber-500" />
+                                    Anti-Cheat Guard
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Enforces fullscreen and detects tab switching.
+                                </p>
+                            </div>
+                            <Switch
+                                id="anti-cheat"
+                                checked={!!quiz.enableAntiCheat}
+                                onCheckedChange={(checked) => handleQuizDetailsChange("enableAntiCheat", checked)}
+                            />
+                        </div>
                     </div>
                 </div>
             </CardContent>
@@ -431,5 +409,3 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     </div>
   );
 }
-
-    

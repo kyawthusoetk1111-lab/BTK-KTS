@@ -1,17 +1,15 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Crown, Users, ClipboardCheck, TrendingUp, Settings, Trash2, Archive } from 'lucide-react';
+import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Users, ClipboardCheck, Trash2, Archive } from 'lucide-react';
 import type { Quiz, Question } from '@/lib/types';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
 import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
-import { UpgradeModal } from './upgrade-modal';
-import { PaymentModal } from './payment-modal';
 import { Badge } from '@/components/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
@@ -87,8 +85,6 @@ export function TeacherDashboard() {
   const firestore = useFirestore();
   const { toast } = useToast();
   
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
 
   const quizzesQuery = useMemoFirebase(() => {
@@ -97,23 +93,6 @@ export function TeacherDashboard() {
   }, [user, firestore]);
 
   const { data: quizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
-
-  const isFreeTier = profile?.accountTier === 'free';
-  const quizCount = quizzes?.length || 0;
-  const freeQuizLimit = 3;
-  const hasReachedFreeLimit = isFreeTier && quizCount >= freeQuizLimit;
-
-  const handleCreateQuizClick = (e: React.MouseEvent) => {
-    if (hasReachedFreeLimit) {
-      e.preventDefault();
-      setUpgradeModalOpen(true);
-    }
-  }
-
-  const handleUpgradeNow = () => {
-    setUpgradeModalOpen(false);
-    setPaymentModalOpen(true);
-  }
 
   const handleDeleteConfirm = () => {
     if (!quizToDelete || !firestore) return;
@@ -184,23 +163,7 @@ export function TeacherDashboard() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                 {isFreeTier && (
-                    <Card className="bg-amber-500/20 border-amber-400/50 text-white">
-                        <CardHeader className="p-4 flex-row items-center gap-4">
-                            <Crown className="h-10 w-10 text-amber-300" />
-                            <div>
-                              <CardTitle className="text-base text-white">You are on the Free Plan</CardTitle>
-                              <CardDescription className="text-amber-200">
-                                  You have created {quizCount} of {freeQuizLimit} quizzes.
-                              </CardDescription>
-                            </div>
-                            <Button size="sm" className="ml-auto" variant="premium" onClick={() => setUpgradeModalOpen(true)}>
-                                Upgrade
-                            </Button>
-                        </CardHeader>
-                    </Card>
-                )}
-                 <Link href="/quizzes/new/edit" onClick={handleCreateQuizClick}>
+                 <Link href="/quizzes/new/edit">
                     <Button size="sm" className="bg-emerald-500 text-slate-950 hover:bg-emerald-600 font-bold">
                         <FilePlus2 className="h-4 w-4 md:mr-2" />
                         <span className="hidden md:inline">စာမေးပွဲအသစ်ဖန်တီးမည်</span>
@@ -343,7 +306,7 @@ export function TeacherDashboard() {
                             <div className="col-span-full text-center text-gray-300 py-16 bg-emerald-900/10 rounded-lg">
                                 <h3 className="text-lg font-semibold">No Quizzes Found</h3>
                                 <p className="text-sm">Get started by creating a new quiz.</p>
-                                <Link href="/quizzes/new/edit" className='mt-4 inline-block' onClick={handleCreateQuizClick}>
+                                <Link href="/quizzes/new/edit" className='mt-4 inline-block'>
                                 <Button className="bg-emerald-500 text-slate-950 hover:bg-emerald-600 font-bold">
                                     <FilePlus2 className="mr-2 h-4 w-4" />
                                     စာမေးပွဲအသစ်ဖန်တီးမည်
@@ -358,18 +321,6 @@ export function TeacherDashboard() {
           </main>
         </SidebarInset>
       </SidebarProvider>
-      <UpgradeModal 
-          isOpen={upgradeModalOpen}
-          onClose={() => setUpgradeModalOpen(false)}
-          onUpgrade={handleUpgradeNow}
-      />
-      <PaymentModal
-          isOpen={paymentModalOpen}
-          onClose={() => setPaymentModalOpen(false)}
-          itemId="pro-upgrade"
-          itemDescription="BTK EXAM Pro Subscription"
-          amount={5000}
-      />
        <AlertDialog open={!!quizToDelete} onOpenChange={(isOpen) => !isOpen && setQuizToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -394,5 +345,3 @@ export function TeacherDashboard() {
     </>
   );
 }
-
-    
