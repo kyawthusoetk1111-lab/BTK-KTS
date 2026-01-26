@@ -28,8 +28,8 @@ const detailedSubmissions = mockSubmissions.map(sub => {
         ...sub,
         subject: quiz?.subject || 'N/A',
         quizName: quiz?.name || 'Unknown Quiz',
-        // Mocking time spent for now
-        timeSpent: `${Math.floor(Math.random() * 15) + 5}m ${Math.floor(Math.random() * 60)}s`
+        // FIX: Replaced Math.random() with a deterministic value to prevent hydration errors.
+        timeSpent: `${((sub.studentName.length % 10) + 5)}m ${((sub.id.charCodeAt(sub.id.length - 1)) % 60)}s`
     }
 });
 
