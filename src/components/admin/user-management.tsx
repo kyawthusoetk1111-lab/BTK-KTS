@@ -27,7 +27,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 
-export function UserManagementTable() {
+interface UserManagementTableProps {
+    searchTerm: string;
+}
+
+export function UserManagementTable({ searchTerm }: UserManagementTableProps) {
     const firestore = useFirestore();
     const { user: currentUser } = useUser();
     const { toast } = useToast();
@@ -39,6 +43,11 @@ export function UserManagementTable() {
     }, [firestore]);
 
     const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+
+    const filteredUsers = users?.filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
     const handleRoleChange = (userId: string, newRole: 'admin' | 'teacher' | 'student') => {
         if (!firestore) return;
@@ -72,54 +81,56 @@ export function UserManagementTable() {
     
     return (
         <>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {users && users.length > 0 ? users.map((user) => (
-                        <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.name}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>
-                                <Select
-                                    value={user.userType}
-                                    onValueChange={(newRole: 'admin' | 'teacher' | 'student') => handleRoleChange(user.id, newRole)}
-                                    disabled={user.id === currentUser?.uid}
-                                >
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="student">Student</SelectItem>
-                                        <SelectItem value="teacher">Teacher</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setUserToDelete(user)}
-                                    disabled={user.id === currentUser?.uid}
-                                >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    )) : (
+            <div className="border rounded-md">
+                <Table>
+                    <TableHeader>
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center h-24">No users found.</TableCell>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                    )}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+                            <TableRow key={user.id}>
+                                <TableCell className="font-medium">{user.name}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell>
+                                    <Select
+                                        value={user.userType}
+                                        onValueChange={(newRole: 'admin' | 'teacher' | 'student') => handleRoleChange(user.id, newRole)}
+                                        disabled={user.id === currentUser?.uid}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Select role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="student">Student</SelectItem>
+                                            <SelectItem value="teacher">Teacher</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setUserToDelete(user)}
+                                        disabled={user.id === currentUser?.uid}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center h-24">No users found.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
             <AlertDialog open={!!userToDelete} onOpenChange={(isOpen) => !isOpen && setUserToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

@@ -67,7 +67,7 @@ export function TeacherSidebar() {
               <Activity />
               {state === 'expanded' && <span className="truncate">BTK Education</span>}
             </Link>
-            <SidebarTrigger className="ml-auto text-emerald-100/80 hover:bg-emerald-400/20 hover:text-white" />
+            <SidebarTrigger className="ml-auto text-emerald-100/80 hover:bg-primary hover:text-primary-foreground" />
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
@@ -76,15 +76,12 @@ export function TeacherSidebar() {
             const href = getHref(item);
             let isActive;
             if (href === '/') {
-                // This handles 'ပင်မစာမျက်နှာ' and 'စာမေးပွဲများ'
                 isActive = pathname === '/' || pathname.startsWith('/quizzes');
             } else if (href === '/results') {
-                // This handles both the main results page and the specific grading pages
                 isActive = pathname.startsWith('/results') || pathname.startsWith('/grading');
             } else if (href === '/admin') {
                 isActive = pathname.startsWith('/admin');
             } else {
-                // This handles all other pages like /question-bank etc.
                 isActive = pathname.startsWith(href);
             }
             
@@ -95,7 +92,7 @@ export function TeacherSidebar() {
                     isActive={isActive}
                     tooltip={{children: item.label, className: "bg-slate-800 text-white border-slate-700"}}
                     className={cn(
-                      'text-emerald-200/80 hover:bg-primary hover:text-primary-foreground hover:font-semibold justify-start',
+                      'text-emerald-300/90 hover:bg-primary hover:text-primary-foreground hover:font-semibold justify-start',
                       isActive &&
                         'bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/30'
                     )}

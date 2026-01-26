@@ -1,171 +1,107 @@
 'use client';
 
 import { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import Image from 'next/image';
-import { LoadingSpinner } from '@/components/loading-spinner';
-import type { Payment, Purchase } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import { Check, X, Users, CreditCard } from 'lucide-react';
-import Link from 'next/link';
-import { Activity } from 'lucide-react';
-import { AuthButton } from '@/components/auth-button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, UserPlus, FileCheck, DollarSign, Search } from 'lucide-react';
 import { UserManagementTable } from '@/components/admin/user-management';
-
+import type { UserProfile } from '@/lib/types';
+import { Input } from '@/components/ui/input';
 
 export default function AdminPage() {
     const firestore = useFirestore();
-    const { toast } = useToast();
-    const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+    const [searchTerm, setSearchTerm] = useState('');
 
-    const paymentsQuery = useMemoFirebase(() => {
+    const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'payments'), where('status', '==', filter));
-    }, [firestore, filter]);
+        return query(collection(firestore, 'users'));
+    }, [firestore]);
 
-    const { data: payments, isLoading: isLoadingPayments } = useCollection<Payment>(paymentsQuery);
+    const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
-    const handleApprove = (payment: Payment) => {
-        if (!firestore) return;
-        
-        const paymentRef = doc(firestore, 'payments', payment.id);
-        updateDocumentNonBlocking(paymentRef, { status: 'approved' });
-
-        if (payment.itemId === 'pro-upgrade') {
-            const userRef = doc(firestore, 'users', payment.userId);
-            updateDocumentNonBlocking(userRef, { accountTier: 'pro' });
-        } else {
-            const purchaseRef = collection(firestore, 'users', payment.userId, 'purchases');
-            const newPurchase: Omit<Purchase, 'id'> = {
-                userId: payment.userId,
-                itemId: payment.itemId,
-                itemType: 'quiz',
-                itemDescription: payment.itemDescription,
-                amountPaid: payment.amount,
-                purchaseDate: new Date().toISOString(),
-            };
-            addDocumentNonBlocking(purchaseRef, newPurchase);
-        }
-
-        toast({
-            title: 'Payment Approved!',
-            description: `${payment.userName}'s payment for ${payment.itemDescription} has been approved.`,
-        });
-    };
-
-    const handleReject = (payment: Payment) => {
-        if (!firestore) return;
-        const paymentRef = doc(firestore, 'payments', payment.id);
-        updateDocumentNonBlocking(paymentRef, { status: 'rejected' });
-        toast({
-            title: 'Payment Rejected',
-            variant: 'destructive',
-        });
-    };
+    const totalStudents = users?.filter(u => u.userType === 'student').length || 0;
+    const totalTeachers = users?.filter(u => u.userType === 'teacher').length || 0;
+    
+    // These would be calculated from real data in a full implementation
+    const activeExams = 12; 
+    const monthlyRevenue = 525000;
 
     return (
-         <div className="flex flex-col min-h-screen bg-muted/40">
-            <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-primary">
-                        <Activity />
-                        Admin Dashboard
-                    </Link>
-                    <AuthButton />
+        <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50">
+            <div className="flex items-center justify-between space-y-2">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">Admin Overview</h2>
+                    <p className="text-muted-foreground">
+                        A quick glance at your platform's statistics.
+                    </p>
                 </div>
-                </div>
-            </header>
-            <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-               <Tabs defaultValue="payments" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="payments">Payment Verification</TabsTrigger>
-                    <TabsTrigger value="users">User Management</TabsTrigger>
-                </TabsList>
-                <TabsContent value="payments">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><CreditCard/>Payment Verification</CardTitle>
-                            <CardDescription>Review and approve or reject user payments.</CardDescription>
-                            <div className="flex space-x-2 pt-4">
-                                <Button variant={filter === 'pending' ? 'default' : 'outline'} onClick={() => setFilter('pending')}>Pending</Button>
-                                <Button variant={filter === 'approved' ? 'default' : 'outline'} onClick={() => setFilter('approved')}>Approved</Button>
-                                <Button variant={filter === 'rejected' ? 'default' : 'outline'} onClick={() => setFilter('rejected')}>Rejected</Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoadingPayments ? (
-                                <div className="flex justify-center items-center h-64">
-                                    <LoadingSpinner />
-                                </div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>User</TableHead>
-                                            <TableHead>Item</TableHead>
-                                            <TableHead>Amount</TableHead>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Screenshot</TableHead>
-                                            <TableHead>Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {payments && payments.length > 0 ? payments.map((p) => (
-                                            <TableRow key={p.id}>
-                                                <TableCell>
-                                                    <div className="font-medium">{p.userName}</div>
-                                                    <div className="text-sm text-muted-foreground">{p.userEmail}</div>
-                                                </TableCell>
-                                                <TableCell>{p.itemDescription}</TableCell>
-                                                <TableCell>{p.amount.toLocaleString()} {p.currency}</TableCell>
-                                                <TableCell>{format(new Date(p.createdAt), 'PPp')}</TableCell>
-                                                <TableCell>
-                                                    <a href={p.screenshotUrl} target="_blank" rel="noopener noreferrer">
-                                                        <Image src={p.screenshotUrl} alt="Payment proof" width={100} height={100} className="rounded-md object-cover"/>
-                                                    </a>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {p.status === 'pending' && (
-                                                        <div className="flex gap-2">
-                                                            <Button size="sm" onClick={() => handleApprove(p)}><Check className="mr-2"/>Approve</Button>
-                                                            <Button size="sm" variant="destructive" onClick={() => handleReject(p)}><X className="mr-2"/>Reject</Button>
-                                                        </div>
-                                                    )}
-                                                    {p.status !== 'pending' && <Badge variant={p.status === 'approved' ? 'secondary' : 'destructive'}>{p.status}</Badge>}
-                                                </TableCell>
-                                            </TableRow>
-                                        )) : (
-                                            <TableRow>
-                                                <TableCell colSpan={6} className="text-center h-24">No {filter} payments found.</TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="users">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Users />User Management</CardTitle>
-                            <CardDescription>View, edit, and manage user roles and permissions.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <UserManagementTable />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-               </Tabs>
-            </main>
-        </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Card className="bg-emerald-50 border-emerald-200">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-emerald-800">Total Students</CardTitle>
+                        <Users className="h-4 w-4 text-emerald-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-emerald-900">{isLoadingUsers ? '...' : totalStudents}</div>
+                        <p className="text-xs text-emerald-700/80">+12 since last month</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-sky-50 border-sky-200">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-sky-800">Total Teachers</CardTitle>
+                        <UserPlus className="h-4 w-4 text-sky-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-sky-900">{isLoadingUsers ? '...' : totalTeachers}</div>
+                        <p className="text-xs text-sky-700/80">+3 since last month</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-indigo-50 border-indigo-200">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-indigo-800">Active Exams</CardTitle>
+                        <FileCheck className="h-4 w-4 text-indigo-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-indigo-900">{activeExams}</div>
+                         <p className="text-xs text-indigo-700/80">2 live right now</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-amber-50 border-amber-200">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-amber-800">Monthly Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-amber-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-amber-900">{monthlyRevenue.toLocaleString()} MMK</div>
+                        <p className="text-xs text-amber-700/80">+15% from last month</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Users />
+                        User Control Center
+                    </CardTitle>
+                    <CardDescription>View, edit, and manage user roles and permissions.</CardDescription>
+                    <div className="relative pt-4">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input 
+                            placeholder="Search by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 bg-slate-50 border-slate-200 focus:bg-white w-full max-w-sm"
+                        />
+                   </div>
+                </CardHeader>
+                <CardContent>
+                    <UserManagementTable searchTerm={searchTerm} />
+                </CardContent>
+            </Card>
+        </main>
     );
 }

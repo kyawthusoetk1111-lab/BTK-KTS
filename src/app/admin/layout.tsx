@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { AdminSidebar } from '@/components/admin/admin-sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
 export default function AdminLayout({
   children,
@@ -41,5 +43,12 @@ export default function AdminLayout({
     )
   }
 
-  return <>{children}</>;
+  return (
+    <SidebarProvider defaultOpen={true}>
+        <AdminSidebar />
+        <SidebarInset className="bg-slate-50">
+            {children}
+        </SidebarInset>
+    </SidebarProvider>
+  );
 }
