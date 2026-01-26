@@ -43,5 +43,3 @@ export default function AdminLayout({
 
   return <>{children}</>;
 }
-
-    
