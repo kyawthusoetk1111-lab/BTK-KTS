@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useFirestore, useUser } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn } from '@/firebase';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Loader2, Activity } from 'lucide-react';
@@ -95,7 +95,7 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router, firestore, auth, toast]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
 
@@ -120,10 +120,7 @@ export default function LoginPage() {
     
     const email = `${studentId.trim()}@btk-exam.com`;
 
-    try {
-      // The sign-in will trigger the useEffect to handle redirection
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
+    initiateEmailSignIn(auth, email, password, (error: any) => {
       let description = 'An unexpected error occurred during login.';
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         description = 'Invalid ID or Password. Please try again.';
@@ -135,7 +132,7 @@ export default function LoginPage() {
       });
       console.error('Login Error:', error);
       setIsLoggingIn(false);
-    }
+    });
   };
   
   const handleAdminLogin = async () => {
