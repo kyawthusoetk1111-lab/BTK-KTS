@@ -345,13 +345,13 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
                         {quiz.isPremium && (
                             <div className="p-4 border-t space-y-2">
-                                <Label htmlFor="price">Price (MMK)</Label>
-                                <Input 
+                                <Label htmlFor="price">Set Price (Ks)</Label>
+                                <Input
                                     id="price"
                                     type="number"
                                     placeholder="e.g., 5000"
-                                    value={quiz.price || ''}
-                                    onChange={(e) => handleQuizDetailsChange("price", e.target.value ? parseInt(e.target.value) : undefined)}
+                                    value={quiz.price ?? 0}
+                                    onChange={(e) => handleQuizDetailsChange("price", parseInt(e.target.value) || 0)}
                                     disabled={!isProTeacher}
                                     className="max-w-xs"
                                 />
