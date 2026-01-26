@@ -11,7 +11,7 @@ export function usePurchases() {
   const purchasesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(collection(firestore, 'users', user.uid, 'purchases'));
-  }, [user, firestore]);
+  }, [user?.uid, firestore]);
 
   const { data: purchases, isLoading, error } = useCollection<Purchase>(purchasesQuery);
 

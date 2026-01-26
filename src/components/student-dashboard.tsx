@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,9 +76,9 @@ export function StudentDashboard() {
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
   
   const pendingPaymentsQuery = useMemoFirebase(() => {
-    if (!firestore || !profile) return null;
+    if (!firestore || !profile?.id) return null;
     return query(collection(firestore, 'payments'), where('userId', '==', profile.id), where('status', '==', 'pending'));
-  }, [firestore, profile]);
+  }, [firestore, profile?.id]);
 
   const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection(pendingPaymentsQuery);
 

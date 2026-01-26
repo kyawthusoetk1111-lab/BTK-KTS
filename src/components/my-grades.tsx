@@ -25,7 +25,7 @@ export function MyGrades() {
     const resultsQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
         return query(collection(firestore, 'users', user.uid, 'examResults'), orderBy('submissionTime', 'desc'));
-    }, [user, firestore]);
+    }, [user?.uid, firestore]);
 
     const { data: results, isLoading } = useCollection<ExamResult>(resultsQuery);
 
