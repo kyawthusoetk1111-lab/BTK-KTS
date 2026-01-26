@@ -169,3 +169,13 @@ export interface AuditLog {
   newScore: number;
   reason?: string;
 }
+
+export interface Expenditure {
+  id: string;
+  date: string;
+  description: string;
+  category: 'Salary' | 'Utilities' | 'Marketing' | 'Office Supplies' | 'Other';
+  amount: number;
+}
+
+    
