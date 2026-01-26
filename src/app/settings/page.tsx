@@ -175,18 +175,18 @@ export default function SettingsPage() {
         <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
             <div>
                 <h1 className="text-4xl font-bold font-headline tracking-tight">ဆက်တင်များ</h1>
-                <p className="text-gray-300">
+                <p className="text-muted-foreground">
                     Manage your school's profile, academic settings, and more.
                 </p>
             </div>
 
-            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+            <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Building className="h-6 w-6"/>
                         School Profile
                     </CardTitle>
-                    <CardDescription className="text-gray-300">
+                    <CardDescription>
                         This information will appear on receipts and reports.
                     </CardDescription>
                 </CardHeader>
@@ -194,9 +194,9 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-6">
                         <div className="space-y-2">
                             <Label>School Logo</Label>
-                            <Avatar className="h-24 w-24 border-2 border-emerald-500/30">
+                            <Avatar className="h-24 w-24 border-2">
                                 <AvatarImage src={logoPreview || undefined} alt="School Logo" />
-                                <AvatarFallback className="bg-transparent text-gray-400">BTK</AvatarFallback>
+                                <AvatarFallback>BTK</AvatarFallback>
                             </Avatar>
                         </div>
                         <div>
@@ -207,13 +207,13 @@ export default function SettingsPage() {
                                 accept="image/*"
                                 onChange={handleLogoUpload}
                             />
-                            <Button asChild variant="outline" className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                            <Button asChild variant="outline">
                                <label htmlFor="logo-upload">
                                  <Upload className="mr-2 h-4 w-4" />
                                   Upload Logo
                                </label>
                             </Button>
-                            <p className="text-xs text-gray-400 mt-2">Recommended: 200x200px PNG</p>
+                            <p className="text-xs text-muted-foreground mt-2">Recommended: 200x200px PNG</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -223,7 +223,6 @@ export default function SettingsPage() {
                                 id="school-name"
                                 value={schoolName}
                                 onChange={(e) => setSchoolName(e.target.value)}
-                                className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
                             />
                         </div>
                         <div className="space-y-2">
@@ -232,7 +231,6 @@ export default function SettingsPage() {
                                 id="contact-number"
                                 value={contactNumber}
                                 onChange={(e) => setContactNumber(e.target.value)}
-                                className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
                             />
                         </div>
                     </div>
@@ -242,54 +240,53 @@ export default function SettingsPage() {
                             id="address"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            className="bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
                         />
                     </div>
                 </CardContent>
-                <CardFooter className="bg-black/20 p-4 flex justify-end">
-                    <Button onClick={handleSaveChanges} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                <CardFooter className="bg-slate-50 p-4 flex justify-end">
+                    <Button onClick={handleSaveChanges}>
                         Save Changes
                     </Button>
                 </CardFooter>
             </Card>
 
-            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+            <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <CloudDownload className="h-6 w-6"/>
                         ဒေတာအရန်သိမ်းဆည်းရန် (Data Backup)
                     </CardTitle>
-                    <CardDescription className="text-gray-300">
+                    <CardDescription>
                         Export your platform data for safekeeping.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Button onClick={handleExportStudents} disabled={isExportingStudents} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                    <Button onClick={handleExportStudents} disabled={isExportingStudents}>
                         {isExportingStudents ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
                         Download All Users
                     </Button>
-                    <Button onClick={handleExportFinancials} disabled={isExportingFinancials} className="bg-emerald-500 text-slate-950 hover:bg-emerald-600">
+                    <Button onClick={handleExportFinancials} disabled={isExportingFinancials}>
                         {isExportingFinancials ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
                         Download Financials
                     </Button>
-                    <Button onClick={handleFullBackup} disabled={isExportingJson} className="bg-sky-500 text-white hover:bg-sky-600">
+                    <Button onClick={handleFullBackup} disabled={isExportingJson} variant="secondary">
                         {isExportingJson ? <Loader2 className="animate-spin mr-2" /> : <CloudDownload className="mr-2" />}
                         Download Full Backup (JSON)
                     </Button>
                 </CardContent>
-                <CardFooter className="bg-black/20 p-4">
+                <CardFooter className="bg-slate-50 p-4">
                     {lastBackup ? (
-                        <p className={cn("text-sm", isBackupOld() ? "text-amber-300 font-semibold" : "text-gray-400")}>
+                        <p className={cn("text-sm", isBackupOld() ? "text-amber-500 font-semibold" : "text-muted-foreground")}>
                             Last backup taken: {format(new Date(lastBackup), "PPP p")}
                         </p>
                     ) : (
-                        <p className="text-sm text-gray-400">No backup has been taken yet.</p>
+                        <p className="text-sm text-muted-foreground">No backup has been taken yet.</p>
                     )}
                 </CardFooter>
             </Card>
 
 
-            <Card className="bg-amber-800/20 backdrop-blur-md border border-amber-500/30 text-white">
+            <Card className="border-destructive">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <AlertTriangle className="h-6 w-6"/>
@@ -297,10 +294,10 @@ export default function SettingsPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-black/20 p-4">
+                    <div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/10 p-4">
                         <div className="space-y-0.5">
                             <Label htmlFor="maintenance-mode" className="text-base font-medium">ကျောင်းသားများ ဝင်ရောက်မှုကို ခေတ္တပိတ်ထားရန် (Maintenance Mode)</Label>
-                            <p className="text-sm text-gray-300">Enabling this will redirect all students to a maintenance page.</p>
+                            <p className="text-sm text-muted-foreground">Enabling this will redirect all students to a maintenance page.</p>
                         </div>
                         {isStatusLoading ? (
                             <LoadingSpinner />
@@ -309,7 +306,7 @@ export default function SettingsPage() {
                                 id="maintenance-mode"
                                 checked={systemStatus?.isMaintenanceMode || false}
                                 onCheckedChange={handleMaintenanceModeChange}
-                                className="data-[state=checked]:bg-amber-500"
+                                className="data-[state=checked]:bg-destructive"
                             />
                         )}
                     </div>
@@ -319,16 +316,16 @@ export default function SettingsPage() {
 
             {/* Placeholder for other sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white opacity-50">
+                <Card className="opacity-50">
                      <CardHeader>
                         <CardTitle>Academic Configuration</CardTitle>
-                        <CardDescription className="text-gray-400">Coming Soon</CardDescription>
+                        <CardDescription>Coming Soon</CardDescription>
                     </CardHeader>
                 </Card>
-                 <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white opacity-50">
+                 <Card className="opacity-50">
                      <CardHeader>
                         <CardTitle>Financial Settings</CardTitle>
-                        <CardDescription className="text-gray-400">Coming Soon</CardDescription>
+                        <CardDescription>Coming Soon</CardDescription>
                     </CardHeader>
                 </Card>
             </div>

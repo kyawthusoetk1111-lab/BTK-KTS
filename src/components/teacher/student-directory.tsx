@@ -159,36 +159,36 @@ export function StudentDirectory() {
     
     return (
         <>
-            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+            <Card>
                 <CardHeader>
                     <CardTitle>All Students & Teachers</CardTitle>
-                    <CardDescription className="text-gray-300">Browse and manage all students and teachers on the platform.</CardDescription>
+                    <CardDescription>Browse and manage all students and teachers on the platform.</CardDescription>
                      <div className="relative pt-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
                             placeholder="Search by name or email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500 w-full max-w-sm"
+                            className="pl-9 w-full max-w-sm"
                         />
                    </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="border border-emerald-500/30 rounded-md">
+                    <div className="border rounded-md">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                    <TableHead className="text-gray-200">Name</TableHead>
-                                    <TableHead className="text-gray-200">Email</TableHead>
-                                    <TableHead className="text-gray-200">Joined Date</TableHead>
-                                    <TableHead className="text-gray-200">Role</TableHead>
-                                    <TableHead className="text-gray-200">Status</TableHead>
-                                    <TableHead className="text-right text-gray-200">Actions</TableHead>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Joined Date</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredUsers.length > 0 ? filteredUsers.map((user) => (
-                                    <TableRow key={user.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                    <TableRow key={user.id}>
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-8 w-8">
@@ -201,25 +201,25 @@ export function StudentDirectory() {
                                         <TableCell>{format(new Date(user.createdAt), 'MMM d, yyyy')}</TableCell>
                                         <TableCell><Badge variant="outline" className="capitalize">{user.userType}</Badge></TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={cn(user.status === 'suspended' ? 'text-orange-300 border-orange-500/40 bg-orange-900/20' : 'text-emerald-300 border-emerald-500/40 bg-emerald-900/20')}>{user.status || 'active'}</Badge>
+                                            <Badge variant="outline" className={cn(user.status === 'suspended' ? 'text-orange-600 border-orange-300' : 'text-emerald-600 border-emerald-300')}>{user.status || 'active'}</Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
                                            <div className="flex justify-end items-center gap-1">
                                                 <Button variant="ghost" size="icon" className="hover:scale-110 cursor-pointer" onClick={() => handleRoleChange(user)} disabled={loadingActions.includes(`role-${user.id}`)}>
-                                                    {loadingActions.includes(`role-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <UserCog className="h-4 w-4 text-sky-400" />}
+                                                    {loadingActions.includes(`role-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <UserCog className="h-4 w-4 text-sky-600" />}
                                                 </Button>
                                                 <Button variant="ghost" size="icon" className="hover:scale-110 cursor-pointer" onClick={() => setUserToConfirm({user, action: 'suspend'})} disabled={loadingActions.includes(`suspend-${user.id}`)}>
-                                                     {loadingActions.includes(`suspend-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <ShieldOff className="h-4 w-4 text-orange-400" />}
+                                                     {loadingActions.includes(`suspend-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <ShieldOff className="h-4 w-4 text-orange-600" />}
                                                 </Button>
                                                 <Button variant="ghost" size="icon" className="hover:scale-110 cursor-pointer" onClick={() => setUserToConfirm({user, action: 'delete'})} disabled={loadingActions.includes(`delete-${user.id}`)}>
-                                                     {loadingActions.includes(`delete-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-red-400" />}
+                                                     {loadingActions.includes(`delete-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-red-600" />}
                                                 </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center h-24 text-gray-300">
+                                        <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
                                             No users found.
                                         </TableCell>
                                     </TableRow>

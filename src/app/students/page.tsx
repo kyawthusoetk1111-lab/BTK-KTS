@@ -8,7 +8,7 @@ export default function StudentsPage() {
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-4xl font-bold font-headline tracking-tight">ကျောင်းသားစီမံခန့်ခွဲမှု</h1>
-                    <p className="text-gray-300">
+                    <p className="text-muted-foreground">
                         View and manage all students on the platform.
                     </p>
                 </div>

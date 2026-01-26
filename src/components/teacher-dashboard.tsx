@@ -153,18 +153,18 @@ export function TeacherDashboard() {
     <>
       <SidebarProvider defaultOpen={true}>
         <TeacherSidebar />
-        <SidebarInset className="bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
+        <SidebarInset className="bg-slate-50">
           <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
               <div>
                 <h1 className="text-4xl font-bold font-headline tracking-tight">ပင်မစာမျက်နှာ</h1>
-                <p className="text-gray-300">
+                <p className="text-muted-foreground">
                   Welcome back, {profile?.name?.split(' ')[0] || 'Teacher'}! Create, manage, and analyze your quizzes all in one place.
                 </p>
               </div>
               <div className="flex items-center gap-4">
                  <Link href="/quizzes/new/edit">
-                    <Button size="sm" className="bg-emerald-500 text-slate-950 hover:bg-emerald-600 font-bold">
+                    <Button size="sm" className="font-bold">
                         <FilePlus2 className="h-4 w-4 md:mr-2" />
                         <span className="hidden md:inline">စာမေးပွဲအသစ်ဖန်တီးမည်</span>
                     </Button>
@@ -178,53 +178,53 @@ export function TeacherDashboard() {
                 <div className="space-y-8">
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-300">စုစုပေါင်း ဖြေဆိုသူအရေအတွက်</CardTitle>
-                                <Users className="h-5 w-5 text-gray-300" style={{filter: 'drop-shadow(0 0 2px #fff)'}}/>
+                                <CardTitle className="text-sm font-medium">စုစုပေါင်း ဖြေဆိုသူအရေအတွက်</CardTitle>
+                                <Users className="h-5 w-5 text-muted-foreground"/>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-4xl font-bold">1,250</div>
-                                <p className="text-xs text-gray-400">+50 since last week</p>
+                                <p className="text-xs text-muted-foreground">+50 since last week</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-300">Active Exams</CardTitle>
-                                <ClipboardCheck className="h-5 w-5 text-gray-300" style={{filter: 'drop-shadow(0 0 2px #fff)'}}/>
+                                <CardTitle className="text-sm font-medium">Active Exams</CardTitle>
+                                <ClipboardCheck className="h-5 w-5 text-muted-foreground"/>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-4xl font-bold">12</div>
-                                <p className="text-xs text-gray-400">2 currently live</p>
+                                <p className="text-xs text-muted-foreground">2 currently live</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-gray-300">Average Score</CardTitle>
-                                <Star className="h-5 w-5 text-gray-300" style={{filter: 'drop-shadow(0 0 2px #fff)'}}/>
+                                <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                                <Star className="h-5 w-5 text-muted-foreground"/>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-4xl font-bold">82%</div>
-                                <p className="text-xs text-gray-400">+3.2% from last month</p>
+                                <p className="text-xs text-muted-foreground">+3.2% from last month</p>
                             </CardContent>
                         </Card>
                     </div>
 
                     {/* Chart */}
-                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <Card>
                         <CardHeader>
                             <CardTitle>ကျောင်းသားများ၏ တိုးတက်မှု</CardTitle>
-                            <CardDescription className="text-gray-300">Average score of all students over the last 6 months.</CardDescription>
+                            <CardDescription>Average score of all students over the last 6 months.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ChartContainer config={chartConfig} className="h-72 w-full">
                                 <ResponsiveContainer>
                                     <LineChart data={performanceData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.2)" />
-                                        <XAxis dataKey="month" stroke="rgba(255,255,255,0.7)" />
-                                        <YAxis stroke="rgba(255,255,255,0.7)" />
-                                        <ChartTooltip cursor={{fill: 'rgba(16,185,129,0.1)'}} content={<ChartTooltipContent indicator="line" labelClassName="text-black dark:text-white" />} />
-                                        <Line type="monotone" dataKey="averageScore" stroke="hsl(var(--primary))" strokeWidth={2} dot={{fill: 'hsl(var(--primary))', r: 5}} activeDot={{ r: 8, fill: '#fff', stroke: 'hsl(var(--primary))' }} />
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="month" />
+                                        <YAxis />
+                                        <ChartTooltip cursor={{fill: 'hsl(var(--muted))'}} content={<ChartTooltipContent indicator="line" />} />
+                                        <Line type="monotone" dataKey="averageScore" stroke="hsl(var(--primary))" strokeWidth={2} dot={{fill: 'hsl(var(--primary))', r: 5}} activeDot={{ r: 8, fill: 'hsl(var(--background))', stroke: 'hsl(var(--primary))' }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </ChartContainer>
@@ -238,17 +238,17 @@ export function TeacherDashboard() {
                             {quizzes && quizzes.length > 0 ? quizzes.map((quiz, index) => {
                                 const status = getQuizStatus(quiz);
                                 return (
-                                    <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
+                                    <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg overflow-hidden" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
                                     <CardHeader>
                                         <div className="flex justify-between items-start mb-2">
                                             <Badge variant={status.variant}>{status.text}</Badge>
-                                            {quiz.examCode && <Badge variant="outline" className="text-gray-300 border-gray-500"><Code className="mr-1 h-3 w-3" />{quiz.examCode}</Badge>}
+                                            {quiz.examCode && <Badge variant="outline"><Code className="mr-1 h-3 w-3" />{quiz.examCode}</Badge>}
                                         </div>
                                         <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
-                                        <CardDescription className="line-clamp-2 text-gray-300">{quiz.description}</CardDescription>
+                                        <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="flex-grow">
-                                        <div className="flex justify-between text-sm text-gray-300">
+                                        <div className="flex justify-between text-sm text-muted-foreground">
                                         <div className="flex items-center gap-2">
                                             <BookCopy className="h-4 w-4" />
                                             <span>{countQuestions(quiz)} Questions</span>
@@ -259,15 +259,15 @@ export function TeacherDashboard() {
                                         </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="flex items-center gap-2 bg-black/30 p-3">
+                                    <CardFooter className="flex items-center gap-2 bg-slate-50 p-3">
                                         <Link href={`/quizzes/${quiz.id}/edit`} className="flex-1">
-                                            <Button size="sm" variant="outline" className="w-full bg-transparent text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/10">
+                                            <Button size="sm" variant="outline" className="w-full">
                                                 <Edit className="mr-2 h-4 w-4" />
                                                 Edit
                                             </Button>
                                         </Link>
                                         <Link href={`/quizzes/${quiz.id}/preview`} className="flex-1">
-                                            <Button size="sm" variant="secondary" className="w-full bg-black/30 hover:bg-black/40 text-gray-300">
+                                            <Button size="sm" variant="secondary" className="w-full">
                                                 <Eye className="mr-2 h-4 w-4" />
                                                 Preview
                                             </Button>
@@ -278,14 +278,14 @@ export function TeacherDashboard() {
                                                      <Button 
                                                         size="icon" 
                                                         variant="outline" 
-                                                        className="bg-transparent border-sky-500/40 text-sky-300 hover:bg-sky-500/10 flex-shrink-0"
+                                                        className="flex-shrink-0"
                                                         onClick={() => handleAddToBank(quiz)}
                                                     >
                                                         <Archive className="h-4 w-4" />
                                                         <span className="sr-only">Add to Bank</span>
                                                     </Button>
                                                 </TooltipTrigger>
-                                                <TooltipContent className="bg-slate-800 text-white border-slate-700">
+                                                <TooltipContent>
                                                     <p>မေးခွန်းဘဏ်သို့ထည့်ရန်</p>
                                                 </TooltipContent>
                                             </Tooltip>
@@ -293,7 +293,7 @@ export function TeacherDashboard() {
                                         <Button 
                                             size="icon" 
                                             variant="destructive" 
-                                            className="bg-red-500/20 text-red-400 hover:bg-red-500/40 hover:text-red-300 border border-red-500/40 flex-shrink-0"
+                                            className="flex-shrink-0"
                                             onClick={() => setQuizToDelete(quiz)}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -303,11 +303,11 @@ export function TeacherDashboard() {
                                     </Card>
                                 )
                             }) : (
-                            <div className="col-span-full text-center text-gray-300 py-16 bg-emerald-900/10 rounded-lg">
+                            <div className="col-span-full text-center text-muted-foreground py-16 bg-slate-100/50 rounded-lg">
                                 <h3 className="text-lg font-semibold">No Quizzes Found</h3>
                                 <p className="text-sm">Get started by creating a new quiz.</p>
                                 <Link href="/quizzes/new/edit" className='mt-4 inline-block'>
-                                <Button className="bg-emerald-500 text-slate-950 hover:bg-emerald-600 font-bold">
+                                <Button className="font-bold">
                                     <FilePlus2 className="mr-2 h-4 w-4" />
                                     စာမေးပွဲအသစ်ဖန်တီးမည်
                                 </Button>

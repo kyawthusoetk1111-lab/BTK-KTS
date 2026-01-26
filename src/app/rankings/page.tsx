@@ -25,9 +25,9 @@ export default function RankingsPage() {
 
     const getTrendIcon = (trend?: 'up' | 'down' | 'stable') => {
         switch (trend) {
-            case 'up': return <ArrowUp className="h-4 w-4 text-green-400" />;
-            case 'down': return <ArrowDown className="h-4 w-4 text-red-400" />;
-            default: return <Minus className="h-4 w-4 text-gray-500" />;
+            case 'up': return <ArrowUp className="h-4 w-4 text-green-500" />;
+            case 'down': return <ArrowDown className="h-4 w-4 text-red-500" />;
+            default: return <Minus className="h-4 w-4 text-slate-500" />;
         }
     };
     
@@ -53,16 +53,16 @@ export default function RankingsPage() {
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-4xl font-bold font-headline tracking-tight">ထိပ်တန်းဖြေဆိုသူများ (Leaderboard)</h1>
-                    <p className="text-gray-300">
+                    <p className="text-muted-foreground">
                         See who is leading the charts across all exams.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={handleReset} className="bg-transparent border-amber-400/40 text-amber-300 hover:bg-amber-400/20 hover:text-amber-200">
+                    <Button variant="outline" onClick={handleReset}>
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Reset Season
                     </Button>
-                    <Button variant="outline" onClick={handleDownload} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                    <Button variant="outline" onClick={handleDownload}>
                         <Download className="mr-2 h-4 w-4" />
                         Download Report
                     </Button>
@@ -70,15 +70,15 @@ export default function RankingsPage() {
             </div>
 
             <div className="mb-8">
-                <Label className="mb-2 block text-gray-300">Filter by Subject</Label>
+                <Label>Filter by Subject</Label>
                 <div className="w-full md:w-72">
                     <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                        <SelectTrigger className="bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
+                        <SelectTrigger>
                             <SelectValue placeholder="Filter by subject..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 text-white border-slate-700">
+                        <SelectContent>
                             {subjects.map(subject => (
-                                <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
+                                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -98,7 +98,6 @@ export default function RankingsPage() {
                                 <div key={student.rank} className={cn("relative", isFirst && "md:-translate-y-8")}>
                                     <Card className={cn(
                                         "text-center p-6 relative flex flex-col items-center transition-all duration-300",
-                                        "bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white",
                                         isFirst && "border-yellow-400/50 shadow-2xl shadow-yellow-500/20"
                                     )}>
                                         {isFirst && <div className="absolute inset-0 shimmer-effect rounded-lg"></div>}
@@ -112,8 +111,8 @@ export default function RankingsPage() {
                                             </div>
                                         </div>
                                         <h3 className="mt-4 text-xl font-bold">{student.studentName}</h3>
-                                        <p className="text-sm text-gray-300">အဆင့် {student.rank}</p>
-                                        <div className="mt-4 text-2xl font-semibold text-yellow-300">{student.score.toLocaleString()} <span className="text-base font-normal text-gray-400">အမှတ်</span></div>
+                                        <p className="text-sm text-muted-foreground">အဆင့် {student.rank}</p>
+                                        <div className="mt-4 text-2xl font-semibold text-primary">{student.score.toLocaleString()} <span className="text-base font-normal text-muted-foreground">အမှတ်</span></div>
                                     </Card>
                                 </div>
                             );
@@ -121,28 +120,28 @@ export default function RankingsPage() {
                     </div>
 
                     {/* Rest of the Leaderboard */}
-                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                    <Card>
                         <CardHeader>
                             <CardTitle>All Rankings for {selectedSubject}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                        <TableHead className="text-gray-200 w-[80px]">အဆင့်</TableHead>
-                                        <TableHead className="text-gray-200">Student</TableHead>
-                                        <TableHead className="text-gray-200 text-right">အမှတ်စုစုပေါင်း</TableHead>
-                                        <TableHead className="text-gray-200 text-right">ဖြေဆိုချိန်</TableHead>
-                                        <TableHead className="text-gray-200 text-right">Trend</TableHead>
+                                    <TableRow>
+                                        <TableHead className="w-[80px]">အဆင့်</TableHead>
+                                        <TableHead>Student</TableHead>
+                                        <TableHead className="text-right">အမှတ်စုစုပေါင်း</TableHead>
+                                        <TableHead className="text-right">ဖြေဆိုချိန်</TableHead>
+                                        <TableHead className="text-right">Trend</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {restOfLeaderboard.map(student => (
-                                        <TableRow key={student.rank} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                        <TableRow key={student.rank}>
                                             <TableCell className="font-bold text-lg">{student.rank}</TableCell>
                                             <TableCell className="font-medium">{student.studentName}</TableCell>
                                             <TableCell className="text-right font-semibold">{student.score.toLocaleString()}</TableCell>
-                                            <TableCell className="text-right text-gray-400">{student.time}</TableCell>
+                                            <TableCell className="text-right text-muted-foreground">{student.time}</TableCell>
                                             <TableCell className="flex justify-end">{getTrendIcon(student.trend)}</TableCell>
                                         </TableRow>
                                     ))}
@@ -152,11 +151,11 @@ export default function RankingsPage() {
                     </Card>
                 </>
             ) : (
-                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white text-center py-20">
+                <Card className="text-center py-20">
                     <CardContent>
-                        <Trophy className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                         <h3 className="text-xl font-bold">No Leaderboard Data</h3>
-                        <p className="text-gray-400">There are no rankings available for {selectedSubject} yet.</p>
+                        <p className="text-muted-foreground">There are no rankings available for {selectedSubject} yet.</p>
                     </CardContent>
                 </Card>
             )}

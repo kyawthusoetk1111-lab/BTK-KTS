@@ -12,10 +12,10 @@ import { Button } from './ui/button';
 import Link from 'next/link';
 
 const getGradeColor = (grade: string) => {
-    if (grade.includes('A')) return 'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-400/50';
-    if (grade.includes('B')) return 'bg-blue-200 text-blue-900 dark:bg-blue-900/50 dark:text-blue-300 border-blue-400/50';
-    if (grade.includes('C')) return 'bg-orange-200 text-orange-900 dark:bg-orange-900/50 dark:text-orange-300 border-orange-400/50';
-    return 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300 border-red-400/50';
+    if (grade.includes('A')) return 'bg-emerald-100 text-emerald-800';
+    if (grade.includes('B')) return 'bg-blue-100 text-blue-800';
+    if (grade.includes('C')) return 'bg-orange-100 text-orange-800';
+    return 'bg-red-100 text-red-800';
 }
 
 export function MyGrades() {
@@ -38,31 +38,31 @@ export function MyGrades() {
     }
 
     return (
-        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+        <Card>
             <CardHeader>
                 <CardTitle>ရမှတ်များ</CardTitle>
-                <CardDescription className="text-gray-300">Here are the results from your recent quiz attempts.</CardDescription>
+                <CardDescription>Here are the results from your recent quiz attempts.</CardDescription>
             </CardHeader>
             <CardContent>
                 {!results || results.length === 0 ? (
-                    <div className="text-center text-gray-300 py-16">
+                    <div className="text-center text-muted-foreground py-16">
                         <h3 className="text-lg font-semibold">No Grades Yet</h3>
                         <p className="text-sm">Complete a quiz to see your grades here.</p>
                     </div>
                 ) : (
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                <TableHead className="text-gray-200">Quiz Name</TableHead>
-                                <TableHead className="text-gray-200">Date</TableHead>
-                                <TableHead className="text-gray-200">Score</TableHead>
-                                <TableHead className="text-gray-200">Grade</TableHead>
-                                <TableHead className="text-right text-gray-200">Action</TableHead>
+                            <TableRow>
+                                <TableHead>Quiz Name</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Score</TableHead>
+                                <TableHead>Grade</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {results.map((result) => (
-                                <TableRow key={result.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                <TableRow key={result.id}>
                                     <TableCell className="font-medium">{result.quizName}</TableCell>
                                     <TableCell>{format(new Date(result.submissionTime), "PP")}</TableCell>
                                     <TableCell>{result.score}/{result.totalPossibleScore}</TableCell>
@@ -72,7 +72,7 @@ export function MyGrades() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="outline" size="sm" asChild className="bg-transparent border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/20 hover:text-emerald-200">
+                                        <Button variant="outline" size="sm" asChild>
                                             <Link href="#">ရလဒ်ကြည့်ရန်</Link>
                                         </Button>
                                     </TableCell>

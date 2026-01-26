@@ -51,16 +51,16 @@ export function TeacherSidebar() {
 
   return (
     <Sidebar
-      className="border-r border-emerald-500/30 bg-emerald-950/20 backdrop-blur-lg"
+      className="border-r bg-card shadow-sm"
       collapsible="icon"
     >
       <SidebarHeader>
         <div className="flex w-full items-center gap-2">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold font-headline text-white">
+            <Link href="/" className="flex items-center gap-2 text-xl font-bold font-headline text-primary">
               <Activity />
               {state === 'expanded' && <span className="truncate">BTK Education</span>}
             </Link>
-            <SidebarTrigger className="ml-auto text-emerald-100/80 hover:bg-primary hover:text-primary-foreground" />
+            <SidebarTrigger className="ml-auto text-muted-foreground hover:bg-accent hover:text-accent-foreground" />
         </div>
       </SidebarHeader>
       <SidebarContent className="p-2">
@@ -87,9 +87,9 @@ export function TeacherSidebar() {
                     isActive={isActive}
                     tooltip={{children: item.label, className: "bg-slate-800 text-white border-slate-700"}}
                     className={cn(
-                      'text-emerald-300/90 hover:bg-primary hover:text-primary-foreground hover:font-semibold justify-start',
+                      'text-muted-foreground hover:bg-primary/10 hover:text-primary hover:font-semibold justify-start',
                       isActive &&
-                        'bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/30'
+                        'bg-primary/10 text-primary font-semibold'
                     )}
                   >
                     <Link href={href}>

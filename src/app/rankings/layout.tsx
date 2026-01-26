@@ -9,7 +9,7 @@ export default function RankingsLayout({
   return (
     <SidebarProvider defaultOpen={true}>
       <TeacherSidebar />
-      <SidebarInset className="bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
+      <SidebarInset className="bg-slate-50">
         {children}
       </SidebarInset>
     </SidebarProvider>

@@ -189,9 +189,9 @@ export function AnalyticsDashboard() {
 
     const getScoreColor = (score: number, total: number) => {
         const percentage = total > 0 ? (score / total) * 100 : 0;
-        if (percentage >= 80) return 'text-emerald-400';
-        if (percentage >= 40) return 'text-amber-400';
-        return 'text-red-400';
+        if (percentage >= 80) return 'text-emerald-500';
+        if (percentage >= 40) return 'text-amber-500';
+        return 'text-red-500';
     };
     
     const filteredSubmissions = detailedSubmissions.filter(sub => {
@@ -204,54 +204,54 @@ export function AnalyticsDashboard() {
         <div className="space-y-8 animate-in fade-in-50">
             {/* 1. Smart Overview Cards */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                 <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Exams Taken</CardTitle>
-                        <FileText className="h-4 w-4 text-gray-300" />
+                        <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalExamsTaken}</div>
-                        <p className="text-xs text-gray-400">+ {newResultsToday} new results today</p>
+                        <p className="text-xs text-muted-foreground">+ {newResultsToday} new results today</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                        <Star className="h-4 w-4 text-gray-300" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{averageScore.toFixed(1)}%</div>
-                        <p className="text-xs text-gray-400">+2.1% from last month</p>
+                        <p className="text-xs text-muted-foreground">+2.1% from last month</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Top Performing Subject</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-gray-300" />
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{topSubject}</div>
-                        <p className="text-xs text-gray-400">88% average score</p>
+                        <p className="text-xs text-muted-foreground">88% average score</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Needs Grading</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-gray-300" />
+                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{mockSubmissions.filter(s => s.status === 'Needs Grading').length}</div>
-                        <p className="text-xs text-gray-400">Waiting for review</p>
+                        <p className="text-xs text-muted-foreground">Waiting for review</p>
                     </CardContent>
                 </Card>
             </div>
             
             {/* 2. Visual Analytics (Charts) */}
             <div className="grid gap-6 lg:grid-cols-5">
-                 <Card className="lg:col-span-3 bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                 <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Exam Pass Rate (Weekly)</CardTitle>
-                        <CardDescription className="text-gray-300">Percentage of students passing exams this week.</CardDescription>
+                        <CardDescription>Percentage of students passing exams this week.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={chartConfig} className="h-64 w-full">
@@ -262,22 +262,22 @@ export function AnalyticsDashboard() {
                                         <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1}/>
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.2)" />
-                                <XAxis dataKey="day" stroke="rgba(255,255,255,0.7)" />
-                                <YAxis stroke="rgba(255,255,255,0.7)" domain={[50, 100]} />
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" />
+                                <YAxis domain={[50, 100]} />
                                 <Tooltip
-                                    cursor={{fill: 'rgba(16,185,129,0.1)'}}
-                                    content={<ChartTooltipContent indicator="line" labelClassName="text-white" className="bg-slate-900/80 border-slate-700" />}
+                                    cursor={{fill: 'hsl(var(--muted) / 0.3)'}}
+                                    content={<ChartTooltipContent indicator="line" />}
                                 />
                                 <Area type="monotone" dataKey="passRate" stroke="hsl(var(--chart-1))" fill="url(#colorPassRate)" />
                             </AreaChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
-                 <Card className="lg:col-span-2 bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                 <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>ဘာသာရပ်အလိုက် ခွဲခြမ်းစိတ်ဖြာမှု</CardTitle>
-                        <CardDescription className="text-gray-300">Distribution of exams taken by subject.</CardDescription>
+                        <CardDescription>Distribution of exams taken by subject.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center justify-center">
                         <ChartContainer config={chartConfig} className="h-64 w-full">
@@ -288,8 +288,8 @@ export function AnalyticsDashboard() {
                                             <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
                                         ))}
                                     </Pie>
-                                    <Legend wrapperStyle={{color: 'white'}} />
-                                    <Tooltip content={<ChartTooltipContent hideLabel className="bg-slate-900/80 border-slate-700 text-white" itemStyle={{color: 'white'}}/>} />
+                                    <Legend />
+                                    <Tooltip content={<ChartTooltipContent hideLabel />} />
                                 </RechartsPieChart>
                              </ResponsiveContainer>
                         </ChartContainer>
@@ -298,32 +298,32 @@ export function AnalyticsDashboard() {
             </div>
 
             {/* 3. Advanced Result Table */}
-            <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+            <Card>
                 <CardHeader>
                     <CardTitle>စာမေးပွဲ ရလဒ်များ (All Results)</CardTitle>
                     <div className="flex flex-col md:flex-row gap-4 justify-between mt-4">
                         <div className="relative w-full md:w-80">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input 
                                 placeholder="Search by student name..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                                className="pl-9"
                             />
                         </div>
                         <div className="flex items-center gap-2">
                              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                                <SelectTrigger className="w-full md:w-64 bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
+                                <SelectTrigger className="w-full md:w-64">
                                     <SelectValue placeholder="Filter by subject..." />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 text-white border-slate-700">
-                                    <SelectItem value="all" className="focus:bg-slate-700">All Subjects</SelectItem>
+                                <SelectContent>
+                                    <SelectItem value="all">All Subjects</SelectItem>
                                     {subjects.map(subject => (
-                                        <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
+                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" onClick={() => handleDownloadPDF(filteredSubmissions)} disabled={isExporting} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                            <Button variant="outline" onClick={() => handleDownloadPDF(filteredSubmissions)} disabled={isExporting}>
                                 {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                                 {isExporting ? 'Generating...' : 'အစီရင်ခံစာ ထုတ်ယူရန်'}
                             </Button>
@@ -331,39 +331,39 @@ export function AnalyticsDashboard() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="border border-emerald-500/30 rounded-md">
+                    <div className="border rounded-md">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                    <TableHead className="text-gray-200 w-[50px]">Rank</TableHead>
-                                    <TableHead className="text-gray-200">Student Name</TableHead>
-                                    <TableHead className="text-gray-200">Subject</TableHead>
-                                    <TableHead className="text-gray-200">Quiz</TableHead>
-                                    <TableHead className="text-gray-200 text-right">Score</TableHead>
-                                    <TableHead className="text-gray-200 text-right">Time Spent</TableHead>
-                                    <TableHead className="text-gray-200 text-right">Date</TableHead>
-                                    <TableHead className="text-gray-200 text-right">Action</TableHead>
+                                <TableRow>
+                                    <TableHead className="w-[50px]">Rank</TableHead>
+                                    <TableHead>Student Name</TableHead>
+                                    <TableHead>Subject</TableHead>
+                                    <TableHead>Quiz</TableHead>
+                                    <TableHead className="text-right">Score</TableHead>
+                                    <TableHead className="text-right">Time Spent</TableHead>
+                                    <TableHead className="text-right">Date</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredSubmissions.length > 0 ? filteredSubmissions.sort((a,b) => b.totalScore - a.totalScore).map((sub, index) => (
-                                    <TableRow key={sub.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                    <TableRow key={sub.id}>
                                         <TableCell className="font-bold text-lg">{index + 1}</TableCell>
                                         <TableCell>{sub.studentName}</TableCell>
-                                        <TableCell><Badge variant="outline" className="text-gray-300 border-gray-500">{sub.subject}</TableCell></TableCell>
+                                        <TableCell><Badge variant="outline">{sub.subject}</Badge></TableCell>
                                         <TableCell className="font-medium">{sub.quizName}</TableCell>
                                         <TableCell className={`text-right font-semibold ${getScoreColor(sub.totalScore, sub.totalPossibleScore)}`}>{sub.totalScore}/{sub.totalPossibleScore}</TableCell>
-                                        <TableCell className="text-right text-gray-400">{sub.timeSpent}</TableCell>
-                                        <TableCell className="text-right text-gray-400">{format(new Date(sub.submissionTime), 'PP')}</TableCell>
+                                        <TableCell className="text-right text-muted-foreground">{sub.timeSpent}</TableCell>
+                                        <TableCell className="text-right text-muted-foreground">{format(new Date(sub.submissionTime), 'PP')}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button asChild variant="outline" size="sm" className="bg-transparent border-emerald-400/40 text-emerald-300 hover:bg-emerald-400/20 hover:text-emerald-200">
+                                            <Button asChild variant="outline" size="sm">
                                                 <Link href={`/grading/${sub.id}`}>View Details</Link>
                                             </Button>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="h-24 text-center text-gray-400">
+                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                                             No results found for the selected filters.
                                         </TableCell>
                                     </TableRow>

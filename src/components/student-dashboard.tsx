@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockLeaderboard } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { BookCopy, Star, Play, Eye, Clock, Search, Activity, Lock } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
@@ -17,7 +17,6 @@ import { Input } from './ui/input';
 import { MyGrades } from './my-grades';
 import { MyBadges } from './my-badges';
 import { Leaderboard } from './leaderboard';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 import { usePurchases } from '@/hooks/use-purchases';
@@ -82,26 +81,32 @@ export function StudentDashboard() {
 
   const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection(pendingPaymentsQuery);
 
-  const filteredQuizzes = (allQuizzes || []).filter(quiz => {
-    const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
-    const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
-    return subjectMatch && codeMatch;
-  });
+  const filteredQuizzes = useMemo(() => {
+    if (!allQuizzes) return [];
+    
+    console.log("Total Quizzes found:", allQuizzes.length);
+
+    return allQuizzes.filter(quiz => {
+        const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
+        const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
+        
+        const status = getQuizStatus(quiz);
+        return subjectMatch && codeMatch && status.text === 'Live';
+    });
+  }, [allQuizzes, selectedSubject, searchCode]);
 
   const isLoading = areQuizzesLoading || isProfileLoading || arePendingPaymentsLoading || arePurchasesLoading;
-  
-  console.log("Total Quizzes found:", allQuizzes?.length);
 
   const hasPurchased = (quizId: string) => purchases.some(p => p.itemId === quizId);
   const isPending = (quizId: string) => pendingPayments?.some(p => p.itemId === quizId);
 
   return (
     <>
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
-      <header className="sticky top-0 z-10 bg-black/20 backdrop-blur-lg border-b border-emerald-500/30">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-slate-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-white">
+            <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-primary">
               <Activity />
               BTK Education
             </Link>
@@ -114,17 +119,17 @@ export function StudentDashboard() {
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold font-headline tracking-tight">မင်္ဂလာပါ {profile?.name?.split(' ')[0] || 'Student'}!</h2>
-            <p className="text-gray-300">
+            <p className="text-slate-500">
               Ready for a new challenge? Select a quiz to start.
             </p>
           </div>
         </div>
         
         <Tabs defaultValue="quizzes">
-            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6 bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-gray-300">
-                <TabsTrigger value="quizzes" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">သင်ခန်းစာများ</TabsTrigger>
-                <TabsTrigger value="grades" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
-                <TabsTrigger value="leaderboards" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white">Leaderboards</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6 bg-slate-200 text-slate-500">
+                <TabsTrigger value="quizzes" className="data-[state=active]:bg-white data-[state=active]:text-primary">သင်ခန်းစာများ</TabsTrigger>
+                <TabsTrigger value="grades" className="data-[state=active]:bg-white data-[state=active]:text-primary">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
+                <TabsTrigger value="leaderboards" className="data-[state=active]:bg-white data-[state=active]:text-primary">Leaderboards</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
                 <div className="flex flex-col md:flex-row gap-4 justify-end mb-4">
@@ -134,18 +139,18 @@ export function StudentDashboard() {
                             placeholder="Search by exam code..."
                             value={searchCode}
                             onChange={(e) => setSearchCode(e.target.value)}
-                            className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                            className="pl-9 bg-white border-slate-300 placeholder:text-slate-400 focus:ring-primary"
                         />
                     </div>
                     <div className="w-full md:w-64">
                         <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                            <SelectTrigger className="bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
+                            <SelectTrigger className="bg-white border-slate-300 focus:ring-primary">
                                 <SelectValue placeholder="Filter by subject..." />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 text-white border-slate-700">
-                                <SelectItem value="all" className="focus:bg-slate-700">All Subjects</SelectItem>
+                            <SelectContent>
+                                <SelectItem value="all">All Subjects</SelectItem>
                                 {subjects.map(subject => (
-                                    <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
+                                    <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -162,19 +167,20 @@ export function StudentDashboard() {
                       const purchased = hasPurchased(quiz.id);
                       const pending = isPending(quiz.id);
                       const locked = isPremium && !purchased && !pending;
+                      const status = getQuizStatus(quiz);
 
                         return (
-                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white overflow-hidden hover:border-emerald-400/60 hover:shadow-emerald-500/20" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
+                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-white border border-slate-200 overflow-hidden hover:border-primary/40 hover:shadow-primary/20" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
-                              <Badge variant="secondary" className="bg-black/30 text-gray-300">{quiz.subject || 'General'}</Badge>
-                               <Badge variant={getQuizStatus(quiz).variant}>{getQuizStatus(quiz).text}</Badge>
+                              <Badge variant="secondary">{quiz.subject || 'General'}</Badge>
+                               <Badge variant={status.variant}>{status.text}</Badge>
                             </div>
                             <CardTitle className="font-headline text-xl">{quiz.name}</CardTitle>
-                            <CardDescription className="line-clamp-2 text-gray-300">{quiz.description}</CardDescription>
+                            <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-2">
-                            <div className="flex justify-between text-sm text-gray-300">
+                            <div className="flex justify-between text-sm text-slate-500">
                                 <div className="flex items-center gap-2">
                                     <BookCopy className="h-4 w-4" />
                                     <span>{countQuestions(quiz)} Questions</span>
@@ -185,13 +191,13 @@ export function StudentDashboard() {
                                 </div>
                             </div>
                             {quiz.timerInMinutes && (
-                                <div className="flex items-center gap-2 text-sm text-gray-300">
+                                <div className="flex items-center gap-2 text-sm text-slate-500">
                                     <Clock className="h-4 w-4" />
                                     <span>{quiz.timerInMinutes} minute timer</span>
                                 </div>
                             )}
                         </CardContent>
-                        <CardFooter className="flex gap-2 bg-black/30 p-3">
+                        <CardFooter className="flex gap-2 bg-slate-50 p-3">
                             {locked ? (
                               <Button size="sm" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold" onClick={() => setPaymentModalState({ isOpen: true, quiz: quiz })}>
                                 <Lock className="mr-2 h-4 w-4" />
@@ -213,7 +219,7 @@ export function StudentDashboard() {
                         </CardFooter>
                         </Card>
                     )}) : (
-                      <div className="col-span-full text-center text-gray-300 py-16">
+                      <div className="col-span-full text-center text-slate-500 py-16">
                         <h3 className="text-lg font-semibold">စာမေးပွဲများ မရှိသေးပါ</h3>
                         <p className="text-sm">လက်ရှိဖြေဆိုရန် စာမေးပွဲများ မရှိပါ။</p>
                       </div>
@@ -228,20 +234,20 @@ export function StudentDashboard() {
                 </div>
             </TabsContent>
             <TabsContent value="leaderboards">
-                <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                <Card>
                     <CardHeader>
                         <CardTitle>Leaderboards</CardTitle>
-                        <CardDescription className="text-gray-300">See how you stack up against your peers.</CardDescription>
+                        <CardDescription>See how you stack up against your peers.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="w-full md:w-64">
                             <Select value={selectedLeaderboardSubject} onValueChange={setSelectedLeaderboardSubject}>
-                                <SelectTrigger className="bg-emerald-900/20 border-emerald-500/30 focus:ring-emerald-500">
+                                <SelectTrigger>
                                     <SelectValue placeholder="Select a subject..." />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 text-white border-slate-700">
+                                <SelectContent>
                                     {subjects.map(subject => (
-                                        <SelectItem key={subject} value={subject} className="focus:bg-slate-700">{subject}</SelectItem>
+                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -265,5 +271,3 @@ export function StudentDashboard() {
     </>
   );
 }
-
-    

@@ -11,9 +11,9 @@ interface LeaderboardProps {
 }
 
 const getRankColor = (rank: number) => {
-    if (rank === 1) return 'text-emerald-400';
-    if (rank === 2) return 'text-slate-400';
-    if (rank === 3) return 'text-yellow-600';
+    if (rank === 1) return 'text-amber-500';
+    if (rank === 2) return 'text-slate-500';
+    if (rank === 3) return 'text-yellow-700';
     return 'text-muted-foreground';
 }
 
@@ -28,7 +28,7 @@ export function Leaderboard({ entries }: LeaderboardProps) {
   }
   
   return (
-    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+    <Card>
       <CardHeader>
         <CardTitle>Top 10 Performers</CardTitle>
       </CardHeader>
@@ -56,7 +56,7 @@ export function Leaderboard({ entries }: LeaderboardProps) {
                 <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1 font-medium">
                         {entry.score}
-                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                     </div>
                 </TableCell>
                 <TableCell className="text-right">
