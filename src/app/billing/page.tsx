@@ -1,19 +1,217 @@
 'use client';
+import { useState } from 'react';
 import { TeacherSidebar } from '@/components/teacher-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { Wallet } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { DollarSign, Calendar, Users, Clock, Search, FileText, Plus } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+
+const transactionsData = [
+  { id: 'INV001', studentName: 'Aung Aung', plan: 'Pro Subscription', date: '2024-05-15', amount: 5000, status: 'Paid' },
+  { id: 'INV002', studentName: 'Ma Ma', plan: 'Quiz: Math 101', date: '2024-05-18', amount: 1000, status: 'Paid' },
+  { id: 'INV003', studentName: 'Hla Hla', plan: 'Pro Subscription', date: '2024-06-01', amount: 5000, status: 'Pending' },
+  { id: 'INV004', studentName: 'Kyaw Kyaw', plan: 'Quiz: Physics Final', date: '2024-04-20', amount: 1500, status: 'Overdue' },
+  { id: 'INV005', studentName: 'Su Su', plan: 'Pro Subscription', date: '2024-05-25', amount: 5000, status: 'Paid' },
+  { id: 'INV006', studentName: 'Nyi Nyi', plan: 'Quiz: English Lit', date: '2024-06-05', amount: 1200, status: 'Pending' },
+];
+
+const revenueData = [
+  { month: 'Jan', revenue: 40000 },
+  { month: 'Feb', revenue: 30000 },
+  { month: 'Mar', revenue: 50000 },
+  { month: 'Apr', revenue: 47000 },
+  { month: 'May', revenue: 60000 },
+  { month: 'Jun', revenue: 58000 },
+];
+
+const chartConfig = {
+  revenue: {
+    label: 'Revenue (MMK)',
+    color: 'hsl(var(--chart-1))',
+  },
+} satisfies ChartConfig;
+
 
 export default function BillingPage() {
+    const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const totalRevenue = transactionsData.filter(t => t.status === 'Paid').reduce((sum, t) => sum + t.amount, 0);
+    const thisMonthRevenue = transactionsData.filter(t => t.status === 'Paid' && new Date(t.date).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0);
+    const activeSubscriptions = transactionsData.filter(t => t.plan.includes('Subscription') && t.status === 'Paid').length;
+    const pendingDue = transactionsData.filter(t => t.status === 'Pending' || t.status === 'Overdue').reduce((sum, t) => sum + t.amount, 0);
+
+    const filteredTransactions = transactionsData.filter(t => 
+        t.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleDownloadReceipt = (invoiceId: string) => {
+        toast({
+            title: `Downloading Receipt ${invoiceId}`,
+            description: 'This feature is coming soon!',
+        });
+    };
+    
+    const handleAddManualEntry = () => {
+         toast({
+            title: `Add Manual Entry`,
+            description: 'This feature is coming soon!',
+        });
+    }
+
     return (
         <SidebarProvider defaultOpen={true}>
             <TeacherSidebar />
             <SidebarInset className="bg-gradient-to-br from-emerald-950 via-slate-950 to-blue-950 text-white">
-                 <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)] text-center">
-                        <Wallet className="h-16 w-16 text-gray-400 mb-4" />
-                        <h2 className="text-2xl font-bold text-white mb-2">Billing</h2>
-                        <p className="text-gray-400">This page is under construction.</p>
+                 <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                    <div>
+                        <h1 className="text-4xl font-bold font-headline tracking-tight">ဘဏ္ဍာရေး အနှစ်ချုပ်</h1>
+                        <p className="text-gray-300">
+                            Monitor your revenue, subscriptions, and transaction history.
+                        </p>
                     </div>
+
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                                <DollarSign className="h-4 w-4 text-gray-300" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{totalRevenue.toLocaleString()} MMK</div>
+                                <p className="text-xs text-gray-400">All-time earnings</p>
+                            </CardContent>
+                        </Card>
+                         <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                                <Calendar className="h-4 w-4 text-gray-300" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{thisMonthRevenue.toLocaleString()} MMK</div>
+                                <p className="text-xs text-gray-400">+15% from last month</p>
+                            </CardContent>
+                        </Card>
+                         <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
+                                <Users className="h-4 w-4 text-gray-300" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{activeSubscriptions}</div>
+                                <p className="text-xs text-gray-400">+2 since last month</p>
+                            </CardContent>
+                        </Card>
+                         <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Pending / Due</CardTitle>
+                                <Clock className="h-4 w-4 text-gray-300" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-amber-300">{pendingDue.toLocaleString()} MMK</div>
+                                <p className="text-xs text-gray-400">From 3 transactions</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <CardHeader>
+                            <CardTitle>ဝင်ငွေဇယား (Revenue Growth)</CardTitle>
+                            <CardDescription className="text-gray-300">Revenue trend for the past 6 months.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <ChartContainer config={chartConfig} className="h-72 w-full">
+                                <ResponsiveContainer>
+                                    <LineChart data={revenueData} margin={{ top: 5, right: 20, left: -10, bottom: 0 }}>
+                                         <defs>
+                                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
+                                                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,185,129,0.2)" />
+                                        <XAxis dataKey="month" stroke="rgba(255,255,255,0.7)" />
+                                        <YAxis stroke="rgba(255,255,255,0.7)" tickFormatter={(value) => `${value/1000}k`} />
+                                        <Tooltip cursor={{fill: 'rgba(16,185,129,0.1)'}} content={<ChartTooltipContent indicator="line" labelClassName="text-white" className="bg-slate-900/80 border-slate-700" />} />
+                                        <Line type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{fill: 'hsl(var(--chart-1))'}} activeDot={{ r: 8 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-emerald-900/20 backdrop-blur-md border border-emerald-500/30 text-white">
+                        <CardHeader>
+                            <CardTitle>ငွေပေးချေမှုမှတ်တမ်း (Transaction History)</CardTitle>
+                             <div className="flex flex-col md:flex-row gap-4 justify-between mt-4">
+                                <div className="relative w-full md:w-80">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input 
+                                        placeholder="Search by name or invoice..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-9 bg-emerald-900/20 border-emerald-500/30 placeholder:text-gray-400 focus:ring-emerald-500"
+                                    />
+                                </div>
+                                <Button variant="outline" onClick={handleAddManualEntry} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Manual Entry
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="border border-emerald-500/30 rounded-md">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                            <TableHead className="text-gray-200">Invoice ID</TableHead>
+                                            <TableHead className="text-gray-200">Student</TableHead>
+                                            <TableHead className="text-gray-200">Plan</TableHead>
+                                            <TableHead className="text-gray-200">Date</TableHead>
+                                            <TableHead className="text-gray-200">Amount</TableHead>
+                                            <TableHead className="text-gray-200">Status</TableHead>
+                                            <TableHead className="text-gray-200 text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredTransactions.map((t) => (
+                                            <TableRow key={t.id} className="border-emerald-500/30 hover:bg-emerald-500/10">
+                                                <TableCell className="font-mono">{t.id}</TableCell>
+                                                <TableCell>{t.studentName}</TableCell>
+                                                <TableCell>{t.plan}</TableCell>
+                                                <TableCell>{t.date}</TableCell>
+                                                <TableCell>{t.amount.toLocaleString()} MMK</TableCell>
+                                                <TableCell>
+                                                    <Badge className={cn(
+                                                        'text-xs font-semibold',
+                                                        t.status === 'Paid' && 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+                                                        t.status === 'Pending' && 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+                                                        t.status === 'Overdue' && 'bg-red-500/20 text-red-300 border border-red-500/30'
+                                                    )}>
+                                                        {t.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadReceipt(t.id)}>
+                                                        <FileText className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                 </main>
             </SidebarInset>
         </SidebarProvider>
