@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Download, FileText, Search, Star, TrendingUp } from 'lucide-react';
+import { CheckCircle, FileText, Search, Star, TrendingUp, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ import type { StudentSubmission, Quiz } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   ChartContainer,
   ChartTooltipContent,
@@ -28,7 +30,6 @@ const detailedSubmissions = mockSubmissions.map(sub => {
         ...sub,
         subject: quiz?.subject || 'N/A',
         quizName: quiz?.name || 'Unknown Quiz',
-        // FIX: Replaced Math.random() with a deterministic value to prevent hydration errors.
         timeSpent: `${((sub.studentName.length % 10) + 5)}m ${((sub.id.charCodeAt(sub.id.length - 1)) % 60)}s`
     }
 });
@@ -67,6 +68,7 @@ export function AnalyticsDashboard() {
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('all');
+    const [isExporting, setIsExporting] = useState(false);
     
     // Stats cards data (mocked)
     const totalExamsTaken = detailedSubmissions.length;
@@ -75,11 +77,96 @@ export function AnalyticsDashboard() {
     const newResultsToday = detailedSubmissions.filter(sub => new Date(sub.submissionTime).toDateString() === new Date().toDateString()).length;
 
 
-    const handleExport = () => {
-        toast({
-            title: "အစီရင်ခံစာ ထုတ်ယူရန်",
-            description: "This feature is coming soon!",
-        });
+    const handleExportPDF = () => {
+        setIsExporting(true);
+        toast({ title: 'Generating PDF Report...' });
+
+        setTimeout(() => {
+            const doc = new jsPDF();
+            
+            // 1. Header
+            const logoUrl = 'https://placehold.co/100x40?text=Logo'; // Placeholder as requested
+            
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text("BTK & KTS Education", doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text("Official Student Progress Report", doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 36, { align: 'center' });
+
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.text("[Logo Placeholder]", 20, 20);
+            doc.rect(14, 14, 30, 15);
+
+
+            // 2. Table
+            const tableColumn = ["Rank", "Name", "Subject", "Score", "Grade"];
+            const tableRows: (string | number)[][] = [];
+
+            const submissionsToExport = filteredSubmissions.sort((a,b) => b.totalScore - a.totalScore);
+
+            submissionsToExport.forEach((sub, index) => {
+                const scoreString = `${sub.totalScore}/${sub.totalPossibleScore}`;
+                const percentage = sub.totalPossibleScore > 0 ? (sub.totalScore / sub.totalPossibleScore) * 100 : 0;
+                let grade = '';
+                if (percentage >= 80) grade = 'A';
+                else if (percentage >= 60) grade = 'B';
+                else if (percentage >= 40) grade = 'C';
+                else grade = 'D';
+
+                const rowData = [
+                    index + 1,
+                    sub.studentName,
+                    sub.subject,
+                    scoreString,
+                    grade
+                ];
+                tableRows.push(rowData);
+            });
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 50,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [16, 185, 129] // Emerald-500
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 255, 244] // Light Green
+                },
+                didDrawPage: (data) => {
+                    // 3. Footer
+                    const pageCount = doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    doc.setTextColor(150);
+
+                    // Signature Line
+                    const sigText = "Head of School";
+                    const sigX = doc.internal.pageSize.width - data.settings.margin.right - 50;
+                    const sigY = doc.internal.pageSize.height - 20;
+                    doc.line(sigX, sigY, sigX + 50, sigY);
+                    doc.text(sigText, sigX + 25, sigY + 5, { align: 'center' });
+
+                    // Timestamp and page number
+                    const timestamp = new Date().toLocaleString();
+                    doc.text(
+                        `Generated on: ${timestamp} | Page ${data.pageNumber} of ${pageCount}`,
+                        data.settings.margin.left,
+                        doc.internal.pageSize.height - 10
+                    );
+                }
+            });
+
+            doc.save('student_progress_report.pdf');
+            setIsExporting(false);
+            toast({ title: 'PDF Exported!', description: 'Your report has been downloaded.' });
+        }, 1000); // Simulate generation time
     };
 
     const getScoreColor = (score: number, total: number) => {
@@ -218,9 +305,9 @@ export function AnalyticsDashboard() {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" onClick={handleExport} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
-                                <Download className="mr-2 h-4 w-4" />
-                                အစီရင်ခံစာ ထုတ်ယူရန်
+                            <Button variant="outline" onClick={handleExportPDF} disabled={isExporting} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                                {isExporting ? 'Generating...' : 'အစီရင်ခံစာ ထုတ်ယူရန်'}
                             </Button>
                         </div>
                     </div>
