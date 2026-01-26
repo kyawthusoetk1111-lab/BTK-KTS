@@ -62,7 +62,7 @@ service cloud.firestore {
      */
     function isAdmin() {
       let docPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return isSignedIn() && exists(docPath) && get(docPath).data.userType == 'admin';
+      return isSignedIn() && exists(docPath) && 'userType' in get(docPath).data && get(docPath).data.userType == 'admin';
     }
 
     /**
@@ -70,7 +70,7 @@ service cloud.firestore {
      */
     function isTeacherOrAdmin() {
       let docPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return isSignedIn() && exists(docPath) && (get(docPath).data.userType == 'teacher' || get(docPath).data.userType == 'admin');
+      return isSignedIn() && exists(docPath) && 'userType' in get(docPath).data && (get(docPath).data.userType == 'teacher' || get(docPath).data.userType == 'admin');
     }
 
     /**
