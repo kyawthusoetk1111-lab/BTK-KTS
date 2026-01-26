@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import type { Payment, Expenditure } from '@/lib/types';
 import { ExpenditureModal } from '@/components/admin/expenditure-modal';
 
