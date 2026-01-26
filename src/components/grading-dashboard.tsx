@@ -14,7 +14,7 @@ import type { StudentSubmission, Quiz } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
   ChartContainer,
@@ -26,13 +26,29 @@ import { Area, Cell, XAxis, YAxis, CartesianGrid, Legend, Tooltip, ResponsiveCon
 // Combine submissions with quiz data
 const detailedSubmissions = mockSubmissions.map(sub => {
     const quiz = mockQuizzes.find(q => q.id === sub.quizId);
+    const timeSpentInSeconds = ((sub.studentName.length * sub.id.length) % 300) + 300;
+    const minutes = Math.floor(timeSpentInSeconds / 60);
+    const seconds = timeSpentInSeconds % 60;
+
+    const percentage = sub.totalPossibleScore > 0 ? (sub.totalScore / sub.totalPossibleScore) * 100 : 0;
+    let grade = '';
+    if (percentage >= 80) grade = 'A';
+    else if (percentage >= 60) grade = 'B';
+    else if (percentage >= 40) grade = 'C';
+    else grade = 'D';
+    
     return {
         ...sub,
         subject: quiz?.subject || 'N/A',
         quizName: quiz?.name || 'Unknown Quiz',
-        timeSpent: `${((sub.studentName.length % 10) + 5)}m ${((sub.id.charCodeAt(sub.id.length - 1)) % 60)}s`
+        timeSpent: `${minutes}m ${seconds}s`,
+        percentage: percentage,
+        grade: grade,
+        attendance: 70 + (sub.studentName.length % 31),
+        remarks: percentage >= 80 ? 'Excellent work!' : (percentage >= 60 ? 'Good effort.' : 'Needs improvement.'),
     }
 });
+
 
 // Mock data for charts
 const passRateData = [
@@ -77,96 +93,98 @@ export function AnalyticsDashboard() {
     const newResultsToday = detailedSubmissions.filter(sub => new Date(sub.submissionTime).toDateString() === new Date().toDateString()).length;
 
 
-    const handleExportPDF = () => {
+    const handleDownloadPDF = (studentResults: typeof filteredSubmissions) => {
         setIsExporting(true);
         toast({ title: 'Generating PDF Report...' });
-
+    
         setTimeout(() => {
-            const doc = new jsPDF();
+            const doc = new jsPDF('landscape');
+        
+            const schoolLogoBase64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...'; 
+        
+            doc.addImage(schoolLogoBase64, 'JPEG', 15, 10, 25, 25); 
             
-            // 1. Header
-            const logoUrl = 'https://placehold.co/100x40?text=Logo'; // Placeholder as requested
+            doc.setFontSize(22);
+            doc.setTextColor(16, 185, 129); // Emerald Green
+            doc.text("BTK & KTS Education", 45, 22);
             
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text("BTK & KTS Education", doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-            
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text("Official Student Progress Report", doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-            
-            doc.setFontSize(10);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 36, { align: 'center' });
-
-            doc.setFontSize(8);
+            doc.setFontSize(11);
             doc.setTextColor(100);
-            doc.text("[Logo Placeholder]", 20, 20);
-            doc.rect(14, 14, 30, 15);
+            doc.text("Official Student Academic Progress Report", 45, 30);
+            doc.text(`Report Generated: ${new Date().toLocaleString()}`, 45, 36);
+        
+            doc.setDrawColor(16, 185, 129);
+            doc.setLineWidth(0.5);
+            doc.line(15, 42, 280, 42); 
 
-
-            // 2. Table
-            const tableColumn = ["Rank", "Name", "Subject", "Score", "Grade"];
-            const tableRows: (string | number)[][] = [];
-
-            const submissionsToExport = filteredSubmissions.sort((a,b) => b.totalScore - a.totalScore);
-
-            submissionsToExport.forEach((sub, index) => {
-                const scoreString = `${sub.totalScore}/${sub.totalPossibleScore}`;
-                const percentage = sub.totalPossibleScore > 0 ? (sub.totalScore / sub.totalPossibleScore) * 100 : 0;
-                let grade = '';
-                if (percentage >= 80) grade = 'A';
-                else if (percentage >= 60) grade = 'B';
-                else if (percentage >= 40) grade = 'C';
-                else grade = 'D';
-
-                const rowData = [
-                    index + 1,
-                    sub.studentName,
-                    sub.subject,
-                    scoreString,
-                    grade
-                ];
-                tableRows.push(rowData);
-            });
-
+            const submissionsToExport = studentResults.sort((a,b) => b.totalScore - a.totalScore);
+        
             autoTable(doc, {
-                head: [tableColumn],
-                body: tableRows,
-                startY: 50,
-                theme: 'striped',
-                headStyles: {
-                    fillColor: [16, 185, 129] // Emerald-500
+                startY: 48,
+                head: [[
+                'Rank', 
+                'Student Name', 
+                'Subject', 
+                'Score %', 
+                'Grade', 
+                'Attendance %', 
+                'Teacher\'s Remarks'
+                ]],
+                body: submissionsToExport.map((res, index) => [
+                index + 1,
+                res.studentName,
+                res.subject,
+                `${res.percentage.toFixed(0)}%`,
+                res.grade || "N/A",
+                `${res.attendance || 0}%`,
+                res.remarks || "No comments"
+                ]),
+                headStyles: { 
+                fillColor: [16, 185, 129], 
+                fontSize: 11,
+                halign: 'center'
                 },
-                alternateRowStyles: {
-                    fillColor: [240, 255, 244] // Light Green
+                columnStyles: {
+                0: { cellWidth: 15, halign: 'center' },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 30 },
+                3: { cellWidth: 20, halign: 'center' },
+                4: { cellWidth: 20, halign: 'center' },
+                5: { cellWidth: 30, halign: 'center' },
+                6: { cellWidth: 'auto' }, 
                 },
-                didDrawPage: (data) => {
-                    // 3. Footer
-                    const pageCount = doc.internal.getNumberOfPages();
-                    doc.setFontSize(8);
-                    doc.setTextColor(150);
-
-                    // Signature Line
-                    const sigText = "Head of School";
-                    const sigX = doc.internal.pageSize.width - data.settings.margin.right - 50;
-                    const sigY = doc.internal.pageSize.height - 20;
-                    doc.line(sigX, sigY, sigX + 50, sigY);
-                    doc.text(sigText, sigX + 25, sigY + 5, { align: 'center' });
-
-                    // Timestamp and page number
-                    const timestamp = new Date().toLocaleString();
-                    doc.text(
-                        `Generated on: ${timestamp} | Page ${data.pageNumber} of ${pageCount}`,
-                        data.settings.margin.left,
-                        doc.internal.pageSize.height - 10
-                    );
+                didParseCell: function(data: any) {
+                if (data.column.index === 5 && data.cell.section === 'body') {
+                    const attendanceVal = parseInt(data.cell.raw);
+                    if (attendanceVal < 75) {
+                    data.cell.styles.textColor = [239, 68, 68];
+                    data.cell.styles.fontStyle = 'bold';
+                    }
                 }
+                },
+                styles: { 
+                font: "helvetica", 
+                fontSize: 10, 
+                cellPadding: 4,
+                overflow: 'linebreak'
+                },
             });
+        
+            const finalY = (doc as any).lastAutoTable.finalY + 25;
+            doc.setFontSize(11);
+            doc.setTextColor(0);
+            doc.text("__________________________", 220, finalY);
+            doc.text("Head of School Signature", 225, finalY + 7);
+            
+            doc.setFontSize(9);
+            doc.setTextColor(150);
+            doc.text("This is a computer-generated report and does not require a physical stamp.", 15, finalY + 15);
+        
+            doc.save(`BTK_Report_${new Date().getTime()}.pdf`);
 
-            doc.save('student_progress_report.pdf');
             setIsExporting(false);
             toast({ title: 'PDF Exported!', description: 'Your report has been downloaded.' });
-        }, 1000); // Simulate generation time
+        }, 1000);
     };
 
     const getScoreColor = (score: number, total: number) => {
@@ -305,7 +323,7 @@ export function AnalyticsDashboard() {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" onClick={handleExportPDF} disabled={isExporting} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
+                            <Button variant="outline" onClick={() => handleDownloadPDF(filteredSubmissions)} disabled={isExporting} className="bg-transparent border-sky-400/40 text-sky-300 hover:bg-sky-400/20 hover:text-sky-200">
                                 {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                                 {isExporting ? 'Generating...' : 'အစီရင်ခံစာ ထုတ်ယူရန်'}
                             </Button>
