@@ -11,8 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UserPlus } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useAuth } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 const studentSchema = z.object({
@@ -35,6 +36,7 @@ export function UserManagementModal({ isOpen, onClose }: UserManagementModalProp
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const firestore = useFirestore();
+  const auth = useAuth();
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
@@ -50,27 +52,26 @@ export function UserManagementModal({ isOpen, onClose }: UserManagementModalProp
 
   const onSubmit = async (data: StudentFormValues) => {
     setIsSaving(true);
-    if (!firestore) {
-        toast({ title: "Error", description: "Firestore not available.", variant: "destructive" });
+    if (!firestore || !auth) {
+        toast({ title: "Error", description: "Services not available.", variant: "destructive" });
         setIsSaving(false);
         return;
     }
     
     try {
-        // This is a placeholder for creating a user. In a real application,
-        // this should be handled by a secure backend function that creates a user
-        // in Firebase Authentication and then creates their profile in Firestore.
-        // The UID from the authenticated user should be used as the document ID here.
-        const newUserId = crypto.randomUUID(); 
-        const userDocRef = doc(firestore, 'users', newUserId);
+        const email = `${data.studentId.trim()}@btk-exam.com`;
+        
+        // 1. Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, data.password);
+        const user = userCredential.user;
 
-        // The user profile is created here. Note that for security, the password
-        // is NOT saved in the Firestore document.
+        // 2. Create user profile in Firestore
+        const userDocRef = doc(firestore, 'users', user.uid);
         const newUserProfile: Omit<UserProfile, 'badges' | 'adminNotes'> = {
-            id: newUserId,
+            id: user.uid,
             name: data.name,
             studentId: data.studentId,
-            email: `${data.studentId}@btk-exam.com`,
+            email: email,
             userType: 'student',
             isFirstLogin: true,
             status: 'active',
@@ -84,19 +85,24 @@ export function UserManagementModal({ isOpen, onClose }: UserManagementModalProp
         await setDoc(userDocRef, newUserProfile);
 
         toast({
-            title: "Student Profile Created!",
-            description: `The profile for ${data.name} has been saved. A secure backend function is now required to set their initial password in Firebase Authentication.`,
-            duration: 10000,
+            title: "Student Created Successfully!",
+            description: `The profile for ${data.name} has been created.`,
         });
 
         onClose();
         form.reset();
 
-    } catch (error) {
-        console.error("Error creating student profile:", error);
+    } catch (error: any) {
+        console.error("Error creating student:", error);
+        let description = "Could not create the student profile. Please try again.";
+        if (error.code === 'auth/email-already-in-use') {
+            description = `A user with the Student ID '${data.studentId}' already exists.`;
+        } else if (error.code === 'auth/weak-password') {
+            description = 'The password is too weak. It must be at least 6 characters long.';
+        }
         toast({
             title: "Save Failed",
-            description: "Could not create the student profile. Please try again.",
+            description: description,
             variant: "destructive",
         });
     } finally {

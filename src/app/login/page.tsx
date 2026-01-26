@@ -12,6 +12,7 @@ import { signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopu
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Loader2, Activity } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg role="img" viewBox="0 0 24 24" {...props}>
@@ -26,12 +27,12 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isAdminLoggingIn, setIsAdminLoggingIn] = useState(false);
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
   const { user, isUserLoading } = useUser();
 
   // This effect will handle redirection after a user is successfully logged in via the Auth state.
@@ -47,7 +48,11 @@ export default function LoginPage() {
                 const userProfile = userDocSnap.data() as UserProfile;
                  if (userProfile.status === 'suspended') {
                     await signOut(auth!);
-                    setError("Your account is suspended. Please contact an administrator.");
+                    toast({
+                        title: "Account Suspended",
+                        description: "Your account is suspended. Please contact an administrator.",
+                        variant: "destructive"
+                    });
                     return;
                 }
                 if (userProfile.userType === 'admin') {
@@ -77,27 +82,38 @@ export default function LoginPage() {
                 } else {
                     // Profile doesn't exist for a non-Google user, something is wrong.
                     await signOut(auth!);
-                    setError('Your user profile was not found. Please contact an administrator.');
+                    toast({
+                        title: "Profile Not Found",
+                        description: "Your user profile was not found. Please contact an administrator.",
+                        variant: "destructive"
+                    });
                 }
             }
         };
 
         checkUserProfile();
     }
-  }, [user, isUserLoading, router, firestore, auth]);
+  }, [user, isUserLoading, router, firestore, auth, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoggingIn(true);
 
     if (!studentId || !password) {
-      setError('Please enter both your ID and password.');
+      toast({
+        title: "Missing Information",
+        description: "Please enter both your ID and password.",
+        variant: "destructive"
+      });
       setIsLoggingIn(false);
       return;
     }
     if (!auth || !firestore) {
-      setError('Authentication service is not ready. Please try again.');
+      toast({
+        title: "Error",
+        description: "Authentication service is not ready. Please try again.",
+        variant: "destructive"
+      });
       setIsLoggingIn(false);
       return;
     }
@@ -108,21 +124,28 @@ export default function LoginPage() {
       // The sign-in will trigger the useEffect to handle redirection
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
+      let description = 'An unexpected error occurred during login.';
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-        setError('Invalid ID or Password. Please try again.');
-      } else {
-        setError('An unexpected error occurred during login.');
-        console.error('Login Error:', error);
+        description = 'Invalid ID or Password. Please try again.';
       }
-       setIsLoggingIn(false);
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: description,
+      });
+      console.error('Login Error:', error);
+      setIsLoggingIn(false);
     }
   };
   
   const handleAdminLogin = async () => {
-    setError(null);
     setIsAdminLoggingIn(true);
     if (!auth || !firestore) {
-      setError('Authentication service is not ready. Please try again.');
+      toast({
+        title: "Error",
+        description: "Authentication service is not ready. Please try again.",
+        variant: "destructive"
+      });
       setIsAdminLoggingIn(false);
       return;
     }
@@ -133,7 +156,11 @@ export default function LoginPage() {
         // On success, the useEffect hook will handle everything.
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
-            setError('Could not sign in with Google. Please try again.');
+            toast({
+                title: "Admin Login Failed",
+                description: 'Could not sign in with Google. Please try again.',
+                variant: 'destructive'
+            });
             console.error('Google Sign-In Error:', error);
         }
         setIsAdminLoggingIn(false);
@@ -184,7 +211,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoggingIn || isAdminLoggingIn}>
               {(isLoggingIn && !isAdminLoggingIn) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {(isLoggingIn && !isAdminLoggingIn) ? 'Signing In...' : 'Sign In'}
@@ -213,5 +239,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
