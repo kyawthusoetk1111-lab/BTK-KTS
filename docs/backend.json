@@ -414,6 +414,10 @@
           "type": "string",
           "description": "Unique identifier for the user."
         },
+        "studentId": {
+          "type": "string",
+          "description": "A unique identifier for the student/teacher for login purposes."
+        },
         "userType": {
           "type": "string",
           "description": "The type of user (e.g., teacher, student, admin)."
@@ -447,6 +451,10 @@
           "type": "string",
           "description": "Private notes for admins about this user."
         },
+        "isFirstLogin": {
+          "type": "boolean",
+          "description": "Flag to force password change on first login."
+        },
         "createdAt": {
           "type": "string",
           "description": "The timestamp when the user was created.",
@@ -460,6 +468,7 @@
       },
       "required": [
         "id",
+        "studentId",
         "userType",
         "name",
         "email",

@@ -77,6 +77,7 @@ export interface Quiz {
 
 export interface UserProfile {
   id: string;
+  studentId: string;
   userType: 'teacher' | 'student' | 'admin';
   name: string;
   email: string;
@@ -86,6 +87,7 @@ export interface UserProfile {
   badges?: Badge[];
   status?: 'active' | 'suspended';
   adminNotes?: string;
+  isFirstLogin?: boolean;
 }
 
 export interface StudentSubmission {
@@ -178,4 +180,5 @@ export interface Expenditure {
   amount: number;
 }
 
+    
     
