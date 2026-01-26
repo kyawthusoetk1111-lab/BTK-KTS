@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -56,10 +58,36 @@ export default function AuditPage() {
     };
 
     const handleExport = () => {
+        if (filteredData.length === 0) {
+            toast({
+                title: 'No Data to Export',
+                description: 'There is no data matching the current filters.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         toast({
             title: 'Exporting Report',
-            description: 'Generating audit report... (This is a placeholder).',
+            description: 'Generating audit report...',
         });
+
+        const dataToExport = filteredData.map(item => ({
+            'Student Name': item.studentName,
+            'Subject': item.subject,
+            'Quiz': item.quizName,
+            'Score': `${item.totalScore}/${item.totalPossibleScore}`,
+            'Grade': item.grade,
+            'Last Updated By': item.lastUpdatedBy,
+            'Submission Time': new Date(item.submissionTime).toLocaleString(),
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Audit Report");
+        
+        const today = format(new Date(), 'yyyy-MM-dd');
+        XLSX.writeFile(workbook, `Exam_Audit_Report_${today}.xlsx`);
     };
     
     const getGradeColor = (grade: string) => {
