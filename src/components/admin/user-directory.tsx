@@ -8,15 +8,13 @@ import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Trash2, ShieldOff, Search, Loader2, MoreVertical } from 'lucide-react';
+import { Trash2, ShieldOff, Search, Loader2, UserPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -173,7 +171,6 @@ export function UserDirectory() {
                             </TableHeader>
                             <TableBody>
                                 {filteredUsers.length > 0 ? filteredUsers.map((user) => {
-                                    const isActionLoading = loadingActions.some(action => action.endsWith(user.id));
                                     const isCurrentUser = user.id === currentUser?.uid;
                                     return (
                                     <TableRow key={user.id} onClick={() => setDetailedUser(user)} className="cursor-pointer">
@@ -194,32 +191,31 @@ export function UserDirectory() {
                                         </TableCell>
                                         <TableCell>{format(new Date(user.createdAt), 'MMM d, yyyy')}</TableCell>
                                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                           <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" disabled={isCurrentUser || isActionLoading}>
-                                                        {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : <MoreVertical className="h-4 w-4" />}
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuLabel className="font-normal text-xs">Change Role</DropdownMenuLabel>
-                                                    <DropdownMenuRadioGroup value={user.userType} onValueChange={(newRole: 'admin' | 'teacher' | 'student') => handleRoleChange(user.id, newRole)}>
-                                                        <DropdownMenuRadioItem value="student">Student</DropdownMenuRadioItem>
-                                                        <DropdownMenuRadioItem value="teacher">Teacher</DropdownMenuRadioItem>
-                                                        <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
-                                                    </DropdownMenuRadioGroup>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => setUserToManage({user, action: 'suspend'})} className="text-orange-600 focus:text-orange-600">
-                                                        <ShieldOff className="mr-2 h-4 w-4" />
-                                                        <span>{user.status === 'suspended' ? 'Reactivate' : 'Suspend'}</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setUserToManage({user, action: 'delete'})} className="text-destructive focus:text-destructive">
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        <span>Delete</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                           <div className="flex justify-end items-center space-x-1">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" disabled={isCurrentUser || loadingActions.includes(`role-${user.id}`)}>
+                                                            {loadingActions.includes(`role-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <UserPlus className="h-4 w-4" />}
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                                                        <DropdownMenuRadioGroup value={user.userType} onValueChange={(newRole: 'admin' | 'teacher' | 'student') => handleRoleChange(user.id, newRole)}>
+                                                            <DropdownMenuRadioItem value="student">Student</DropdownMenuRadioItem>
+                                                            <DropdownMenuRadioItem value="teacher">Teacher</DropdownMenuRadioItem>
+                                                            <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                                                        </DropdownMenuRadioGroup>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+
+                                                <Button variant="ghost" size="icon" disabled={isCurrentUser || loadingActions.includes(`suspend-${user.id}`)} onClick={() => setUserToManage({user, action: 'suspend'})}>
+                                                    {loadingActions.includes(`suspend-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <ShieldOff className="h-4 w-4 text-orange-600" />}
+                                                </Button>
+
+                                                <Button variant="ghost" size="icon" disabled={isCurrentUser || loadingActions.includes(`delete-${user.id}`)} onClick={() => setUserToManage({user, action: 'delete'})}>
+                                                    {loadingActions.includes(`delete-${user.id}`) ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4 text-destructive" />}
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 )}) : (
