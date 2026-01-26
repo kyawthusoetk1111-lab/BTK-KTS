@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,16 +16,10 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
 
-// Mock student data for combobox
-const students = [
-  { label: 'Aung Aung', value: 'Aung Aung' },
-  { label: 'Ma Ma', value: 'Ma Ma' },
-  { label: 'Hla Hla', value: 'Hla Hla' },
-  { label: 'Kyaw Kyaw', value: 'Kyaw Kyaw' },
-  { label: 'Su Su', value: 'Su Su' },
-  { label: 'Nyi Nyi', value: 'Nyi Nyi' },
-];
 
 const paymentSchema = z.object({
   studentName: z.string({ required_error: 'Student name is required.' }).min(1, 'Student name is required.'),
@@ -47,6 +41,22 @@ interface ManualPaymentModalProps {
 export function ManualPaymentModal({ isOpen, onClose, onSave }: ManualPaymentModalProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+
+  const firestore = useFirestore();
+
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+
+  const { data: users } = useCollection<UserProfile>(usersQuery);
+
+  const studentOptions = useMemo(() => {
+    if (!users) return [];
+    return users
+      .filter(user => user.userType === 'student')
+      .map(student => ({ label: student.name, value: student.name }));
+  }, [users]);
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
@@ -107,7 +117,7 @@ export function ManualPaymentModal({ isOpen, onClose, onSave }: ManualPaymentMod
                   <FormLabel>Student Name</FormLabel>
                   <FormControl>
                     <Combobox
-                      options={students}
+                      options={studentOptions}
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select a student..."
