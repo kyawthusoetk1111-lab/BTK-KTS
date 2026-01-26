@@ -198,12 +198,14 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
 
     /**
-     * @description Users can create their own payment records. Admins can read/write all payment records for verification.
+     * @description Users can create their own payment records. Admins can read/update all payment records for verification.
      * @path /payments/{paymentId}
      */
     match /payments/{paymentId} {
-        allow read, write: if isAdmin();
+        allow get, list: if isAdmin();
         allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+        allow update: if isAdmin();
+        allow delete: if isAdmin();
     }
     
     /**
@@ -224,4 +226,3 @@ service cloud.firestore {
     }
   }
 }
-    

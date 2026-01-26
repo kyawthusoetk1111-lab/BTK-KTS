@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   PieChart,
   Activity,
-  LogOut
+  LogOut,
+  Wallet
 } from 'lucide-react';
 import { AuthButton } from '../auth-button';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ const menuItems = [
   { href: '/admin/users', label: 'အသုံးပြုသူများ စီမံရန်', icon: Users },
   { href: '/admin/audit', label: 'Exam Audit', icon: ShieldCheck },
   { href: '/admin/financials', label: 'Financial Insights', icon: PieChart },
+  { href: '/admin/payments', label: 'Payment Verification', icon: Wallet },
   { href: '/admin/logs', label: 'စနစ်မှတ်တမ်း', icon: Activity },
 ];
 
@@ -114,5 +116,3 @@ export function AdminSidebar() {
     </Sidebar>
   );
 }
-
-    
