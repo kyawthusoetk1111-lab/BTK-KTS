@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { mockSubmissions } from '@/lib/data';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const getQuizStatus = (quiz: Quiz): { text: 'Live' | 'Draft' | 'Closed'; variant: 'live' | 'draft' | 'closed' } => {
     const now = new Date();
@@ -93,6 +95,76 @@ export function TeacherDashboard() {
   }, [user, firestore]);
 
   const { data: quizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
+
+  const analyticsData = useMemo(() => {
+    if (!quizzes || !mockSubmissions) return [];
+
+    const isCorrect = (question: Question, answer: any): boolean | null => {
+        if (answer === undefined || answer === null || answer === '') return null;
+        if (question.type === 'multiple-choice') {
+            const correctOption = question.options?.find(o => o.isCorrect);
+            return correctOption?.id === answer;
+        }
+        if (question.type === 'true-false') {
+            const correctOption = question.options?.find(o => o.isCorrect);
+            return correctOption?.text === answer;
+        }
+        return null;
+    }
+
+    return quizzes.map(quiz => {
+        const submissionsForQuiz = mockSubmissions.filter(s => s.quizId === quiz.id);
+        const totalTakes = submissionsForQuiz.length;
+
+        if (totalTakes === 0) {
+            return {
+                quizId: quiz.id,
+                quizName: quiz.name,
+                totalTakes: 0,
+                averageScore: 0,
+                hardQuestions: [],
+            };
+        }
+
+        const totalPossibleScore = calculateTotalPoints(quiz);
+        const averageScore = submissionsForQuiz.reduce((sum, sub) => sum + (sub.totalScore / sub.totalPossibleScore * 100), 0) / totalTakes;
+        
+        const questionStats: Record<string, { wrong: number }> = {};
+        quiz.sections.forEach(sec => sec.questions.forEach(q => {
+            questionStats[q.id] = { wrong: 0 };
+        }));
+
+        submissionsForQuiz.forEach(sub => {
+            quiz.sections.forEach(sec => {
+                sec.questions.forEach(q => {
+                    const correctness = isCorrect(q, sub.answers[q.id]);
+                    if (correctness === false) {
+                        questionStats[q.id].wrong++;
+                    }
+                });
+            });
+        });
+
+        const hardQuestions = Object.entries(questionStats)
+            .filter(([_, stats]) => (stats.wrong / totalTakes) > 0.5)
+            .map(([questionId, stats]) => {
+                const question = quiz.sections.flatMap(s => s.questions).find(q => q.id === questionId);
+                return {
+                    text: question?.text || "Unknown Question",
+                    wrongPercentage: (stats.wrong / totalTakes) * 100,
+                };
+            });
+
+        return {
+            quizId: quiz.id,
+            quizName: quiz.name,
+            totalTakes,
+            averageScore,
+            hardQuestions,
+        };
+    });
+}, [quizzes]);
+
 
   const handleDeleteConfirm = () => {
     if (!quizToDelete || !firestore) return;
@@ -230,6 +302,49 @@ export function TeacherDashboard() {
                             </ChartContainer>
                         </CardContent>
                     </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Quiz Analytics</CardTitle>
+                            <CardDescription>Performance breakdown for each of your quizzes.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {analyticsData.length > 0 ? (
+                                <Accordion type="single" collapsible className="w-full">
+                                    {analyticsData.map(quizStats => (
+                                        <AccordionItem value={quizStats.quizId} key={quizStats.quizId}>
+                                            <AccordionTrigger>
+                                                <div className="flex justify-between w-full pr-4">
+                                                    <span className="font-semibold">{quizStats.quizName}</span>
+                                                    <span className="text-sm text-muted-foreground">{quizStats.totalTakes} Takers</span>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="pt-4 space-y-4">
+                                                {quizStats.totalTakes > 0 ? (
+                                                    <>
+                                                        <p><strong>Average Score:</strong> {quizStats.averageScore.toFixed(1)}%</p>
+                                                        <div>
+                                                            <h4 className="font-semibold mb-2">Hardest Questions (&gt;50% incorrect)</h4>
+                                                            {quizStats.hardQuestions.length > 0 ? (
+                                                                <ul className="list-disc pl-5 space-y-1 text-sm">
+                                                                    {quizStats.hardQuestions.map((q, i) => (
+                                                                        <li key={i} className="text-red-600">
+                                                                            "{q.text.substring(0, 50)}..." ({q.wrongPercentage.toFixed(0)}% incorrect)
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            ) : <p className="text-sm text-muted-foreground">No questions were particularly hard for students. Great job!</p>}
+                                                        </div>
+                                                    </>
+                                                ) : <p className="text-sm text-muted-foreground">No submissions for this quiz yet.</p>}
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            ) : <p className="text-muted-foreground">No analytics to display yet.</p>}
+                        </CardContent>
+                    </Card>
+
 
                     {/* Quizzes */}
                     <div className="space-y-4">
