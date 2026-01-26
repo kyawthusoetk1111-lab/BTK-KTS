@@ -65,6 +65,14 @@ service cloud.firestore {
     }
 
     /**
+     * Checks if the user is a teacher or an admin.
+     */
+    function isTeacherOrAdmin() {
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType;
+      return isSignedIn() && (userRole == 'teacher' || userRole == 'admin');
+    }
+
+    /**
      * Checks if a field is immutable during an update operation.
      * Prevents clients from changing critical relational keys like owner IDs.
      */
@@ -189,5 +197,16 @@ service cloud.firestore {
         allow read, write: if isAdmin();
         allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
     }
+
+    // -------------------------------------------------------------------------
+    // Quiz Bank Rules
+    // -------------------------------------------------------------------------
+    match /quizBank/{questionId} {
+      allow read: if isTeacherOrAdmin();
+      allow create: if isTeacherOrAdmin() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isTeacherOrAdmin() && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
   }
 }
+
+    

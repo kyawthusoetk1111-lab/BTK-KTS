@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilePlus2, BookCopy, Star, Edit, Eye, Library, Code, Crown, Users, ClipboardCheck, TrendingUp, Settings, Trash2, Archive } from 'lucide-react';
-import type { Quiz } from '@/lib/types';
+import type { Quiz, Question } from '@/lib/types';
 import { useUserWithProfile } from '@/hooks/use-user-with-profile';
-import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 import { UpgradeModal } from './upgrade-modal';
@@ -128,6 +128,45 @@ export function TeacherDashboard() {
 
     setQuizToDelete(null);
   };
+  
+  const handleAddToBank = (quiz: Quiz) => {
+    if (!firestore || !user) {
+        toast({ title: "Error", description: "Could not add to bank. Please try again.", variant: "destructive"});
+        return;
+    }
+
+    let questionCount = 0;
+    quiz.sections.forEach(section => {
+        section.questions.forEach(question => {
+            const bankQuestion: Question = {
+                ...question,
+                id: question.id, // Use original ID to prevent duplicates on re-add
+                ownerId: user.uid,
+                subject: quiz.subject,
+                difficulty: 'Medium', // Default difficulty
+                sourceQuizId: quiz.id,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            const docRef = doc(firestore, 'quizBank', bankQuestion.id);
+            setDocumentNonBlocking(docRef, bankQuestion, { merge: true });
+            questionCount++;
+        });
+    });
+
+    if (questionCount > 0) {
+        toast({
+            title: "Added to Bank!",
+            description: `${questionCount} questions from "${quiz.name}" have been added to your question bank.`
+        });
+    } else {
+        toast({
+            title: "No questions found",
+            description: `"${quiz.name}" has no questions to add to the bank.`,
+            variant: "destructive"
+        });
+    }
+  }
 
   const isLoading = areQuizzesLoading || isProfileLoading;
 
@@ -277,7 +316,7 @@ export function TeacherDashboard() {
                                                         size="icon" 
                                                         variant="outline" 
                                                         className="bg-transparent border-sky-500/40 text-sky-300 hover:bg-sky-500/10 flex-shrink-0"
-                                                        onClick={() => {toast({title: "Added to Bank!", description: `"${quiz.name}" has been added to your question bank.`})}}
+                                                        onClick={() => handleAddToBank(quiz)}
                                                     >
                                                         <Archive className="h-4 w-4" />
                                                         <span className="sr-only">Add to Bank</span>
@@ -355,3 +394,5 @@ export function TeacherDashboard() {
     </>
   );
 }
+
+    

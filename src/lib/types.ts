@@ -41,6 +41,12 @@ export interface Question {
   ownerId?: string;
   imageUrl?: string;
   audioUrl?: string;
+  subject?: string;
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
+  usageCount?: number;
+  sourceQuizId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Section {

@@ -188,6 +188,54 @@
         "updatedAt"
       ]
     },
+    "BankQuestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BankQuestion",
+      "type": "object",
+      "description": "Represents a self-contained question stored in the quiz bank for reuse.",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "questionType": { "type": "string" },
+        "questionText": { "type": "string" },
+        "points": { "type": "number" },
+        "subject": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+        "usageCount": { "type": "number" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "isCorrect": { "type": "boolean" }
+            },
+            "required": ["id", "text", "isCorrect"]
+          }
+        },
+        "matchingPairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "left": { "type": "string" },
+              "right": { "type": "string" }
+            },
+            "required": ["id", "left", "right"]
+          }
+        },
+        "dropdowns": { "type": "array" },
+        "passageId": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "sourceQuizId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "questionType", "questionText", "points", "createdAt", "updatedAt"]
+    },
     "AnswerOption": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AnswerOption",
@@ -819,6 +867,22 @@
             {
               "name": "purchaseId",
               "description": "The unique identifier of the purchase record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/quizBank/{questionId}",
+        "definition": {
+          "entityName": "BankQuestion",
+          "schema": {
+            "$ref": "#/backend/entities/BankQuestion"
+          },
+          "description": "Stores individual questions that can be reused across quizzes.",
+          "params": [
+            {
+              "name": "questionId",
+              "description": "The unique identifier of the banked question."
             }
           ]
         }

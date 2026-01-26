@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { mockQuizzes } from '@/lib/data';
-import type { Question, Quiz } from '@/lib/types';
+import type { Question } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
-import { Search, Trash2, FileOutput } from 'lucide-react';
+import { Search, Trash2, FileOutput, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -29,33 +28,27 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-type BankQuestion = Question & {
-    quizName: string;
-    quizId: string;
-    sectionName: string;
-    subject: string | undefined;
-};
+import { useCollection, useFirestore, useMemoFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query } from 'firebase/firestore';
+import { LoadingSpinner } from '@/components/loading-spinner';
+import { QuizBankEditor } from '@/components/quiz-bank-editor';
 
 export default function QuestionBankPage() {
     const { toast } = useToast();
+    const firestore = useFirestore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('all');
-    const [questionToDelete, setQuestionToDelete] = useState<BankQuestion | null>(null);
+    const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+    const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
 
-    const allQuestions: BankQuestion[] = mockQuizzes.flatMap((quiz: Quiz) =>
-        quiz.sections.flatMap(section =>
-            section.questions.map(question => ({
-                ...question,
-                quizName: quiz.name,
-                quizId: quiz.id,
-                sectionName: section.name,
-                subject: quiz.subject,
-            }))
-        )
-    );
+    const bankQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'quizBank'));
+    }, [firestore]);
 
-    const filteredQuestions = allQuestions.filter(q => {
+    const { data: allQuestions, isLoading } = useCollection<Question>(bankQuery);
+    
+    const filteredQuestions = (allQuestions || []).filter(q => {
         const searchMatch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
         const subjectMatch = selectedSubject === 'all' || q.subject === selectedSubject;
         return searchMatch && subjectMatch;
@@ -66,8 +59,17 @@ export default function QuestionBankPage() {
     };
 
     const handleDelete = () => {
-        toast({ title: 'Coming Soon!', description: 'Deleting from the question bank will be available soon.' });
+        if (!questionToDelete || !firestore) return;
+        const docRef = doc(firestore, 'quizBank', questionToDelete.id);
+        deleteDocumentNonBlocking(docRef);
+        toast({ title: 'Question Deleted', description: 'The question has been removed from the bank.', variant: 'destructive'});
         setQuestionToDelete(null);
+    }
+    
+    const handleSave = (updatedQuestion: Question) => {
+        if (!firestore) return;
+        const docRef = doc(firestore, 'quizBank', updatedQuestion.id);
+        updateDocumentNonBlocking(docRef, updatedQuestion);
     }
 
     return (
@@ -75,7 +77,7 @@ export default function QuestionBankPage() {
             <main className="flex-1 p-6 sm:p-8 space-y-8 animate-in fade-in-50">
                 <div className="flex items-center justify-between space-y-2">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">မေးခွန်းဘဏ် (Question Bank)</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">မေးခွန်းဘဏ် စီမံခန့်ခွဲမှု</h1>
                         <p className="text-muted-foreground">
                             Browse, manage, and reuse questions from all your quizzes.
                         </p>
@@ -110,48 +112,75 @@ export default function QuestionBankPage() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {filteredQuestions.map(q => (
-                                <Card key={q.id} className="flex flex-col">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-base font-medium line-clamp-3">{q.text || '[No Question Text]'}</CardTitle>
-                                        <CardDescription className="text-xs pt-1">
-                                            From: <span className="font-semibold">{q.quizName}</span>
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="flex-grow flex justify-between items-center text-sm text-muted-foreground">
-                                        <Badge variant="outline" className="capitalize">{q.type.replace('-', ' ')}</Badge>
-                                        <span className="font-semibold">{q.points} pts</span>
-                                    </CardContent>
-                                    <CardFooter className="p-2 border-t flex gap-2">
-                                         <Button variant="outline" size="sm" className="w-full" onClick={handleExport}>
-                                            <FileOutput className="mr-2 h-4 w-4" />
-                                            ဘဏ်ထဲမှထုတ်ယူရန်
-                                        </Button>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button variant="destructive" size="icon" onClick={() => setQuestionToDelete(q)}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>မေးခွန်းဘဏ်မှဖျက်ရန်</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </CardFooter>
-                                </Card>
-                            ))}
-                            {filteredQuestions.length === 0 && (
-                                <div className="col-span-full text-center py-12 text-muted-foreground">
-                                    <p>No questions found for your criteria.</p>
-                                </div>
-                            )}
-                        </div>
+                        {isLoading ? (
+                             <div className="col-span-full text-center py-12 text-muted-foreground">
+                                <LoadingSpinner />
+                                <p className="mt-2">Loading questions...</p>
+                            </div>
+                        ) : filteredQuestions.length > 0 ? (
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {filteredQuestions.map(q => (
+                                    <Card key={q.id} className="flex flex-col">
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-base font-medium line-clamp-3">{q.text || '[No Question Text]'}</CardTitle>
+                                            <CardDescription className="text-xs pt-1">
+                                                Subject: <span className="font-semibold">{q.subject || 'N/A'}</span>
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="flex-grow flex justify-between items-center text-sm text-muted-foreground">
+                                            <div className="flex gap-1">
+                                                <Badge variant="outline" className="capitalize">{q.type.replace('-', ' ')}</Badge>
+                                                <Badge variant="secondary" className="capitalize">{q.difficulty || 'Medium'}</Badge>
+                                            </div>
+                                            <span className="font-semibold">{q.points} pts</span>
+                                        </CardContent>
+                                        <CardFooter className="p-2 border-t flex gap-2">
+                                            <Button variant="outline" size="sm" className="w-full" onClick={handleExport}>
+                                                <FileOutput className="mr-2 h-4 w-4" />
+                                                ထုတ်ယူရန်
+                                            </Button>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="outline" size="icon" onClick={() => setQuestionToEdit(q)}>
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>မေးခွန်းပြင်ရန်</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button variant="destructive" size="icon" onClick={() => setQuestionToDelete(q)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>မေးခွန်းဘဏ်မှဖျက်ရန်</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="col-span-full text-center py-12 text-muted-foreground">
+                                <p>No questions found in the bank.</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
+
+            <QuizBankEditor 
+                question={questionToEdit}
+                onOpenChange={(isOpen) => !isOpen && setQuestionToEdit(null)}
+                onSave={handleSave}
+            />
 
             <AlertDialog open={!!questionToDelete} onOpenChange={(isOpen) => !isOpen && setQuestionToDelete(null)}>
                 <AlertDialogContent>
@@ -175,3 +204,5 @@ export default function QuestionBankPage() {
         </>
     );
 }
+
+    
