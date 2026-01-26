@@ -21,6 +21,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 import { usePurchases } from '@/hooks/use-purchases';
 import { PaymentModal } from './payment-modal';
+import { mockLeaderboard } from '@/lib/data';
 
 function calculateTotalPoints(quiz: Quiz) {
   return quiz.sections.reduce((total, section) => {
