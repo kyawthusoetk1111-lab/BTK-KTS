@@ -88,6 +88,9 @@ export interface UserProfile {
   status?: 'active' | 'suspended';
   adminNotes?: string;
   isFirstLogin?: boolean;
+  grade?: string;
+  gender?: 'male' | 'female' | 'other';
+  phone?: string;
 }
 
 export interface StudentSubmission {

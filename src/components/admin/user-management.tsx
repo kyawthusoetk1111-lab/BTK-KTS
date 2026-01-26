@@ -57,36 +57,36 @@ export function UserManagementModal({ isOpen, onClose }: UserManagementModalProp
     }
     
     try {
-        // This is a placeholder ID. A secure implementation would get the real UID
-        // from a Firebase Auth user created via a backend function.
+        // This is a placeholder for creating a user. In a real application,
+        // this should be handled by a secure backend function that creates a user
+        // in Firebase Authentication and then creates their profile in Firestore.
+        // The UID from the authenticated user should be used as the document ID here.
         const newUserId = crypto.randomUUID(); 
         const userDocRef = doc(firestore, 'users', newUserId);
 
-        // This profile is created without storing the password, which is a critical security practice.
-        const newUserProfile: UserProfile = {
+        // The user profile is created here. Note that for security, the password
+        // is NOT saved in the Firestore document.
+        const newUserProfile: Omit<UserProfile, 'badges' | 'adminNotes'> = {
             id: newUserId,
             name: data.name,
             studentId: data.studentId,
-            email: `${data.studentId}@btk-exam.com`, // The email is derived from the student ID
+            email: `${data.studentId}@btk-exam.com`,
             userType: 'student',
-            isFirstLogin: true, // This flag will force a password change on first login
+            isFirstLogin: true,
             status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+            grade: data.grade,
+            gender: data.gender,
+            phone: data.phone,
         };
 
         await setDoc(userDocRef, newUserProfile);
 
         toast({
             title: "Student Profile Created!",
-            description: `${data.name}'s profile has been saved successfully.`,
-        });
-        
-        toast({
-            title: "Action Required",
-            description: "A backend function is needed to securely set this user's initial password in Firebase Authentication.",
-            variant: "destructive",
-            duration: 10000
+            description: `The profile for ${data.name} has been saved. A secure backend function is now required to set their initial password in Firebase Authentication.`,
+            duration: 10000,
         });
 
         onClose();
