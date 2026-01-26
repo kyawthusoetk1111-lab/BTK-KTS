@@ -161,7 +161,7 @@ export function UserDirectory() {
                             <CardDescription>Manage all user accounts on the platform.</CardDescription>
                         </div>
                         <Button onClick={() => setIsAddUserModalOpen(true)} className="mt-4 md:mt-0">
-                            <UserPlus /> Add New Student
+                            <UserPlus /> Add User
                         </Button>
                     </div>
                      <div className="relative pt-4">

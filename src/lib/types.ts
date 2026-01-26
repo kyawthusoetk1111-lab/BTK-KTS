@@ -91,6 +91,7 @@ export interface UserProfile {
   grade?: string;
   gender?: 'male' | 'female' | 'other';
   phone?: string;
+  subject?: string;
 }
 
 export interface StudentSubmission {
