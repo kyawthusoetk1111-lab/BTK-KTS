@@ -135,9 +135,11 @@ export function StudentDashboard() {
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
   const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection<Payment>(pendingPaymentsQuery);
 
-  const liveQuizzes = (allQuizzes || []).filter(quiz => getQuizStatus(quiz).variant === 'live');
+  if (allQuizzes) {
+    console.log("Total Quizzes found:", allQuizzes.length);
+  }
 
-  const filteredQuizzes = liveQuizzes.filter(quiz => {
+  const filteredQuizzes = (allQuizzes || []).filter(quiz => {
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
     const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
     return subjectMatch && codeMatch;
