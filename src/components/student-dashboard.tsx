@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { BookCopy, Star, Play, Eye, Clock, Search, Activity, Lock } from 'lucide-react';
 import type { Quiz } from '@/lib/types';
 import { AuthButton } from '@/components/auth-button';
@@ -17,6 +16,7 @@ import { Input } from './ui/input';
 import { MyGrades } from './my-grades';
 import { MyBadges } from './my-badges';
 import { Leaderboard } from './leaderboard';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { LoadingSpinner } from './loading-spinner';
 import { usePurchases } from '@/hooks/use-purchases';
@@ -102,8 +102,8 @@ export function StudentDashboard() {
 
   return (
     <>
-    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-slate-200">
+    <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-200">
+      <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold font-headline text-primary">
@@ -119,17 +119,17 @@ export function StudentDashboard() {
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div>
             <h2 className="text-3xl font-bold font-headline tracking-tight">မင်္ဂလာပါ {profile?.name?.split(' ')[0] || 'Student'}!</h2>
-            <p className="text-slate-500">
+            <p className="text-slate-500 dark:text-slate-400">
               Ready for a new challenge? Select a quiz to start.
             </p>
           </div>
         </div>
         
         <Tabs defaultValue="quizzes">
-            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6 bg-slate-200 text-slate-500">
-                <TabsTrigger value="quizzes" className="data-[state=active]:bg-white data-[state=active]:text-primary">သင်ခန်းစာများ</TabsTrigger>
-                <TabsTrigger value="grades" className="data-[state=active]:bg-white data-[state=active]:text-primary">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
-                <TabsTrigger value="leaderboards" className="data-[state=active]:bg-white data-[state=active]:text-primary">Leaderboards</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 md:w-[600px] mb-6 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                <TabsTrigger value="quizzes" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:text-primary">သင်ခန်းစာများ</TabsTrigger>
+                <TabsTrigger value="grades" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:text-primary">ရမှတ်များနှင့် ဆုတံဆိပ်များ</TabsTrigger>
+                <TabsTrigger value="leaderboards" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 data-[state=active]:text-primary">Leaderboards</TabsTrigger>
             </TabsList>
             <TabsContent value="quizzes">
                 <div className="flex flex-col md:flex-row gap-4 justify-end mb-4">
@@ -139,12 +139,12 @@ export function StudentDashboard() {
                             placeholder="Search by exam code..."
                             value={searchCode}
                             onChange={(e) => setSearchCode(e.target.value)}
-                            className="pl-9 bg-white border-slate-300 placeholder:text-slate-400 focus:ring-primary"
+                            className="pl-9 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 placeholder:text-slate-400 focus:ring-primary"
                         />
                     </div>
                     <div className="w-full md:w-64">
                         <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                            <SelectTrigger className="bg-white border-slate-300 focus:ring-primary">
+                            <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-primary">
                                 <SelectValue placeholder="Filter by subject..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -166,11 +166,11 @@ export function StudentDashboard() {
                       const isPremium = (quiz.price ?? 0) > 0;
                       const purchased = hasPurchased(quiz.id);
                       const pending = isPending(quiz.id);
-                      const locked = isPremium && !purchased && !pending;
+                      const locked = isPremium && !purchased;
                       const status = getQuizStatus(quiz);
 
                         return (
-                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-white border border-slate-200 overflow-hidden hover:border-primary/40 hover:shadow-primary/20" style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms forwards`, opacity: 0 }}>
+                        <Card key={quiz.id} className="flex flex-col transition-all duration-300 hover:shadow-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden hover:border-primary/40 hover:shadow-primary/20">
                         <CardHeader>
                             <div className="flex justify-between items-start mb-2">
                               <Badge variant="secondary">{quiz.subject || 'General'}</Badge>
@@ -180,7 +180,7 @@ export function StudentDashboard() {
                             <CardDescription className="line-clamp-2">{quiz.description}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-2">
-                            <div className="flex justify-between text-sm text-slate-500">
+                            <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
                                 <div className="flex items-center gap-2">
                                     <BookCopy className="h-4 w-4" />
                                     <span>{countQuestions(quiz)} Questions</span>
@@ -191,35 +191,34 @@ export function StudentDashboard() {
                                 </div>
                             </div>
                             {quiz.timerInMinutes && (
-                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                     <Clock className="h-4 w-4" />
                                     <span>{quiz.timerInMinutes} minute timer</span>
                                 </div>
                             )}
                         </CardContent>
-                        <CardFooter className="flex gap-2 bg-slate-50 p-3">
-                            {locked ? (
+                        <CardFooter className="flex gap-2 bg-slate-50 dark:bg-slate-800/50 p-3">
+                            {locked && !pending ? (
                               <Button size="sm" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold" onClick={() => setPaymentModalState({ isOpen: true, quiz: quiz })}>
                                 <Lock className="mr-2 h-4 w-4" />
                                 Buy Now ({quiz.price} Ks)
                               </Button>
-                            ) : pending ? (
+                            ) : locked && pending ? (
                                <Button size="sm" className="w-full font-bold" disabled>
                                 <Clock className="mr-2 h-4 w-4 animate-spin" />
                                 Pending Approval
                               </Button>
                             ) : (
                                <Link href={`/quizzes/${quiz.id}/take`} className="flex-1">
-                                <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold">
-                                    <Play className="mr-2 h-4 w-4" />
-                                    စာမေးပွဲစတင်မည်
+                                <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold" disabled={status.text !== 'Live'}>
+                                    {status.text === 'Live' ? <><Play className="mr-2 h-4 w-4" /> စာမေးပွဲစတင်မည်</> : status.text}
                                 </Button>
                             </Link>
                             )}
                         </CardFooter>
                         </Card>
                     )}) : (
-                      <div className="col-span-full text-center text-slate-500 py-16">
+                      <div className="col-span-full text-center text-slate-500 dark:text-slate-400 py-16">
                         <h3 className="text-lg font-semibold">စာမေးပွဲများ မရှိသေးပါ</h3>
                         <p className="text-sm">လက်ရှိဖြေဆိုရန် စာမေးပွဲများ မရှိပါ။</p>
                       </div>
@@ -234,7 +233,7 @@ export function StudentDashboard() {
                 </div>
             </TabsContent>
             <TabsContent value="leaderboards">
-                <Card>
+                <Card className="bg-white dark:bg-slate-900">
                     <CardHeader>
                         <CardTitle>Leaderboards</CardTitle>
                         <CardDescription>See how you stack up against your peers.</CardDescription>
