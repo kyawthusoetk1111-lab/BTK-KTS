@@ -74,15 +74,20 @@ export function StudentDashboard() {
   }, [firestore]);
 
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
-  const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection(
-    firestore && profile ? query(collection(firestore, 'payments'), where('userId', '==', profile.id), where('status', '==', 'pending')) : null
-  );
+  
+  const pendingPaymentsQuery = useMemoFirebase(() => {
+    if (!firestore || !profile) return null;
+    return query(collection(firestore, 'payments'), where('userId', '==', profile.id), where('status', '==', 'pending'));
+  }, [firestore, profile]);
+
+  const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection(pendingPaymentsQuery);
 
   const filteredQuizzes = (allQuizzes || []).filter(quiz => {
     const status = getQuizStatus(quiz);
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
     const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
     
+    // Only show live quizzes to students
     return status.variant === 'live' && subjectMatch && codeMatch;
   });
 
