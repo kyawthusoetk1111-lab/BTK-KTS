@@ -39,6 +39,27 @@ function countQuestions(quiz: Quiz) {
   }, 0);
 }
 
+const getQuizStatus = (quiz: Quiz): { text: 'Live' | 'Draft' | 'Closed'; variant: 'live' | 'draft' | 'closed' } => {
+    const now = new Date();
+    const start = quiz.startDate ? new Date(quiz.startDate) : null;
+    const end = quiz.endDate ? new Date(quiz.endDate) : null;
+
+    if (!start && !end) {
+        return { text: 'Draft', variant: 'draft' };
+    }
+    if (start && now < start) {
+        return { text: 'Draft', variant: 'draft' }; // Scheduled
+    }
+    if (end && now > end) {
+        return { text: 'Closed', variant: 'closed' };
+    }
+    if (start && now >= start && (!end || now < end)) {
+        return { text: 'Live', variant: 'live' };
+    }
+
+    return { text: 'Draft', variant: 'draft' }; // Fallback
+};
+
 function MyPurchases({ purchases, isLoading }: { purchases: Purchase[], isLoading: boolean }) {
     if (isLoading) {
         return (
@@ -114,7 +135,9 @@ export function StudentDashboard() {
   const { data: allQuizzes, isLoading: areQuizzesLoading } = useCollection<Quiz>(quizzesQuery);
   const { data: pendingPayments, isLoading: arePendingPaymentsLoading } = useCollection<Payment>(pendingPaymentsQuery);
 
-  const filteredQuizzes = (allQuizzes || []).filter(quiz => {
+  const liveQuizzes = (allQuizzes || []).filter(quiz => getQuizStatus(quiz).variant === 'live');
+
+  const filteredQuizzes = liveQuizzes.filter(quiz => {
     const subjectMatch = selectedSubject === 'all' || quiz.subject === selectedSubject;
     const codeMatch = !searchCode || (quiz.examCode && quiz.examCode.toLowerCase().includes(searchCode.toLowerCase()));
     return subjectMatch && codeMatch;
@@ -258,8 +281,8 @@ export function StudentDashboard() {
                         </Card>
                     )}) : (
                       <div className="col-span-full text-center text-gray-300 py-16">
-                        <h3 className="text-lg font-semibold">No Quizzes Available</h3>
-                        <p className="text-sm">Check back later or search by exam code to find a specific quiz.</p>
+                        <h3 className="text-lg font-semibold">စာမေးပွဲများ မရှိသေးပါ</h3>
+                        <p className="text-sm">လက်ရှိဖြေဆိုရန် စာမေးပွဲများ မရှိပါ။</p>
                       </div>
                     )}
                     </div>
