@@ -77,7 +77,7 @@ export interface Quiz {
 
 export interface UserProfile {
   id: string;
-  studentId: string;
+  studentId?: string;
   userType: 'teacher' | 'student' | 'admin';
   name: string;
   email: string;
@@ -180,5 +180,4 @@ export interface Expenditure {
   amount: number;
 }
 
-    
     
