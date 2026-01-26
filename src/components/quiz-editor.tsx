@@ -23,6 +23,7 @@ import { useFirestore, useUser } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { useUserWithProfile } from "@/hooks/use-user-with-profile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Badge } from "@/components/badge";
 
 interface QuizEditorProps {
   initialQuiz: Quiz;
@@ -50,7 +51,11 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
   const handlePremiumToggle = (checked: boolean) => {
     setQuiz(prev => {
         const newState = { ...prev, isPremium: checked };
-        if (checked && (newState.price === undefined || newState.price === null)) {
+        if (checked) {
+            if (newState.price === undefined || newState.price === null) {
+                newState.price = 0;
+            }
+        } else {
             newState.price = 0;
         }
         return newState;
@@ -355,13 +360,17 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
                         {quiz.isPremium && (
                             <div className="p-4 border-t space-y-2">
-                                <Label htmlFor="price">Set Price (Ks)</Label>
+                                <div className="flex items-center gap-2">
+                                  <Label htmlFor="price">Price (MMK)</Label>
+                                  <Badge variant="premium">Premium</Badge>
+                                </div>
                                 <Input
                                     id="price"
                                     type="number"
+                                    min="0"
                                     placeholder="e.g., 5000"
                                     value={quiz.price ?? 0}
-                                    onChange={(e) => handleQuizDetailsChange("price", parseInt(e.target.value) || 0)}
+                                    onChange={(e) => handleQuizDetailsChange("price", Math.max(0, parseInt(e.target.value, 10) || 0))}
                                     disabled={!isProTeacher}
                                     className="max-w-xs"
                                 />
@@ -422,3 +431,5 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
     </div>
   );
 }
+
+    
