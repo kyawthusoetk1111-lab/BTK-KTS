@@ -121,7 +121,7 @@ export function TeacherDashboard() {
                 ...question,
                 id: question.id, // Use original ID to prevent duplicates on re-add
                 ownerId: user.uid,
-                subject: quiz.subject,
+                subject: quiz.subject || 'General',
                 difficulty: 'Medium', // Default difficulty
                 sourceQuizId: quiz.id,
                 createdAt: new Date().toISOString(),

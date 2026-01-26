@@ -118,6 +118,7 @@ export function QuizEditor({ initialQuiz }: QuizEditorProps) {
 
     const quizToSave: Quiz = {
         ...quiz,
+        subject: quiz.subject || 'General',
         ownerId: user.uid,
         updatedAt: new Date().toISOString(),
         createdAt: quiz.createdAt || new Date().toISOString()
