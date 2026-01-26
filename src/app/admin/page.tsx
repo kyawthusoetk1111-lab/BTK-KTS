@@ -4,15 +4,12 @@ import { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, UserPlus, FileCheck, DollarSign, Search } from 'lucide-react';
-import { UserManagementTable } from '@/components/admin/user-management';
+import { Users, UserPlus, FileCheck, DollarSign } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
-import { Input } from '@/components/ui/input';
 import { SubjectPerformance } from '@/components/admin/subject-performance';
 
 export default function AdminPage() {
     const firestore = useFirestore();
-    const [searchTerm, setSearchTerm] = useState('');
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -40,7 +37,7 @@ export default function AdminPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-emerald-50 border-emerald-200">
+                <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-emerald-800">Total Students</CardTitle>
                         <Users className="h-4 w-4 text-emerald-600" />
@@ -50,7 +47,7 @@ export default function AdminPage() {
                         <p className="text-xs text-emerald-700/80">+12 since last month</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-sky-50 border-sky-200">
+                <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-sky-800">Total Teachers</CardTitle>
                         <UserPlus className="h-4 w-4 text-sky-600" />
@@ -60,7 +57,7 @@ export default function AdminPage() {
                         <p className="text-xs text-sky-700/80">+3 since last month</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-indigo-50 border-indigo-200">
+                <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-indigo-800">Active Exams</CardTitle>
                         <FileCheck className="h-4 w-4 text-indigo-600" />
@@ -70,7 +67,7 @@ export default function AdminPage() {
                          <p className="text-xs text-indigo-700/80">2 live right now</p>
                     </CardContent>
                 </Card>
-                 <Card className="bg-amber-50 border-amber-200">
+                 <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-amber-800">Monthly Revenue</CardTitle>
                         <DollarSign className="h-4 w-4 text-amber-600" />
@@ -84,27 +81,8 @@ export default function AdminPage() {
 
             <SubjectPerformance />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Users />
-                        User Control Center
-                    </CardTitle>
-                    <CardDescription>View, edit, and manage user roles and permissions.</CardDescription>
-                    <div className="relative pt-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input 
-                            placeholder="Search by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 bg-slate-50 border-slate-200 focus:bg-white w-full max-w-sm"
-                        />
-                   </div>
-                </CardHeader>
-                <CardContent>
-                    <UserManagementTable searchTerm={searchTerm} />
-                </CardContent>
-            </Card>
         </main>
     );
 }
+
+    

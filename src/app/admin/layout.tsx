@@ -46,9 +46,11 @@ export default function AdminLayout({
   return (
     <SidebarProvider defaultOpen={true}>
         <AdminSidebar />
-        <SidebarInset className="bg-slate-50">
+        <SidebarInset className="bg-slate-100 dark:bg-slate-900">
             {children}
         </SidebarInset>
     </SidebarProvider>
   );
 }
+
+    

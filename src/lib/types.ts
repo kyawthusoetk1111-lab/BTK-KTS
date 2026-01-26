@@ -78,6 +78,8 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
   badges?: Badge[];
+  status?: 'active' | 'suspended';
+  adminNotes?: string;
 }
 
 export interface StudentSubmission {
