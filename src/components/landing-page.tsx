@@ -1,155 +1,163 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './badge';
-import { 
-  Activity, Search, Clock, LogIn, Trophy, 
-  Facebook, Twitter, Instagram, Github 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import {
+  Activity, Search, Trophy, Clock, Facebook, Twitter, Instagram, Linkedin
 } from 'lucide-react';
-import { db } from '@/firebase'; 
-import { collection, getDocs } from 'firebase/firestore';
+import { mockQuizzes, mockLeaderboard } from '@/lib/data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function LandingPage() {
-    const [quizzes, setQuizzes] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchQuizzes = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, 'quizzes'));
-                const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setQuizzes(data);
-            } catch (error) { 
-                console.error("Fetch Error:", error); 
-            } finally { 
-                setLoading(false); 
-            }
-        };
-        fetchQuizzes();
-    }, []);
+    const leaderboardEntries = mockLeaderboard['Mathematics'] || [];
+    const heroImage = PlaceHolderImages.find(img => img.id === 'hero-landing');
 
     return (
         <div className="flex flex-col min-h-screen bg-white text-slate-900">
-            {/* --- 1. Navbar with Login/Sign Up --- */}
-            <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-emerald-600">
-                        <Activity /> BTK Education
-                    </Link>
-                    
-                    <div className="hidden md:flex flex-1 px-10">
-                        <div className="relative w-full max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input placeholder="Search exams..." className="pl-9 bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"/>
+            {/* --- Navbar (Original) --- */}
+            <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur border-b border-slate-200">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+                            <Activity className="text-emerald-600"/> BTK Education
+                        </Link>
+                        <div className="hidden md:flex items-center justify-center flex-1 px-16">
+                           <div className="relative w-full max-w-md">
+                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                               <Input placeholder="Search for exams..." className="pl-9 bg-slate-100 border-none focus:bg-white text-slate-900"/>
+                           </div>
                         </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Link href="/login"><Button variant="ghost" className="text-slate-600">Log in</Button></Link>
-                        <Link href="/login"><Button className="bg-emerald-600 text-white hover:bg-emerald-700">Sign Up</Button></Link>
+                        <div className="flex items-center gap-2">
+                            <Link href="/login"><Button variant="ghost" className="text-slate-600">Login</Button></Link>
+                            <Link href="/login"><Button className="bg-emerald-600 text-white hover:bg-emerald-700">Sign Up</Button></Link>
+                        </div>
                     </div>
                 </div>
             </header>
             
             <main className="flex-1">
-                {/* --- 2. Hero Section --- */}
-                <section className="py-20 bg-gradient-to-b from-emerald-50 to-white">
-                    <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-                        <div className="space-y-6 text-center md:text-left">
-                            <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight">
-                                တောက်ပတဲ့ အနာဂတ် <br/> <span className="text-emerald-600 font-black">BTK မှာစတင်ပါ</span>
-                            </h1>
-                            <p className="text-lg text-slate-600 max-w-lg mx-auto md:mx-0">
-                                သင်၏ပညာရေး ရည်မှန်းချက်များကို အရည်အသွေးမြင့် သင်ခန်းစာများနှင့်အတူ တစ်နေရာတည်းတွင် လေ့လာပါ။
-                            </p>
-                            <div className="flex justify-center md:justify-start gap-4">
-                                <Button size="lg" className="bg-emerald-600 text-white px-8 h-12">စတင်လေ့လာမည်</Button>
-                                <Button size="lg" variant="outline" className="text-slate-900 border-slate-300 h-12">သင်ခန်းစာများ</Button>
+                {/* --- Hero Section (Original) --- */}
+                <section className="relative bg-white py-20 overflow-hidden">
+                    <div className="container mx-auto px-4">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            <div className="space-y-6">
+                                <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                                    တောက်ပတဲ့ အနာဂတ် <br/> <span className="text-emerald-600">BTK မှာစတင်ပါ</span>
+                                </h1>
+                                <p className="text-lg text-slate-600 max-w-lg">
+                                    သင်၏ပညာရေး ရည်မှန်းချက်များကို BTK Education တွင် အကောင်အထည်ဖော်လိုက်ပါ။ အရည်အသွေးမြင့် သင်ခန်းစာများနှင့် စာမေးပွဲများကို တစ်နေရာတည်းတွင် လေ့လာနိုင်ပါသည်။
+                                </p>
+                                <div className="flex gap-4">
+                                    <Button size="lg" className="bg-emerald-600 text-white hover:bg-emerald-700 px-8">စတင်လေ့လာမည်</Button>
+                                    <Button size="lg" variant="outline" className="border-slate-200 text-slate-900">သင်ခန်းစာများကြည့်မည်</Button>
+                                </div>
                             </div>
-                        </div>
-                        <div className="relative flex justify-center">
-                            <div className="w-full max-w-md aspect-video bg-slate-200 rounded-2xl shadow-2xl flex items-center justify-center overflow-hidden border-4 border-white">
-                                <img src="https://picsum.photos/seed/edu/800/600" alt="Education" className="object-cover w-full h-full" />
+                            <div className="relative">
+                                <div className="absolute -inset-4 bg-emerald-100 rounded-full blur-3xl opacity-30 animate-pulse"></div>
+                                <Image 
+                                    src={heroImage?.imageUrl || "https://picsum.photos/seed/edutech/600/400"}
+                                    alt="Hero Illustration" width={600} height={400} className="relative rounded-2xl shadow-2xl border border-slate-100"
+                                />
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* --- 3. Live Quizzes (Dynamic) --- */}
-                <section className="py-20 container mx-auto px-4">
-                    <div className="flex items-center justify-between mb-10">
-                        <h2 className="text-3xl font-bold text-slate-900">လက်ရှိစာမေးပွဲများ</h2>
-                        <Link href="/quizzes" className="text-emerald-600 font-semibold hover:underline text-sm">အားလုံးကြည့်ရန် →</Link>
-                    </div>
-                    
-                    {loading ? (
-                        <div className="text-center py-10 text-slate-400">ရှာဖွေနေပါသည်...</div>
-                    ) : quizzes.length > 0 ? (
+                {/* --- Featured Exams Section (Original Styling) --- */}
+                <section className="bg-slate-50 py-24">
+                    <div className="container mx-auto px-4">
+                        <div className="flex justify-between items-end mb-12">
+                            <div>
+                                <h2 className="text-3xl font-bold text-slate-900">လက်ရှိဖြေဆိုနေသော စာမေးပွဲများ</h2>
+                                <p className="text-slate-500 mt-2">လူကြိုက်အများဆုံးနှင့် နောက်ဆုံးထွက်စာမေးပွဲများ</p>
+                            </div>
+                            <Link href="/quizzes" className="text-emerald-600 font-semibold hover:underline">အားလုံးကြည့်မည် →</Link>
+                        </div>
+                        
                         <div className="grid md:grid-cols-3 gap-8">
-                            {quizzes.map((quiz) => (
-                                <Card key={quiz.id} className="border border-slate-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden">
-                                    <div className="h-44 bg-slate-100 relative overflow-hidden">
-                                        <img src={`https://picsum.photos/seed/${quiz.id}/400/250`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                        <Badge className="absolute top-4 left-4 bg-emerald-500 text-white border-none">Live</Badge>
+                            {mockQuizzes.slice(0, 3).map((quiz) => (
+                                <Card key={quiz.id} className="bg-white border-none shadow-sm hover:shadow-xl transition-all duration-300 group">
+                                    <div className="relative h-48 overflow-hidden rounded-t-xl">
+                                        <Image src={`https://picsum.photos/seed/${quiz.id}/400/200`} alt={quiz.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <Badge className="absolute top-4 right-4 bg-emerald-500 text-white border-none px-3 py-1">Live</Badge>
                                     </div>
                                     <CardContent className="p-6">
-                                        <p className="text-xs font-bold text-emerald-600 uppercase mb-2 tracking-tighter">{quiz.subject || "General"}</p>
+                                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">{quiz.subject}</p>
                                         <h3 className="text-xl font-bold text-slate-900 mb-4 line-clamp-1">{quiz.name}</h3>
-                                        <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-                                            <span className="text-slate-500 text-sm flex items-center gap-1"><Clock size={16}/>{quiz.timerInMinutes} min</span>
-                                            <Link href={`/quizzes/${quiz.id}/take`}><Button className="bg-slate-900 text-white hover:bg-emerald-600">ဖြေဆိုမည်</Button></Link>
+                                        <div className="flex items-center justify-between text-slate-500 text-sm pt-4 border-t border-slate-50">
+                                            <div className="flex items-center gap-2"><Clock size={16}/> <span>{quiz.timerInMinutes} mins</span></div>
+                                            <Link href={`/quizzes/${quiz.id}/take`}>
+                                                <Button className="bg-slate-900 text-white hover:bg-emerald-600 transition-colors">ဖြေဆိုမည်</Button>
+                                            </Link>
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
                         </div>
-                    ) : (
-                        <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                             <p className="text-slate-500">လက်ရှိတွင် ဖြေဆိုရန် စာမေးပွဲများ မရှိသေးပါ။</p>
-                        </div>
-                    )}
+                    </div>
                 </section>
 
-                {/* --- 4. Leaderboard Mockup --- */}
-                <section className="py-20 bg-slate-900 text-white">
-                    <div className="container mx-auto px-4 max-w-3xl text-center">
-                        <Trophy className="mx-auto text-yellow-500 mb-4" size={48} />
-                        <h2 className="text-3xl font-bold mb-10 text-white">အမှတ်အများဆုံး ကျောင်းသားများ</h2>
-                        <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/10">
-                            <div className="flex justify-between border-b border-white/10 pb-4 mb-4 font-bold text-emerald-400">
-                                <span>Name</span>
-                                <span>Score</span>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between text-white/80"><span>Maung Maung</span> <span>98%</span></div>
-                                <div className="flex justify-between text-white/80 border-t border-white/5 pt-4"><span>Su Su</span> <span>95%</span></div>
-                            </div>
-                        </div>
+                {/* --- Leaderboard Section (Original) --- */}
+                <section className="py-24 bg-white">
+                    <div className="container mx-auto px-4 max-w-4xl text-center">
+                        <Badge variant="outline" className="mb-4 border-emerald-200 text-emerald-700 bg-emerald-50">Top Performers</Badge>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-12">အမှတ်အများဆုံး ကျောင်းသားများ</h2>
+                        <Card className="border-slate-100 shadow-2xl overflow-hidden">
+                             <Table>
+                                <TableHeader className="bg-slate-50">
+                                    <TableRow>
+                                        <TableHead className="w-[100px] text-slate-900">Rank</TableHead>
+                                        <TableHead className="text-slate-900">Student Name</TableHead>
+                                        <TableHead className="text-right text-slate-900">Score</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {leaderboardEntries.slice(0, 5).map((entry, index) => (
+                                        <TableRow key={entry.rank} className="hover:bg-slate-50 transition-colors">
+                                            <TableCell className="font-bold">
+                                                <div className="flex items-center gap-2">
+                                                    {index === 0 ? <Trophy className="h-5 w-5 text-yellow-500" /> : <span className="ml-7 text-slate-400">{entry.rank}</span>}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-medium text-slate-700">{entry.studentName}</TableCell>
+                                            <TableCell className="text-right font-bold text-emerald-600">{entry.score}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                             </Table>
+                        </Card>
                     </div>
                 </section>
             </main>
 
-            {/* --- 5. Footer --- */}
-            <footer className="bg-slate-50 border-t border-slate-200 py-12">
-                <div className="container mx-auto px-4 grid md:grid-cols-4 gap-10">
-                    <div className="col-span-2">
-                        <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2"><Activity className="text-emerald-600"/> BTK Education</h3>
-                        <p className="text-slate-500 text-sm leading-relaxed max-w-xs">အရည်အသွေးမြင့် ပညာရေးကို လူတိုင်းလက်လှမ်းမီစေရန် BTK က ကြိုးပမ်းဆောင်ရွက်နေပါသည်။</p>
+            {/* --- Footer (Original) --- */}
+            <footer className="bg-slate-900 text-slate-400 py-16">
+                <div className="container mx-auto px-4">
+                    <div className="grid md:grid-cols-4 gap-12 mb-12 text-center md:text-left">
+                        <div className="col-span-2 space-y-4">
+                            <h3 className="text-2xl font-bold text-white flex items-center gap-2 justify-center md:justify-start">
+                                <Activity className="text-emerald-500" /> BTK Education
+                            </h3>
+                            <p className="max-w-xs mx-auto md:mx-0">ပညာရေးသည် အနာဂတ်၏ သော့ချက်ဖြစ်သည်။ BTK ဖြင့် သင်၏ အရည်အချင်းကို မြှင့်တင်ပါ။</p>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-bold mb-4">Quick Links</h4>
+                            <ul className="space-y-2"><li>About Us</li><li>Courses</li><li>Contact</li></ul>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-bold mb-4">Follow Us</h4>
+                            <div className="flex justify-center md:justify-start gap-4">
+                                <Facebook className="hover:text-emerald-500 cursor-pointer" /> <Twitter className="hover:text-emerald-500 cursor-pointer" /> <Instagram className="hover:text-emerald-500 cursor-pointer" />
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 className="font-bold text-slate-900 mb-4">Quick Links</h4>
-                        <ul className="text-slate-500 text-sm space-y-2">
-                            <li>Home</li><li>Exams</li><li>About Us</li>
-                        </ul>
-                    </div>
-                    <div className="flex gap-4">
-                        <Facebook size={20} className="text-slate-400 hover:text-emerald-600 cursor-pointer" />
-                        <Twitter size={20} className="text-slate-400 hover:text-emerald-600 cursor-pointer" />
-                        <Instagram size={20} className="text-slate-400 hover:text-emerald-600 cursor-pointer" />
+                    <div className="pt-8 border-t border-slate-800 text-center text-sm">
+                        &copy; {new Date().getFullYear()} BTK Education. All rights reserved.
                     </div>
                 </div>
             </footer>
