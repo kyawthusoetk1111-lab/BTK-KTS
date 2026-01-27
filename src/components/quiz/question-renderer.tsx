@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { LatexRenderer } from '../latex-renderer';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import React, { useState, useEffect, useRef } from 'react';
 
 interface QuestionRendererProps {
     question: Question;
@@ -20,6 +19,20 @@ interface QuestionRendererProps {
 
 export function QuestionRenderer({ question, answer, onAnswerChange, passageText, showInstantFeedback }: QuestionRendererProps) {
     
+    const getIsCorrect = (question: Question, answer: any): boolean | null => {
+        if (answer === undefined || answer === null || answer === '') return null;
+
+        if (question.type === 'multiple-choice' || question.type === 'dropdown') {
+            const correctOption = question.options.find(o => o.isCorrect);
+            return correctOption?.id === answer;
+        }
+        if (question.type === 'true-false') {
+            const correctOption = question.options.find(o => o.isCorrect);
+            return correctOption?.text === answer;
+        }
+        return null;
+    }
+
     const getOptionClass = (optionId: string) => {
         if (!showInstantFeedback || answer === undefined || answer === null || answer === '') return '';
         const correctOption = question.options.find(o => o.isCorrect);

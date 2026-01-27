@@ -10,8 +10,6 @@ import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Button } from './ui/button';
 import Link from 'next/link';
-import { Crown, GraduationCap } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const getGradeColor = (grade: string) => {
     if (grade.includes('A')) return 'bg-emerald-100 text-emerald-800';
@@ -69,33 +67,9 @@ export function MyGrades() {
                                     <TableCell>{format(new Date(result.submissionTime), "PP")}</TableCell>
                                     <TableCell>{result.score}/{result.totalPossibleScore}</TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className={getGradeColor(result.grade)}>
-                                                {result.grade}
-                                            </Badge>
-                                            <TooltipProvider>
-                                                {result.grade === 'A*' && (
-                                                    <Tooltip>
-                                                        <TooltipTrigger>
-                                                            <Crown className="h-5 w-5 text-amber-500" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Grand Master</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                                {result.grade === 'A' && (
-                                                    <Tooltip>
-                                                        <TooltipTrigger>
-                                                            <GraduationCap className="h-5 w-5 text-sky-500" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>Scholar</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                            </TooltipProvider>
-                                        </div>
+                                        <Badge variant="outline" className={getGradeColor(result.grade)}>
+                                            {result.grade}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="outline" size="sm" asChild>
