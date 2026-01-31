@@ -1,6 +1,7 @@
 'use client';
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from './ui/button';
@@ -69,11 +70,13 @@ export function LandingPage() {
     );
 }
 =======
+=======
+import { useState, useEffect } from 'react';
+>>>>>>> parent of 8ab9a50 (Update landing-page.tsx)
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Card, CardContent } from './ui/card';
+<<<<<<< HEAD
 import { Badge, badgeVariants } from './badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import {
@@ -113,20 +116,38 @@ const getQuizStatus = (quiz: Quiz): { text: 'Live' | 'Draft' | 'Closed'; variant
 
     return { text: 'Draft', variant: 'draft' };
 };
+=======
+import { Badge } from './badge';
+import { Activity, Search, Clock, LogIn } from 'lucide-react';
+import { db } from '@/firebase'; 
+import { collection, getDocs } from 'firebase/firestore';
+>>>>>>> parent of 8ab9a50 (Update landing-page.tsx)
 
 
 export function LandingPage() {
+<<<<<<< HEAD
     // We'll use the Math leaderboard as a sample for the landing page
     const leaderboardEntries = mockLeaderboard['Mathematics'] || [];
     
     const heroImage = PlaceHolderImages.find(img => img.id === 'hero-landing');
+=======
+    const [quizzes, setQuizzes] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+>>>>>>> parent of 8ab9a50 (Update landing-page.tsx)
 
-    const getQuizImage = (quizId: string) => {
-        const image = PlaceHolderImages.find(img => img.id === quizId);
-        return image || { imageUrl: `https://picsum.photos/seed/${quizId}/400/200`, imageHint: 'quiz' };
-    }
+    useEffect(() => {
+        const fetchQuizzes = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'quizzes'));
+                const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setQuizzes(data);
+            } catch (error) { console.error(error); } finally { setLoading(false); }
+        };
+        fetchQuizzes();
+    }, []);
 
     return (
+<<<<<<< HEAD
         <div className="flex flex-col min-h-screen bg-white text-slate-800">
             {/* Navbar */}
             <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-lg border-b border-slate-200">
@@ -297,10 +318,48 @@ export function LandingPage() {
                                     ))}
                                 </TableBody>
                              </Table>
-                        </Card>
+=======
+        <div className="flex flex-col min-h-screen bg-white">
+            <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm">
+                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-emerald-600">
+                        <Activity /> BTK Education
+                    </Link>
+                    
+                    {/* --- Login / Sign Up ခလုတ်များ --- */}
+                    <div className="flex items-center gap-3">
+                        <Link href="/login">
+                            <Button variant="ghost" className="text-slate-600 font-medium">Log in</Button>
+                        </Link>
+                        <Link href="/login">
+                            <Button className="bg-blue-600 text-white hover:bg-blue-700 px-6 font-bold shadow-md transition-all">
+                                Sign Up
+                            </Button>
+                        </Link>
                     </div>
-                </section>
+                </div>
+            </header>
+
+            <main className="flex-1 container mx-auto px-4 py-12">
+                <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center md:text-left">လက်ရှိစာမေးပွဲများ</h2>
+                {loading ? <p className="text-center">ရှာဖွေနေပါသည်...</p> : 
+                <div className="grid md:grid-cols-3 gap-8">
+                    {quizzes.map(q => (
+                        <Card key={q.id} className="border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                                <Badge className="bg-emerald-500 text-white mb-3">Live</Badge>
+                                <h3 className="text-xl font-bold text-slate-900 mb-4">{q.name}</h3>
+                                <div className="flex justify-between items-center pt-4 border-t">
+                                    <span className="text-slate-500 text-sm flex items-center gap-1"><Clock size={16}/>{q.timerInMinutes} min</span>
+                                    <Link href={`/quizzes/${q.id}/take`}><Button className="bg-slate-900 text-white">ဖြေဆိုမည်</Button></Link>
+                                </div>
+                            </CardContent>
+>>>>>>> parent of 8ab9a50 (Update landing-page.tsx)
+                        </Card>
+                    ))}
+                </div>}
             </main>
+<<<<<<< HEAD
 
             {/* Footer */}
             <footer className="bg-slate-900 text-slate-300">
@@ -340,6 +399,8 @@ export function LandingPage() {
                     </div>
                  </div>
             </footer>
+=======
+>>>>>>> parent of 8ab9a50 (Update landing-page.tsx)
         </div>
     );
 }
